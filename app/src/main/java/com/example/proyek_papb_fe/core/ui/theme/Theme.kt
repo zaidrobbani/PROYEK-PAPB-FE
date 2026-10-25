@@ -1,4 +1,4 @@
-package com.example.proyek_papb_fe.ui.theme
+package com.example.proyek_papb_fe.core.ui.theme
 
 import android.app.Activity
 import android.os.Build
