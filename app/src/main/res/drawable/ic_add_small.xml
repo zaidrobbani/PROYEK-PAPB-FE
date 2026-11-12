@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Form Pengajuan Freelancer" (17:4405): 17:4520 quick snippet add -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="8.01111dp"
+    android:height="8.01111dp"
+    android:viewportWidth="8.01111"
+    android:viewportHeight="8.01111">
+    <path
+        android:fillColor="#5A6149"
+        android:pathData="M3.25 4.33333H0V3.25H3.25V0H4.33333V3.25H7.58333V4.33333H4.33333V7.58333H3.25V4.33333V4.33333" />
+</vector>

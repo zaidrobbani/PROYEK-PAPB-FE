@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Review Hasil Project" (17-1468), ikon diekspor dari Figma -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14.2615dp"
+    android:height="14.2615dp"
+    android:viewportWidth="14.2615"
+    android:viewportHeight="14.2615">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0 13.5V9.75H1.5V12H3.75V13.5H0V13.5M9.75 13.5V12H12V9.75H13.5V13.5H9.75V13.5M0 3.75V0H3.75V1.5H1.5V3.75H0V3.75M12 3.75V1.5H9.75V0H13.5V3.75H12V3.75" />
+</vector>

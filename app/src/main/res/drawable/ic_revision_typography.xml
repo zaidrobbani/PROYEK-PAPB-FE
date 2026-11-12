@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Notifikasi Permintaan Revisi (Freelancer)" (17:5737), ikon 17:5792, diekspor dari Figma. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="9dp"
+    android:height="10dp"
+    android:viewportWidth="9"
+    android:viewportHeight="10">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M2.97917 8.66667V1.625H0V0H7.58333V1.625H4.60417V8.66667H2.97917Z" />
+</vector>
