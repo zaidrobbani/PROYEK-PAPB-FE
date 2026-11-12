@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Beri Ulasan Freelancer" (17-6591), ikon diekspor dari Figma -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="31.6923dp"
+    android:height="30.1077dp"
+    android:viewportWidth="31.6923"
+    android:viewportHeight="30.1077">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M5.7375 28.5L8.175 17.9625L0 10.875L10.8 9.9375L15 0L19.2 9.9375L30 10.875L21.825 17.9625L24.2625 28.5L15 22.9125L5.7375 28.5V28.5" />
+</vector>

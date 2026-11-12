@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Modal Unggah Draf (Freelancer)" (17:5174), ikon 17:5514: Material Symbols Rounded "send" (Apache License 2.0). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="15.0538dp"
+    android:height="12.6769dp"
+    android:viewportWidth="15.0538"
+    android:viewportHeight="12.6769">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M0 12V0L14.25 6L0 12V12M1.5 9.75L10.3875 6L1.5 2.25V4.875L6 6L1.5 7.125V9.75V9.75M1.5 9.75V6V2.25V4.875V4.875V7.125V7.125V9.75V9.75" />
+</vector>

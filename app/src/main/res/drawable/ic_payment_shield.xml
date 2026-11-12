@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Detail Pembayaran QRIS" (17:1267), catatan escrow 17:1368 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14.0855dp"
+    android:height="19.7197dp"
+    android:viewportWidth="14.0855"
+    android:viewportHeight="19.7197">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M5.79178 13.4045L10.5001 8.69615L9.31262 7.50865L5.79178 11.0295L4.04178 9.27949L2.85428 10.467L5.79178 13.4045V13.4045M6.66678 18.7795C4.73623 18.2934 3.14248 17.1857 1.88553 15.4566C0.62859 13.7274 0.000117688 11.8073 0.000117688 9.69615V4.61282L6.66678 2.11282L13.3335 4.61282V9.69615C13.3335 11.8073 12.705 13.7274 11.448 15.4566C10.1911 17.1857 8.59734 18.2934 6.66678 18.7795V18.7795" />
+</vector>
