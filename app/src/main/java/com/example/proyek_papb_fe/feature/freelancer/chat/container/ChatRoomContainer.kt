@@ -110,19 +110,19 @@ private fun contextFor(status: ProjectStatus, offer: SubmittedOffer, now: Long =
             val daysLeft = ceil((deadline - now) / TimeUnit.DAYS.toMillis(1).toDouble()).toInt().coerceAtLeast(0)
             ChatProjectContext(
                 escrowLabel = "Saldo tertahan ${formatRupiah(offer.netAmount)}",
-                note = "Tenggat project: ",
+                note = "Tenggat proyek: ",
                 noteEmphasis = "$daysLeft hari lagi",
                 noteSuffix = " (${formatShortDate(deadline)})"
             )
         }
         ProjectStatus.SELESAI -> ChatProjectContext(
             escrowLabel = null,
-            note = "Project selesai pada ",
+            note = "Proyek selesai pada ",
             noteEmphasis = formatShortDate(offer.completedAtMillis ?: now)
         )
         ProjectStatus.DIBATALKAN -> ChatProjectContext(
             escrowLabel = null,
-            note = "Project dibatalkan · Alasan: ",
+            note = "Proyek dibatalkan · Alasan: ",
             noteEmphasis = offer.cancellation?.reason?.label
         )
     }
@@ -304,7 +304,7 @@ fun ChatRoomContainer(
         negotiation = negotiation,
         onCancelProjectClick = {
             // Pembatalan hanya sebelum kesepakatan final (tab Project "Project Berjalan").
-            if (offer?.isAgreed == true) toast("Project sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.") else isCancelSheetVisible = true
+            if (offer?.isAgreed == true) toast("Proyek sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.") else isCancelSheetVisible = true
         },
         onContinueProjectClick = { projectId?.let(onContinueProject) },
         topBanner = resultStageEntry(projectId)?.let { (stage, entry) ->
@@ -393,7 +393,7 @@ private fun resultStageEntry(projectId: Int?): Pair<ResultReviewStage, UmkmSimul
             "Lihat permintaan revisi"
         )
         ResultReviewStage.COMPLETED -> UmkmSimulationEntry(
-            "Hasil disetujui UMKM. Project selesai dan dana sudah diteruskan ke dompetmu.",
+            "Hasil disetujui UMKM. Proyek selesai dan dana sudah diteruskan ke dompetmu.",
             "Lihat ringkasan proyek selesai"
         )
         ResultReviewStage.NO_SUBMISSION -> return null

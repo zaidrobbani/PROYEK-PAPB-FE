@@ -41,7 +41,7 @@ internal fun ProposalCard(
             .clip(StatusCardShape)
             .background(TemuKaryaColors.SurfaceCard)
             .border(1.dp, SubmissionStatusColors.Outline, StatusCardShape)
-            .clickable(onClickLabel = "Lihat status project", onClick = onClick)
+            .clickable(onClickLabel = "Lihat status proyek", onClick = onClick)
             .padding(17.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {

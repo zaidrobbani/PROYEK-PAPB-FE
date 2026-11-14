@@ -118,7 +118,7 @@ fun CancelProjectBottomSheet(
                 }
             }
             SheetButton(
-                text = "Ya, Batalkan Project",
+                text = "Ya, Batalkan Proyek",
                 filled = true,
                 onClick = { hideThen(onConfirm) }
             )
@@ -153,7 +153,7 @@ private fun SheetHeader() {
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Batalkan project ini?",
+                text = "Batalkan proyek ini?",
                 style = NegotiationTypography.SheetTitle,
                 color = TemuKaryaColors.TextHeading
             )

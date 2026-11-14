@@ -65,7 +65,7 @@ internal fun SubmissionStatusActionBar(
                 modifier = Modifier.size(19.dp)
             )
             Text(
-                text = "Cari Project Lain",
+                text = "Cari Proyek Lain",
                 style = SubmissionStatusTypography.Button,
                 color = TemuKaryaColors.ActionPrimary,
                 maxLines = 1

@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.core.data
 
+import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.data.model.AvatarTone
 import com.example.proyek_papb_fe.core.data.model.FreelancerProject
 import com.example.proyek_papb_fe.core.data.model.MatchLevel
@@ -38,7 +39,8 @@ object FreelancerProjectDummyData {
             deadlineCompact = "20 Nov",
             applicationDaysLeft = 3,
             otherApplicantCount = 2,
-            match = ProjectMatch(percentage = 96, level = MatchLevel.TOP)
+            match = ProjectMatch(percentage = 96, level = MatchLevel.TOP),
+            imageRes = R.drawable.img_portfolio_pouch_kopi
         ),
         FreelancerProject(
             id = 102,
@@ -115,7 +117,9 @@ object FreelancerProjectDummyData {
             deadline = "5 Nov 2026",
             deadlineCompact = "5 Nov",
             applicationDaysLeft = 2,
-            otherApplicantCount = 1
+            otherApplicantCount = 1,
+            match = ProjectMatch(percentage = 91, level = MatchLevel.GOOD),
+            imageRes = R.drawable.img_reco_sambal
         ),
         FreelancerProject(
             id = 105,
@@ -166,7 +170,9 @@ object FreelancerProjectDummyData {
             deadlineCompact = "18 Nov",
             applicationDaysLeft = 7,
             otherApplicantCount = 5,
-            isNew = true
+            isNew = true,
+            match = ProjectMatch(percentage = 87, level = MatchLevel.GOOD),
+            imageRes = R.drawable.img_reco_kue_kering
         ),
         FreelancerProject(
             id = 107,

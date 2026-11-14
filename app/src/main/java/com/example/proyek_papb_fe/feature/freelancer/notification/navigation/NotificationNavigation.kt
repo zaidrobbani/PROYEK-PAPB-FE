@@ -8,7 +8,7 @@ import com.example.proyek_papb_fe.feature.freelancer.notification.container.Noti
 import com.example.proyek_papb_fe.feature.freelancer.revision.container.RevisionRequestContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Notifikasi (539:1407). Halaman detail dari Profil (tanpa bottom bar). */
+/** Figma: Notifikasi (539:1407). Halaman detail dari Profil dan lonceng Beranda (tanpa bottom bar). */
 @Serializable
 data object NotificationRoute
 

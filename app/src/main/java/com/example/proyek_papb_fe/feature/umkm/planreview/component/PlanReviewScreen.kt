@@ -185,7 +185,7 @@ private fun InfoCard() {
     ) {
         Icon(painterResource(R.drawable.ic_wallet_info), null, tint = PlanReviewColors.InfoIcon, modifier = Modifier.size(19.dp))
         Text(
-            "Periksa tahapan dan bobot yang diusulkan freelancer. Setelah kamu setujui, kesepakatan final terkunci dan project masuk tahap Menunggu Pembayaran.",
+            "Periksa tahapan dan bobot yang diusulkan freelancer. Setelah kamu setujui, kesepakatan final terkunci dan proyek masuk tahap Menunggu Pembayaran.",
             style = PlanReviewTypography.Body,
             color = PlanReviewColors.OnInfo,
             modifier = Modifier.weight(1f)

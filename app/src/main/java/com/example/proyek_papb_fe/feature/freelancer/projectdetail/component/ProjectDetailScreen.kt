@@ -38,7 +38,7 @@ fun ProjectDetailScreen(
             .fillMaxSize()
             .background(TemuKaryaColors.BgCanvas)
     ) {
-        DetailTopBar(title = "Detail Project", onBack = onBack)
+        DetailTopBar(title = "Detail Proyek", onBack = onBack)
 
         Column(
             modifier = Modifier

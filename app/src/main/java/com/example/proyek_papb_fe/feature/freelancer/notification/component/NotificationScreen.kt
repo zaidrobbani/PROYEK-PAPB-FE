@@ -214,7 +214,7 @@ private fun EmptyState(onFindProjectsClick: () -> Unit) {
         }
         Text("Belum ada notifikasi", style = NotificationTypography.EmptyTitle, color = TemuKaryaColors.TextHeading, textAlign = TextAlign.Center)
         Text(
-            "Kabar soal pengajuan, revisi, progres project, dan pembayaran akan muncul di sini.",
+            "Kabar soal pengajuan, revisi, progres proyek, dan pembayaran akan muncul di sini.",
             style = NotificationTypography.EmptyBody,
             color = TemuKaryaColors.TextBody,
             textAlign = TextAlign.Center
@@ -230,7 +230,7 @@ private fun EmptyState(onFindProjectsClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(painterResource(R.drawable.ic_nav_travel_explore), null, tint = TemuKaryaColors.ActionPrimary, modifier = Modifier.size(19.dp))
-            Text("Cari Project", style = NotificationTypography.Button, color = TemuKaryaColors.ActionPrimary)
+            Text("Cari Proyek", style = NotificationTypography.Button, color = TemuKaryaColors.ActionPrimary)
         }
     }
 }
@@ -239,7 +239,7 @@ private fun EmptyState(onFindProjectsClick: () -> Unit) {
 @Composable
 private fun NotificationScreenPreview() {
     NotificationScreen(
-        filters = listOf(NotificationFilterUi("Semua (2)", true), NotificationFilterUi("Project", false)),
+        filters = listOf(NotificationFilterUi("Semua (2)", true), NotificationFilterUi("Proyek", false)),
         unreadCount = 1,
         groups = listOf(
             NotificationGroupUi(

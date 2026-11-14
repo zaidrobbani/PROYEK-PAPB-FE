@@ -14,7 +14,7 @@ package com.example.proyek_papb_fe.core.data.model
 enum class ProjectStatus(val label: String) {
     MENUNGGU_KESEPAKATAN("Menunggu Kesepakatan"),
     NEGOSIASI("Negosiasi"),
-    PROJECT_BERJALAN("Project Berjalan"),
+    PROJECT_BERJALAN("Proyek Berjalan"),
     SELESAI("Selesai"),
     DIBATALKAN("Dibatalkan")
 }

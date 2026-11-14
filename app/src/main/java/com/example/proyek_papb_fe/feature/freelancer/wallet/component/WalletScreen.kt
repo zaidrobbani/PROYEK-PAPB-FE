@@ -153,7 +153,7 @@ private fun BalanceCard(state: WalletUiState, onWithdrawClick: () -> Unit) {
         Text(state.totalBalance, style = WalletTypography.Total, color = TemuKaryaColors.TextPrimary)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             BalanceTile(R.drawable.ic_wallet_available, "Saldo Tersedia", state.availableBalance, "Dapat dicairkan", Modifier.weight(1f))
-            BalanceTile(R.drawable.ic_wallet_lock, "Saldo Tertahan", state.heldBalance, "Dari project yang berjalan", Modifier.weight(1f))
+            BalanceTile(R.drawable.ic_wallet_lock, "Saldo Tertahan", state.heldBalance, "Dari proyek yang berjalan", Modifier.weight(1f))
         }
         Row(
             modifier = Modifier
@@ -201,7 +201,7 @@ private fun HeldBalanceInfo() {
     ) {
         Icon(painterResource(R.drawable.ic_wallet_info), contentDescription = null, tint = TemuKaryaColors.Olive)
         Text(
-            text = "Saldo tertahan baru masuk ke saldo tersedia setelah UMKM menyetujui hasil project.",
+            text = "Saldo tertahan baru masuk ke saldo tersedia setelah UMKM menyetujui hasil proyek.",
             style = WalletTypography.Info,
             color = WalletColors.OnInfo,
             modifier = Modifier.weight(1f)
@@ -332,7 +332,7 @@ private fun WalletScreenPreview() {
             accountHolder = "a.n. Andi Ramadhan",
             isPrimaryAccount = true,
             transactions = listOf(
-                WalletTransactionUi("1", "Foto Katalog Menu Warung Kopi", "Pemasukan project, 18 Okt", "+ Rp 950.000", WalletTransactionKind.INCOME),
+                WalletTransactionUi("1", "Foto Katalog Menu Warung Kopi", "Pemasukan proyek, 18 Okt", "+ Rp 950.000", WalletTransactionKind.INCOME),
                 WalletTransactionUi("2", "Pencairan ke BCA", "Berhasil, 2 Okt", "− Rp 500.000", WalletTransactionKind.WITHDRAWAL),
                 WalletTransactionUi("3", "Rebranding Pouch Kopi", "Ditahan sejak 24 Okt", "Rp 1.500.000", WalletTransactionKind.HELD)
             ),

@@ -82,9 +82,9 @@ fun WorkPlanContainer(
 
     val blocked: Pair<String, String>? = when {
         project == null || offer == null ->
-            "Rencana tidak ditemukan" to "Belum ada penawaran untuk project dengan id $projectId."
+            "Rencana tidak ditemukan" to "Belum ada penawaran untuk proyek dengan id $projectId."
         offer.isCancelled ->
-            "Project dibatalkan" to "Project ini sudah dibatalkan sehingga rencana pengerjaan tidak dapat disusun."
+            "Proyek dibatalkan" to "Proyek ini sudah dibatalkan sehingga rencana pengerjaan tidak dapat disusun."
         !offer.isApproved ->
             "Penawaran belum disetujui" to "Rencana pengerjaan bisa disusun setelah UMKM menyetujui penawaran."
         else -> null
@@ -117,11 +117,11 @@ fun WorkPlanContainer(
             actionLabel = "Tinjau sebagai UMKM"
         )
         storedPlan?.status == WorkPlanStatus.APPROVED && payment?.status != PaymentStatus.PAID -> UmkmSimulationEntry(
-            message = "${project.clientName} sudah menyetujui rencana. Project menunggu pembayaran UMKM.",
+            message = "${project.clientName} sudah menyetujui rencana. Proyek menunggu pembayaran UMKM.",
             actionLabel = "Lanjut ke Pembayaran"
         )
         payment?.status == PaymentStatus.PAID -> UmkmSimulationEntry(
-            message = "${project.clientName} sudah membayar. Dana ditahan TEMUKARYA dan project resmi berjalan.",
+            message = "${project.clientName} sudah membayar. Dana ditahan TEMUKARYA dan proyek resmi berjalan.",
             actionLabel = "Lihat Bukti Pembayaran"
         )
         else -> null

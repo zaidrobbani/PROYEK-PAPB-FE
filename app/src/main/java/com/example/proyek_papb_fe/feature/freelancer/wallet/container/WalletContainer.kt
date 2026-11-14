@@ -49,7 +49,7 @@ private fun WalletSummary.toUiState(showAll: Boolean): WalletUiState {
         transactions = (shownSettled + held).map { tx ->
             when (tx.type) {
                 WalletTransactionType.INCOME -> WalletTransactionUi(
-                    tx.id, tx.title, "Pemasukan project, ${shortDate(tx.atMillis)}", "+ ${formatRupiah(tx.amount)}", WalletTransactionKind.INCOME
+                    tx.id, tx.title, "Pemasukan proyek, ${shortDate(tx.atMillis)}", "+ ${formatRupiah(tx.amount)}", WalletTransactionKind.INCOME
                 )
                 WalletTransactionType.WITHDRAWAL -> WalletTransactionUi(
                     tx.id, tx.title, "${if (tx.isPending) "Diproses" else "Berhasil"}, ${shortDate(tx.atMillis)}", "− ${formatRupiah(tx.amount)}", WalletTransactionKind.WITHDRAWAL

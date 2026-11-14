@@ -87,9 +87,14 @@ fun AppNavHost(
     ) {
         dashboardScreen(
             onWalletClick = { navController.navigateToWallet() },
-            onProjectClick = { projectId ->
-                // Navigasi Detail Project akan ditambahkan nanti
-            }
+            // Proyek aktif → Status Pengajuan proyek itu (tujuan yang sama dengan kartu tab Proyek).
+            onActiveProjectClick = { projectId -> navController.navigateToSubmissionStatus(projectId) },
+            // Tab Proyek (SubmissionRoute), lewat mekanisme tab agar bottom bar & state tab tetap benar.
+            onSeeAllActiveProjectsClick = { navController.navigateToTopLevel(SubmissionRoute) },
+            onRecommendedProjectClick = { projectId -> navController.navigateToProjectDetail(projectId) },
+            onSeeAllRecommendationsClick = { navController.navigateToTopLevel(SearchProjectRoute) },
+            // Notifikasi yang sama dengan menu di Profil (NotificationRoute + NotificationStore).
+            onNotificationClick = { navController.navigateToNotifications() }
         )
 
         searchProjectScreen(

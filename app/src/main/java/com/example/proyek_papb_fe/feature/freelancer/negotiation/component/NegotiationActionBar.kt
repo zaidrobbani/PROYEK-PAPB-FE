@@ -89,7 +89,7 @@ internal fun NegotiationActionBar(
                 modifier = Modifier.size(19.dp)
             )
             Text(
-                text = "Lanjut Project",
+                text = "Lanjut Proyek",
                 style = NegotiationTypography.Button,
                 color = TemuKaryaColors.OnAction,
                 maxLines = 1

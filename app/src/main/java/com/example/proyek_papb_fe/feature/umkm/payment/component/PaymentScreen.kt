@@ -267,7 +267,7 @@ private fun BreakdownCard(state: PaymentUiState) {
         }
         Column(verticalArrangement = Arrangement.spacedBy(P8)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Nilai Project Disepakati", style = PaymentTypography.Row, color = TemuKaryaColors.TextBody)
+                Text("Nilai Proyek Disepakati", style = PaymentTypography.Row, color = TemuKaryaColors.TextBody)
                 Text(state.agreedValue, style = PaymentTypography.BodySemi, color = TemuKaryaColors.TextPrimary)
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

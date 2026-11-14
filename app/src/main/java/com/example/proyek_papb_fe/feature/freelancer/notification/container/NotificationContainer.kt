@@ -38,7 +38,7 @@ private fun FreelancerNotification.toUi() = NotificationItemUi(
 )
 
 /**
- * Container Notifikasi (Figma 539:1407), dibuka dari menu "Notifikasi" dan lonceng di Profil.
+ * Container Notifikasi (Figma 539:1407), dibuka dari menu "Notifikasi" dan lonceng di Profil, serta lonceng di Beranda.
  * Ketuk notifikasi = tandai dibaca. "Permintaan revisi pekerjaan" membuka layar
  * Permintaan Revisi (Figma 17:5737) untuk projectId notifikasi tersebut; jenis lain
  * membuka layar terkait yang sudah ada bila tersedia.

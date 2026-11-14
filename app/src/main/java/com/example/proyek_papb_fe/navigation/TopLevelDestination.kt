@@ -24,13 +24,13 @@ enum class TopLevelDestination(
         route = DashboardRoute
     ),
     SEARCH_PROJECT(
-        label = "Cari Project",
+        label = "Cari Proyek",
         iconRes = R.drawable.ic_nav_travel_explore,
         route = SearchProjectRoute
     ),
     /** Tab "Project" (dulu "Pengajuan"); route internal tetap SubmissionRoute. */
     SUBMISSION(
-        label = "Project",
+        label = "Proyek",
         iconRes = R.drawable.ic_nav_project,
         route = SubmissionRoute
     ),

@@ -22,10 +22,10 @@ fun ProjectDetailContainer(
 
     if (project == null) {
         Column(modifier = Modifier.fillMaxSize()) {
-            DetailTopBar(title = "Detail Project", onBack = onBack)
+            DetailTopBar(title = "Detail Proyek", onBack = onBack)
             FeaturePlaceholder(
-                title = "Project tidak ditemukan",
-                description = "Project dengan id $projectId tidak tersedia."
+                title = "Proyek tidak ditemukan",
+                description = "Proyek dengan id $projectId tidak tersedia."
             )
         }
         return

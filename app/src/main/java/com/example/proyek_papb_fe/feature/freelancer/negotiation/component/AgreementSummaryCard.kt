@@ -59,7 +59,7 @@ internal fun AgreementSummaryCard(
             )
         }
 
-        SummaryRow("Nilai project", projectValue, NegotiationTypography.RowValueBold)
+        SummaryRow("Nilai proyek", projectValue, NegotiationTypography.RowValueBold)
         SummaryRow("Durasi pengerjaan", duration, NegotiationTypography.RowValue)
         SummaryRow("Output", output, NegotiationTypography.RowValue)
         Box(

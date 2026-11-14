@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.core.data.model
 
+import androidx.annotation.DrawableRes
+
 /** Kategori project sesuai pill di Figma "Cari Project" (2011:274). */
 enum class ProjectCategory(val label: String) {
     PACKAGING("Desain Kemasan"),
@@ -64,5 +66,7 @@ data class FreelancerProject(
     val otherApplicantCount: Int,
 
     val match: ProjectMatch? = null,
-    val isNew: Boolean = false
+    val isNew: Boolean = false,
+    /** Foto/ilustrasi proyek untuk kartu "Rekomendasi Proyek" di Beranda; null = belum ada gambar. */
+    @param:DrawableRes val imageRes: Int? = null
 )

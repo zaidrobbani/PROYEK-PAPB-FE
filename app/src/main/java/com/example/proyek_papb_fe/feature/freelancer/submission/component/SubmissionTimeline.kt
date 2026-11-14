@@ -54,7 +54,7 @@ fun submissionSteps(
         SubmissionStep(R.drawable.ic_pending, "Ditinjau pemilik UMKM", "UMKM sedang membandingkan pelamar", StepState.CURRENT)
     },
     if (cancellationReason != null) {
-        SubmissionStep(R.drawable.ic_close, "Project dibatalkan", "Alasan: $cancellationReason", StepState.CANCELLED)
+        SubmissionStep(R.drawable.ic_close, "Proyek dibatalkan", "Alasan: $cancellationReason", StepState.CANCELLED)
     } else {
         SubmissionStep(
             R.drawable.ic_handshake,
@@ -76,7 +76,7 @@ fun submissionSteps(
     SubmissionStep(
         R.drawable.ic_brush,
         "Mulai pengerjaan",
-        if (isCompleted) "Project selesai dikerjakan" else "Status menjadi Sedang Dikerjakan",
+        if (isCompleted) "Proyek selesai dikerjakan" else "Status menjadi Sedang Dikerjakan",
         when {
             isCompleted -> StepState.DONE
             isAgreed -> StepState.CURRENT

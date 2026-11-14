@@ -23,6 +23,8 @@ import com.example.proyek_papb_fe.R
 data class DashboardProject(
     val id: Int,
     val title: String,
+    /** Ringkasan singkat proyek (kartu Rekomendasi, maks. 2 baris). */
+    val description: String = "",
     val category: String,
     val budget: String,
     val status: String,
@@ -97,7 +99,7 @@ fun DashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(8.451.dp)
                 ) {
                     SectionHeader(
-                        title = "Project Aktif Saya",
+                        title = "Proyek Aktif Saya",
                         onSeeAllClick = onSeeAllActiveProjectsClick
                     )
                     if (activeProject != null) {
@@ -107,7 +109,7 @@ fun DashboardScreen(
                         )
                     } else {
                         Text(
-                            text = "Belum ada project aktif.",
+                            text = "Belum ada proyek aktif.",
                             style = DashboardTypography.BodyRegular,
                             color = DashboardColors.TextBody
                         )
