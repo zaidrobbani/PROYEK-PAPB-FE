@@ -147,7 +147,7 @@ internal object ChatDummyData {
             projectStatus = ProjectStatus.SELESAI,
             context = ChatProjectContext(
                 escrowLabel = null,
-                note = "Project selesai pada ",
+                note = "Proyek selesai pada ",
                 noteEmphasis = "5 Okt 2026"
             ),
             messages = listOf(

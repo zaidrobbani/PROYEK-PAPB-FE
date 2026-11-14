@@ -144,7 +144,7 @@ private fun ChatFootnote() {
                 .size(15.dp)
         )
         Text(
-            text = "Percakapan terbuka setelah UMKM memilih pengajuanmu pada sebuah project.",
+            text = "Percakapan terbuka setelah UMKM memilih pengajuanmu pada sebuah proyek.",
             style = TemuKaryaTypography.BodyRegular,
             color = TemuKaryaColors.TextPlaceholder,
             modifier = Modifier.widthIn(max = 300.dp)

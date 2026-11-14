@@ -111,7 +111,7 @@ fun SubmissionListScreen(
             .background(TemuKaryaColors.BgCanvas)
     ) {
         RootTopBar(
-            title = "Project",
+            title = "Proyek",
             hasUnreadNotification = hasUnreadNotification,
             onNotificationClick = onNotificationClick
         )
@@ -175,16 +175,16 @@ private fun EmptyProposals(
             modifier = Modifier.size(40.dp)
         )
         Text(
-            text = "Belum ada project",
+            text = "Belum ada proyek",
             style = SubmissionStatusTypography.SectionTitle,
             color = TemuKaryaColors.TextHeading,
             textAlign = TextAlign.Center
         )
         Text(
             text = if (selectedFilter == ProjectFilter.SEMUA) {
-                "Ajukan penawaran ke project UMKM, lalu pantau statusnya di sini."
+                "Ajukan penawaran ke proyek UMKM, lalu pantau statusnya di sini."
             } else {
-                "Belum ada project dengan status \"${selectedFilter.label}\"."
+                "Belum ada proyek dengan status \"${selectedFilter.label}\"."
             },
             style = TemuKaryaTypography.BodyRegular,
             color = TemuKaryaColors.TextBody,
@@ -208,7 +208,7 @@ private fun EmptyProposals(
                 modifier = Modifier.size(19.dp)
             )
             Text(
-                text = "Cari Project",
+                text = "Cari Proyek",
                 style = SubmissionStatusTypography.Button,
                 color = TemuKaryaColors.OnAction,
                 maxLines = 1

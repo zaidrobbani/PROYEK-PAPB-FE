@@ -103,12 +103,12 @@ internal fun ProjectContextStrip(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .clickable(onClickLabel = "Lihat detail project", onClick = onDetailClick),
+                    .clickable(onClickLabel = "Lihat detail proyek", onClick = onDetailClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_chevron_right),
-                    contentDescription = "Lihat detail project",
+                    contentDescription = "Lihat detail proyek",
                     tint = TemuKaryaColors.TextBody,
                     modifier = Modifier.size(24.dp)
                 )

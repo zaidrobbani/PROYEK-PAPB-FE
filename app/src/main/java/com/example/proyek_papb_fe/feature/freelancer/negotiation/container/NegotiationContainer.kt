@@ -65,8 +65,8 @@ fun NegotiationContainer(
         Column(modifier = Modifier.fillMaxSize()) {
             DetailTopBar(title = "Negosiasi", onBack = onBack)
             FeaturePlaceholder(
-                title = "Project dibatalkan",
-                description = "Negosiasi untuk project ini sudah dibatalkan dan tidak dapat dilanjutkan."
+                title = "Proyek dibatalkan",
+                description = "Negosiasi untuk proyek ini sudah dibatalkan dan tidak dapat dilanjutkan."
             )
         }
         return
@@ -77,7 +77,7 @@ fun NegotiationContainer(
             DetailTopBar(title = "Negosiasi", onBack = onBack)
             FeaturePlaceholder(
                 title = "Negosiasi tidak ditemukan",
-                description = "Belum ada penawaran terkirim untuk project dengan id $projectId."
+                description = "Belum ada penawaran terkirim untuk proyek dengan id $projectId."
             )
         }
         return
@@ -113,7 +113,7 @@ fun NegotiationContainer(
         onCancelClick = {
             // Pembatalan hanya sebelum kesepakatan final (tab Project "Project Berjalan").
             if (SubmittedOfferStore.get(projectId)?.isAgreed == true) {
-                Toast.makeText(context, "Project sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Proyek sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.", Toast.LENGTH_SHORT).show()
             } else {
                 isCancelSheetVisible = true
             }

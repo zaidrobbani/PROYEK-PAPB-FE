@@ -74,7 +74,7 @@ private fun CancellationInfo() {
                 .size(15.dp)
         )
         Text(
-            text = "Sebelum pembayaran, kedua pihak masih bisa melanjutkan atau membatalkan project tanpa biaya.",
+            text = "Sebelum pembayaran, kedua pihak masih bisa melanjutkan atau membatalkan proyek tanpa biaya.",
             style = InfoStyle,
             color = NegotiationColors.OnGreen
         )

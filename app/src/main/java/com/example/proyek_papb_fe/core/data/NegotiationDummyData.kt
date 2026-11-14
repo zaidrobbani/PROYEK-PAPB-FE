@@ -23,7 +23,7 @@ object NegotiationDummyData {
     )
 
     fun agreedOutputFor(projectId: Int): String =
-        agreedOutputs[projectId] ?: "Sesuai lingkup project"
+        agreedOutputs[projectId] ?: "Sesuai lingkup proyek"
 
     /**
      * Percakapan awal yang sudah terjadi sebelum layar dibuka. Durasi dan nilai di
@@ -46,7 +46,7 @@ object NegotiationDummyData {
         } else {
             clientOpening = "Mas $freelancer, terima kasih penawarannya. Bisa dijelaskan hasil akhir " +
                 "yang akan diserahkan?"
-            freelancerReply = "Bisa Kak $ownerFirstName. Hasil akhir sesuai lingkup project, durasinya " +
+            freelancerReply = "Bisa Kak $ownerFirstName. Hasil akhir sesuai lingkup proyek, durasinya " +
                 "$durationDays hari dan nilainya tetap $offerAmount."
         }
 

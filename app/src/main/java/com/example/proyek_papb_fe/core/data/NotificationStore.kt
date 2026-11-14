@@ -57,7 +57,7 @@ object NotificationStore {
         FreelancerNotification(
             id = "nt-4", type = NotificationType.PROJECT_PROGRESS,
             title = "Rencana pengerjaan disetujui",
-            body = "Kedai Kopi Senja menyetujui rencanamu. Project kini Sedang Dikerjakan.",
+            body = "Kedai Kopi Senja menyetujui rencanamu. Proyek kini Sedang Dikerjakan.",
             timeLabel = "16.20", day = NotificationDay.YESTERDAY, isRead = true, projectId = REVISION_PROJECT_ID
         ),
         FreelancerNotification(
@@ -68,13 +68,13 @@ object NotificationStore {
         ),
         FreelancerNotification(
             id = "nt-6", type = NotificationType.PAYMENT,
-            title = "Dana project masuk ke saldo",
+            title = "Dana proyek masuk ke saldo",
             body = "Rp 950.000 dari Foto Katalog Menu Warung Kopi kini bisa dicairkan.",
             timeLabel = "09.10", day = NotificationDay.YESTERDAY, isRead = true
         ),
         FreelancerNotification(
             id = "nt-7", type = NotificationType.NEW_PROJECT,
-            title = "Project baru sesuai keahlianmu",
+            title = "Proyek baru sesuai keahlianmu",
             body = "Desain Label Botol Sambal · Budget Rp 750.000 · Sleman",
             timeLabel = "Sen, 10.00", day = NotificationDay.THIS_WEEK, isRead = true
         ),

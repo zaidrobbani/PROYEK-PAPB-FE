@@ -26,9 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 internal val RecommendationCardWidth = 295.795.dp
-internal val RecommendationCardHeight = 390.33.dp
 
-/** Figma: Article - Recommendation Card (17:3859 / 17:3895). */
+/**
+ * Figma: Article - Recommendation Card (17:3859 / 17:3895), versi ringkas: tinggi mengikuti isi
+ * (gambar → judul → deskripsi → budget) tanpa ruang kosong. Judul & deskripsi memakai
+ * minLines = maxLines = 2 agar semua kartu di carousel sama tinggi.
+ */
 @Composable
 internal fun RecommendationCard(
     project: DashboardProject,
@@ -39,67 +42,69 @@ internal fun RecommendationCard(
     Column(
         modifier = modifier
             .width(RecommendationCardWidth)
-            .height(RecommendationCardHeight)
             .dashboardCardShadow(shape)
             .clip(shape)
             .background(DashboardColors.SurfaceCard)
             .clickable(onClick = onClick)
             .padding(12.677.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.spacedBy(4.226.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.226.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(135.221.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(DashboardColors.SurfaceImage)
-            ) {
-                if (project.imageRes != null) {
-                    Image(
-                        painter = painterResource(project.imageRes),
-                        contentDescription = project.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Text(
-                        text = project.imageEmoji,
-                        fontSize = 48.sp,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                project.matchPercentage?.let { percentage ->
-                    MatchBadge(
-                        text = "$percentage% Cocok",
-                        modifier = Modifier.padding(start = 8.45.dp, top = 8.45.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = project.title,
-                style = DashboardTypography.CardTitle,
-                color = DashboardColors.TextHeading,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        // Figma: Container 38.559 tinggi, harga di top 17.43.
         Box(
             modifier = Modifier
-                .padding(top = 8.451.dp)
-                .height(38.559.dp)
+                .fillMaxWidth()
+                .height(135.221.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(DashboardColors.SurfaceImage)
         ) {
-            Text(
-                text = project.budget,
-                style = DashboardTypography.CardTitle,
-                color = DashboardColors.TextHeading,
-                modifier = Modifier.padding(top = 17.43.dp)
-            )
+            if (project.imageRes != null) {
+                Image(
+                    painter = painterResource(project.imageRes),
+                    contentDescription = project.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Text(
+                    text = project.imageEmoji,
+                    fontSize = 48.sp,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            project.matchPercentage?.let { percentage ->
+                MatchBadge(
+                    text = "$percentage% Cocok",
+                    modifier = Modifier.padding(start = 8.45.dp, top = 8.45.dp)
+                )
+            }
         }
+
+        Text(
+            text = project.title,
+            style = DashboardTypography.CardTitle,
+            color = DashboardColors.TextHeading,
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 4.226.dp)
+        )
+
+        Text(
+            text = project.description,
+            style = DashboardTypography.BodyRegular,
+            color = DashboardColors.TextBody,
+            minLines = 2,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        // Budget langsung di bawah deskripsi (jarak total 8.451 = spacedBy + padding).
+        Text(
+            text = project.budget,
+            style = DashboardTypography.CardTitle,
+            color = DashboardColors.TextHeading,
+            modifier = Modifier.padding(top = 4.226.dp)
+        )
     }
 }
 

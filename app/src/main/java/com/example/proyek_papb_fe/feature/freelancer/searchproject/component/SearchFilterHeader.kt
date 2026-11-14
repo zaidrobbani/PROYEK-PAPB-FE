@@ -94,12 +94,12 @@ private fun SearchField(
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val placeholder = "Cari project desain, web, branding..."
+    val placeholder = "Cari proyek desain, web, branding..."
 
     BasicTextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = modifier.semantics { contentDescription = "Cari project" },
+        modifier = modifier.semantics { contentDescription = "Cari proyek" },
         textStyle = TemuKaryaTypography.Input.copy(color = TemuKaryaColors.TextPrimary),
         singleLine = true,
         cursorBrush = SolidColor(TemuKaryaColors.ActionPrimary),

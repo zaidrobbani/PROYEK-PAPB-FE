@@ -77,7 +77,7 @@ fun PortfolioListScreen(
             KelolaEmptyState(
                 iconRes = R.drawable.ic_profile_photo_library,
                 title = "Belum ada portofolio",
-                body = "Tambahkan karya terbaikmu agar UMKM lebih yakin mengundangmu ke project.",
+                body = "Tambahkan karya terbaikmu agar UMKM lebih yakin mengundangmu ke proyek.",
                 actionLabel = "Tambah Portofolio",
                 actionIconRes = R.drawable.ic_add,
                 onAction = onAddClick
@@ -285,7 +285,7 @@ fun PortfolioFormScreen(
             label = "Deskripsi",
             value = form.description,
             onValueChange = { onFormChange(form.copy(description = it.take(PortfolioDescriptionMax))) },
-            placeholder = "Ceritakan tujuan project, peranmu, dan hasilnya untuk klien.",
+            placeholder = "Ceritakan tujuan proyek, peranmu, dan hasilnya untuk klien.",
             helper = "${form.description.length}/$PortfolioDescriptionMax karakter",
             error = errors.description,
             singleLine = false,

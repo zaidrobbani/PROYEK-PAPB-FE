@@ -74,7 +74,7 @@ data class ProfessionalProfileErrors(
 /** "500000" → "Rp 500.000 / project" (Figma Field Tarif) tanpa mengubah nilai mentah. */
 private object RatePerProjectTransformation : VisualTransformation {
     private const val Prefix = "Rp "
-    private const val Suffix = " / project"
+    private const val Suffix = " / proyek"
     override fun filter(text: AnnotatedString): TransformedText {
         val raw = text.text
         if (raw.isEmpty()) return TransformedText(AnnotatedString(""), OffsetMapping.Identity)
@@ -160,7 +160,7 @@ fun ProfessionalProfileScreen(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
         )
 
-        KelolaSectionTitle("Keahlian", subtitle = "Dipakai untuk mencocokkan project yang relevan.")
+        KelolaSectionTitle("Keahlian", subtitle = "Dipakai untuk mencocokkan proyek yang relevan.")
         KelolaDropdownField(
             label = "Bidang keahlian utama",
             options = fieldOptions,
@@ -189,7 +189,7 @@ fun ProfessionalProfileScreen(
             label = "Tarif mulai dari",
             value = form.rateDigits,
             onValueChange = { input -> onFormChange(form.copy(rateDigits = input.filter(Char::isDigit).trimStart('0').take(11))) },
-            placeholder = "Rp 0 / project",
+            placeholder = "Rp 0 / proyek",
             helper = "Kisaran awal; nilai akhir tetap mengikuti kesepakatan dengan UMKM.",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             visualTransformation = RatePerProjectTransformation

@@ -117,7 +117,7 @@ private fun CancellationInfoCard() {
             modifier = Modifier.size(19.dp)
         )
         Text(
-            text = "Sebelum pembayaran, kedua pihak masih bisa melanjutkan atau membatalkan project tanpa biaya.",
+            text = "Sebelum pembayaran, kedua pihak masih bisa melanjutkan atau membatalkan proyek tanpa biaya.",
             style = NegotiationTypography.Info,
             color = NegotiationColors.OnGreen,
             modifier = Modifier.weight(1f)

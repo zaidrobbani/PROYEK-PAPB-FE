@@ -75,7 +75,7 @@ fun SubmissionStatusContainer(
             DetailTopBar(title = "Status Pengajuan", onBack = onBack)
             FeaturePlaceholder(
                 title = "Pengajuan tidak ditemukan",
-                description = "Belum ada penawaran terkirim untuk project dengan id $projectId."
+                description = "Belum ada penawaran terkirim untuk proyek dengan id $projectId."
             )
         }
         return

@@ -66,7 +66,7 @@ enum class NotificationType(val group: NotificationFilter?) {
 }
 
 /** Chip filter Notifikasi (Figma: Semua · Project · Pembayaran · Pesan). */
-enum class NotificationFilter(val label: String) { PROJECT("Project"), PAYMENT("Pembayaran"), MESSAGE("Pesan") }
+enum class NotificationFilter(val label: String) { PROJECT("Proyek"), PAYMENT("Pembayaran"), MESSAGE("Pesan") }
 
 /** Kelompok waktu di daftar Notifikasi. */
 enum class NotificationDay(val label: String) { TODAY("Hari ini"), YESTERDAY("Kemarin"), THIS_WEEK("Minggu ini") }

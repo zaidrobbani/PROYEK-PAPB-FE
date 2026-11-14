@@ -65,5 +65,5 @@ fun FeaturePlaceholder(
 @Preview(showBackground = true)
 @Composable
 private fun FeaturePlaceholderPreview() {
-    FeaturePlaceholder(title = "Cari Project")
+    FeaturePlaceholder(title = "Cari Proyek")
 }

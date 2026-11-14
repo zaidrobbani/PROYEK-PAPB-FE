@@ -56,8 +56,8 @@ fun OfferFormContainer(
         Column(modifier = Modifier.fillMaxSize()) {
             DetailTopBar(title = "Ajukan Penawaran", onBack = onBack)
             FeaturePlaceholder(
-                title = "Project tidak ditemukan",
-                description = "Project dengan id $projectId tidak tersedia."
+                title = "Proyek tidak ditemukan",
+                description = "Proyek dengan id $projectId tidak tersedia."
             )
         }
         return

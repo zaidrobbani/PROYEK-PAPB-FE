@@ -41,7 +41,7 @@ internal fun ChatSearchField(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Cari nama atau project"
+    placeholder: String = "Cari nama atau proyek"
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 

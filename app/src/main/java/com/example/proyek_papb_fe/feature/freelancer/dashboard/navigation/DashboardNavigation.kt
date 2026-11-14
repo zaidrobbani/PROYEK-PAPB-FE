@@ -10,12 +10,24 @@ data object DashboardRoute
 
 fun NavGraphBuilder.dashboardScreen(
     onWalletClick: () -> Unit,
-    onProjectClick: (Int) -> Unit
+    /** Kartu "Proyek Aktif Saya": buka halaman proyek milik projectId ini. */
+    onActiveProjectClick: (projectId: Int) -> Unit,
+    /** "Lihat Semua" di "Proyek Aktif Saya". */
+    onSeeAllActiveProjectsClick: () -> Unit,
+    /** Kartu "Rekomendasi Proyek": buka Detail Proyek projectId ini. */
+    onRecommendedProjectClick: (projectId: Int) -> Unit,
+    /** "Lihat Semua" di "Rekomendasi Proyek". */
+    onSeeAllRecommendationsClick: () -> Unit,
+    onNotificationClick: () -> Unit
 ) {
     composable<DashboardRoute> {
         DashboardContainer(
             onWalletClick = onWalletClick,
-            onProjectClick = onProjectClick
+            onActiveProjectClick = onActiveProjectClick,
+            onSeeAllActiveProjectsClick = onSeeAllActiveProjectsClick,
+            onRecommendedProjectClick = onRecommendedProjectClick,
+            onSeeAllRecommendationsClick = onSeeAllRecommendationsClick,
+            onNotificationClick = onNotificationClick
         )
     }
 }

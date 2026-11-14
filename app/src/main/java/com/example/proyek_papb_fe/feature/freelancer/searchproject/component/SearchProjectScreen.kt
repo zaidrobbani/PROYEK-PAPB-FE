@@ -49,7 +49,7 @@ fun SearchProjectScreen(
             .background(TemuKaryaColors.BgCanvas)
     ) {
         RootTopBar(
-            title = "Cari Project",
+            title = "Cari Proyek",
             hasUnreadNotification = hasUnreadNotification,
             onNotificationClick = onNotificationClick
         )
@@ -84,7 +84,7 @@ fun SearchProjectScreen(
             if (projects.isEmpty()) {
                 item(key = "empty") {
                     Text(
-                        text = "Tidak ada project yang cocok dengan pencarian Anda.",
+                        text = "Tidak ada proyek yang cocok dengan pencarian Anda.",
                         style = TemuKaryaTypography.BodyRegular,
                         color = TemuKaryaColors.TextBody,
                         textAlign = TextAlign.Center,
