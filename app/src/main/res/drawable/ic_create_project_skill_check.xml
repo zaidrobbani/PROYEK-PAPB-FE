@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Disalin apa adanya dari aset Figma (file 5iVDEAnceSXwLeTePb5Nv1): putih dengan opacity 80%. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="11.4797dp"
+    android:height="8.46889dp"
+    android:viewportWidth="11.4797"
+    android:viewportHeight="8.46889">
+    <path
+        android:fillAlpha="0.8"
+        android:fillColor="#FFFFFF"
+        android:pathData="M3.8 8.01667L0 4.21667L0.95 3.26667L3.8 6.11667L9.91667 0L10.8667 0.95L3.8 8.01667V8.01667" />
+</vector>

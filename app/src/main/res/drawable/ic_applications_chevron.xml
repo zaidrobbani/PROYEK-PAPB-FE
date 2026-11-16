@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Disalin apa adanya dari aset Figma (file 5iVDEAnceSXwLeTePb5Nv1). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="8.45128dp"
+    android:height="5.21162dp"
+    android:viewportWidth="8.45128"
+    android:viewportHeight="5.21162">
+    <path
+        android:fillColor="#281810"
+        android:pathData="M4 4.93333L0 0.933333L0.933333 0L4 3.06667L7.06667 0L8 0.933333L4 4.93333V4.93333" />
+</vector>
