@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Profil Saya (Freelancer)" (27:250), ikon 27:308: Material Symbols Rounded "chevron_right"
+     (weight 400, fill 0), diekspor dari Figma pada ukuran 21px. Apache License 2.0. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="21dp"
+    android:height="21dp"
+    android:viewportWidth="21"
+    android:viewportHeight="21">
+    <group
+        android:translateX="7.5469"
+        android:translateY="5.5781">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M3.78438 4.92188L0.240626 1.37812C0.080209 1.21771 6.25849e-07 1.02812 6.25849e-07 0.809374C6.25849e-07 0.590624 0.080209 0.401041 0.240626 0.240624C0.401042 0.0802071 0.590625 -1.2517e-06 0.809375 -1.2517e-06C1.02813 -1.2517e-06 1.21771 0.0802071 1.37813 0.240624L5.49063 4.35312C5.57813 4.42604 5.63646 4.51354 5.66563 4.61562C5.70938 4.71771 5.73125 4.81979 5.73125 4.92188C5.73125 5.02396 5.70938 5.12604 5.66563 5.22812C5.63646 5.31562 5.57813 5.40312 5.49063 5.49062L1.37813 9.60312C1.21771 9.76354 1.02813 9.84375 0.809375 9.84375C0.590625 9.82917 0.401042 9.74167 0.240626 9.58125C0.080209 9.42083 6.25849e-07 9.23125 6.25849e-07 9.0125C6.25849e-07 8.79375 0.080209 8.60417 0.240626 8.44375L3.78438 4.92188Z" />
+    </group>
+</vector>

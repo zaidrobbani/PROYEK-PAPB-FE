@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Sukses Penyelesaian Proyek" (17-6338), ikon diekspor dari Figma -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17.4308dp"
+    android:height="16.6385dp"
+    android:viewportWidth="17.4308"
+    android:viewportHeight="16.6385">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M5.7 15.75L4.275 13.35L1.575 12.75L1.8375 9.975L0 7.875L1.8375 5.775L1.575 3L4.275 2.4L5.7 0L8.25 1.0875L10.8 0L12.225 2.4L14.925 3L14.6625 5.775L16.5 7.875L14.6625 9.975L14.925 12.75L12.225 13.35L10.8 15.75L8.25 14.6625L5.7 15.75V15.75M7.4625 10.5375L11.7 6.3L10.65 5.2125L7.4625 8.4L5.85 6.825L4.8 7.875L7.4625 10.5375V10.5375" />
+</vector>

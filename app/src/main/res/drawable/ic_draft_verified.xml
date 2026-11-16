@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Figma "Modal Unggah Draf (Freelancer)" (17:5174), ikon 17:5505: Material Symbols Rounded "verified" (Apache License 2.0). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="19.3675dp"
+    android:height="20.6dp"
+    android:viewportWidth="19.3675"
+    android:viewportHeight="20.6">
+    <path
+        android:fillColor="#FF5A6149"
+        android:pathData="M6.33354 19.6128L4.75021 16.9462L1.75021 16.2795L2.04188 13.1962L0.000210337 10.8628L2.04188 8.5295L1.75021 5.44617L4.75021 4.7795L6.33354 2.11284L9.16688 3.32117L12.0002 2.11284L13.5835 4.7795L16.5835 5.44617L16.2919 8.5295L18.3335 10.8628L16.2919 13.1962L16.5835 16.2795L13.5835 16.9462L12.0002 19.6128L9.16688 18.4045L6.33354 19.6128V19.6128M8.29188 13.8212L13.0002 9.11284L11.8335 7.9045L8.29188 11.4462L6.50021 9.69617L5.33354 10.8628L8.29188 13.8212V13.8212" />
+</vector>
