@@ -26,15 +26,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.cancel_project_dialog.component.CancelProjectSheet
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmCancellationReason
 
-/**
- * Modal Batalkan Project (UMKM) di atas screen Negosiasi. Bukan route sendiri dan bukan
- * ModalBottomSheet Material, agar scrim dan bentuk sheet sama dengan Figma.
- *
- * Pilihan awal "Harga belum sesuai" mengikuti Figma (dan sheet versi freelancer); konfirmasi
- * tetap diperiksa wajib memilih alasan. Scrim, Back, dan "Kembali ke Negosiasi" menutup modal
- * tanpa mengubah apa pun. [onConfirm] menerima alasan terpilih; perubahan status dilakukan
- * pemanggil sesuai aturan Blueprint.
- */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CancelProjectDialog(
@@ -45,7 +36,6 @@ fun CancelProjectDialog(
 ) {
     BackHandler(enabled = visible, onBack = onDismiss)
     AnimatedVisibility(visible = visible, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
-        // Dibuat ulang setiap modal dibuka, jadi pilihan kembali ke bawaan Figma.
         var selectedName by rememberSaveable { mutableStateOf<String?>(UmkmCancellationReason.entries.first().name) }
         val selected = selectedName?.let { UmkmCancellationReason.valueOf(it) }
 
@@ -70,7 +60,6 @@ fun CancelProjectDialog(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .animateEnterExit(enter = slideInVertically { it }, exit = slideOutVertically { it })
-                    // Sentuhan di dalam sheet tidak diteruskan ke scrim.
                     .pointerInput(Unit) { detectTapGestures { } }
             )
         }

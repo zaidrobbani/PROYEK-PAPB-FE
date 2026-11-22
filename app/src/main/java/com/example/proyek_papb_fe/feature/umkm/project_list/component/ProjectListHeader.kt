@@ -35,7 +35,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputSha
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
 
-/** Banner "Perlu Perhatian Anda", isinya dihitung dari daftar project. */
 @Composable
 fun ProjectAttentionBanner(
     reviewCount: Int,
@@ -112,14 +111,22 @@ fun ProjectAttentionBanner(
     }
 }
 
-/** Tab filter status yang tampil di Figma. Status lain (mis. Terbuka) hanya muncul di "Semua". */
-enum class ProjectTab(val label: String, val status: ProjectStatus?) {
+/** Tab Figma mengelompokkan beberapa status BE (mis. TERBUKA & MENUNGGU_PEMBAYARAN masuk "Menunggu Kesepakatan"). */
+enum class ProjectTab(val label: String, val statuses: Set<ProjectStatus>?) {
     Semua("Semua", null),
-    MenungguKesepakatan("Menunggu Kesepakatan", ProjectStatus.MenungguKesepakatan),
-    SedangDikerjakan("Sedang Dikerjakan", ProjectStatus.SedangDikerjakan),
-    MenungguReview("Menunggu Review", ProjectStatus.MenungguReview),
-    Selesai("Selesai", ProjectStatus.Selesai),
-    Dibatalkan("Dibatalkan", ProjectStatus.Dibatalkan)
+    MenungguKesepakatan(
+        "Menunggu Kesepakatan",
+        setOf(ProjectStatus.Terbuka, ProjectStatus.MenungguKesepakatan, ProjectStatus.MenungguPembayaran)
+    ),
+    SedangDikerjakan(
+        "Sedang Dikerjakan",
+        setOf(ProjectStatus.SiapDikerjakan, ProjectStatus.SedangDikerjakan, ProjectStatus.Revisi)
+    ),
+    MenungguReview("Menunggu Review", setOf(ProjectStatus.MenungguReview)),
+    Selesai("Selesai", setOf(ProjectStatus.Selesai)),
+    Dibatalkan("Dibatalkan", setOf(ProjectStatus.Dibatalkan));
+
+    fun matches(status: ProjectStatus): Boolean = statuses == null || status in statuses
 }
 
 @Composable

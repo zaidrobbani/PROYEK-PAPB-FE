@@ -41,14 +41,11 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan Bukti Pembayaran (sudah diformat, dari pembayaran yang sama dengan layar Pembayaran). */
 data class PaymentProofUiState(
     val paymentId: String,
-    /** "24 Okt 2026, 14.32 WIB". */
     val paidAt: String,
     val total: String,
     val contractValue: String,
-    /** "QRIS (simulasi)". */
     val methodLabel: String,
     val projectTitle: String,
     val freelancerName: String,
@@ -58,10 +55,6 @@ data class PaymentProofUiState(
     val umkmOwner: String
 )
 
-/**
- * Figma: Bukti Pembayaran Berhasil (17:3177), judul "Bukti Pembayaran". Hero sukses lalu
- * kartu struk digital escrow. Figma tidak memiliki tombol aksi; keluar lewat Back.
- */
 @Composable
 fun PaymentProofScreen(
     state: PaymentProofUiState,
@@ -84,7 +77,6 @@ fun PaymentProofScreen(
     }
 }
 
-/** 17:3180: lingkaran sukses 67.6 dengan titik hijau, judul, dan keterangan. */
 @Composable
 private fun SuccessHero() {
     Column(modifier = Modifier.fillMaxWidth().padding(top = P8), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -114,7 +106,6 @@ private fun SuccessHero() {
     }
 }
 
-/** 17:3242: "Kartu Struk Digital Escrow". */
 @Composable
 private fun Receipt(state: PaymentProofUiState, onCopy: () -> Unit, modifier: Modifier = Modifier) {
     Column(
@@ -124,7 +115,6 @@ private fun Receipt(state: PaymentProofUiState, onCopy: () -> Unit, modifier: Mo
             .clip(PaymentCardShape)
             .background(TemuKaryaColors.SurfaceWhite)
     ) {
-        // 17:3306: bagian atas struk.
         Column(
             modifier = Modifier.fillMaxWidth().background(TemuKaryaColors.SurfaceCard).padding(P17),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -145,7 +135,6 @@ private fun Receipt(state: PaymentProofUiState, onCopy: () -> Unit, modifier: Mo
             }
         }
         Perforation()
-        // 17:3243: rincian bawah struk.
         Column(
             modifier = Modifier.fillMaxWidth().padding(start = P17, end = P17, top = 4.226.dp, bottom = P17),
             verticalArrangement = Arrangement.spacedBy(14.79.dp)
@@ -207,7 +196,6 @@ private fun Receipt(state: PaymentProofUiState, onCopy: () -> Unit, modifier: Mo
     }
 }
 
-/** 17:3324: lekukan kiri-kanan (warna kanvas) dan garis putus-putus. */
 @Composable
 private fun Perforation() {
     Row(modifier = Modifier.fillMaxWidth().height(25.354.dp), verticalAlignment = Alignment.CenterVertically) {

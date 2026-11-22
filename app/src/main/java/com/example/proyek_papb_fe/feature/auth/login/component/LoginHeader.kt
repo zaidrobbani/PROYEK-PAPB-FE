@@ -63,7 +63,6 @@ fun LoginHeader(modifier: Modifier = Modifier) {
             )
         )
         Text(
-            // Baris dipisah persis seperti frame Figma.
             text = "Masuk untuk memantau project dan\nkolaborasi aktifmu",
             modifier = Modifier
                 .padding(top = 4.226.dp)

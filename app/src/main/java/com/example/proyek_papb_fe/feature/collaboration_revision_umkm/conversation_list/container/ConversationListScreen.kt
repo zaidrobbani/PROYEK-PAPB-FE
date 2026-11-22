@@ -40,20 +40,24 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.formatConversationTime
 import com.example.proyek_papb_fe.feature.umkm.data.searchConversations
 import java.time.LocalDate
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
-/**
- * Daftar Percakapan UMKM (tab Chat). Data dari DATA DUMMY lokal [UmkmConversationStore],
- * bukan chat real-time. [onOpenConversation] null = Ruang Chat belum tersedia; baris tetap
- * memberi respons berupa pesan singkat.
- */
 @Composable
 fun ConversationListScreen(
     onNotificationsClick: () -> Unit,
     onOpenConversation: ((conversationId: String) -> Unit)?,
     onTabSelected: (UmkmTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(null))
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+    }
     var query by rememberSaveable { mutableStateOf("") }
     var stageName by rememberSaveable { mutableStateOf<String?>(null) }
     val stage = stageName?.let { ConversationStage.valueOf(it) }
@@ -93,7 +97,6 @@ fun ConversationListScreen(
             item(key = "list-top") { Spacer(Modifier.height(8.dp)) }
             if (shown.isEmpty()) {
                 item(key = "empty") {
-                    // Figma tidak punya keadaan kosong; teks sederhana ini tambahan.
                     Text(
                         text = "Tidak ada percakapan yang cocok.",
                         modifier = Modifier
@@ -129,10 +132,3 @@ fun ConversationListScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ConversationListScreenPreview() {
-    PROYEKPAPBFETheme {
-        ConversationListScreen(onNotificationsClick = {}, onOpenConversation = null, onTabSelected = {})
-    }
-}

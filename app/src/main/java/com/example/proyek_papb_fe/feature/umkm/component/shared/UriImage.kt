@@ -14,11 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Menampilkan gambar lokal dari content URI (misalnya foto profil yang dipilih pengguna) tanpa
- * library tambahan. Gambar diperkecil saat dibaca agar hemat memori. [fallback] tampil bila URI
- * tidak bisa dibaca atau masih dimuat.
- */
 @Composable
 fun UriImage(
     uri: String,

@@ -49,7 +49,6 @@ import java.util.TimeZone
 
 private const val DayMillis = 24L * 60 * 60 * 1000
 
-/** Tengah malam UTC untuk tanggal hari ini menurut zona waktu perangkat. */
 internal fun todayUtcMillis(): Long {
     val local = Calendar.getInstance()
     return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
@@ -63,7 +62,6 @@ internal fun formatDeadline(utcMillis: Long): String =
         .apply { timeZone = TimeZone.getTimeZone("UTC") }
         .format(utcMillis)
 
-/** "3 minggu", "2 minggu 3 hari", atau "5 hari" dari hari ini sampai batas waktu. */
 internal fun formatDuration(deadlineUtcMillis: Long, todayUtcMillis: Long = todayUtcMillis()): String {
     val days = ((deadlineUtcMillis - todayUtcMillis) / DayMillis).toInt()
     val weeks = days / 7
@@ -106,7 +104,6 @@ fun DeadlineField(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                // Figma tidak punya keadaan kosong; teks pengarah ini tambahan.
                 text = formatted ?: "Pilih tanggal",
                 color = if (formatted != null) colors.onSurface else colors.outline,
                 style = MaterialTheme.typography.bodyLarge.withFrameMetrics(
@@ -130,7 +127,6 @@ fun DeadlineField(
         val pickerState = rememberDatePickerState(
             initialSelectedDateMillis = deadlineUtcMillis,
             selectableDates = object : SelectableDates {
-                // Batas waktu harus setelah hari ini.
                 override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis >= tomorrow
             }
         )
@@ -179,7 +175,6 @@ fun DeadlineField(
     }
 }
 
-/** "Durasi perkiraan 3 minggu pengerjaan" dengan bagian durasi ditebalkan seperti Figma. */
 @Composable
 fun DeadlineDurationNote(deadlineUtcMillis: Long, modifier: Modifier = Modifier) {
     val text = buildAnnotatedString {

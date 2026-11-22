@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.example.proyek_papb_fe.core.ui.components.InitialsAvatar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +67,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit, style
         lineHeight = lineHeight
     ).copy(fontStyle = style)
 
-/** Figma "Hero Profile Card" (17:1731): foto, nama, keahlian, lokasi, statistik, dan harga. */
 @Composable
 fun ProfileHeroCard(profile: FreelancerProfile, priceText: String?, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -77,7 +77,6 @@ fun ProfileHeroCard(profile: FreelancerProfile, priceText: String?, modifier: Mo
             .clip(CardShape)
             .background(colors.surfaceContainerLow)
     ) {
-        // Aksen lingkaran hijau lembut di pojok kanan atas.
         Box(
             Modifier
                 .align(Alignment.TopEnd)
@@ -91,16 +90,28 @@ fun ProfileHeroCard(profile: FreelancerProfile, priceText: String?, modifier: Mo
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.677.dp), verticalAlignment = Alignment.Top) {
                 Box {
-                    Image(
-                        painter = painterResource(profile.photo),
-                        contentDescription = "Foto ${profile.name}",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(84.513.dp)
-                            .authDropShadow(CardShape, AuthShadowStyle.Subtle)
-                            .clip(CardShape)
-                            .background(colors.surfaceContainer)
-                    )
+                    val photo = profile.photo
+                    if (photo != null) {
+                        Image(
+                            painter = painterResource(photo),
+                            contentDescription = "Foto ${profile.name}",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(84.513.dp)
+                                .authDropShadow(CardShape, AuthShadowStyle.Subtle)
+                                .clip(CardShape)
+                                .background(colors.surfaceContainer)
+                        )
+                    } else {
+                        InitialsAvatar(
+                            name = profile.name,
+                            modifier = Modifier
+                                .size(84.513.dp)
+                                .authDropShadow(CardShape, AuthShadowStyle.Subtle),
+                            shape = CardShape,
+                            fontSize = 26.sp
+                        )
+                    }
                     if (profile.verified) {
                         Box(
                             modifier = Modifier
@@ -239,7 +250,6 @@ private fun SectionTitle(@DrawableRes iconRes: Int, title: String, modifier: Mod
     }
 }
 
-/** Tidak ada di Figma: catatan bila data bagian ini belum ada. */
 @Composable
 private fun EmptyNote(message: String) {
     Text(
@@ -249,7 +259,6 @@ private fun EmptyNote(message: String) {
     )
 }
 
-/** Figma "Section: Keahlian Utama" (17:1711). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SkillsSection(skills: List<ProfileSkill>, modifier: Modifier = Modifier) {
@@ -285,7 +294,6 @@ fun SkillsSection(skills: List<ProfileSkill>, modifier: Modifier = Modifier) {
     }
 }
 
-/** Figma "Section: Portofolio Pilihan" (17:1786): judul + grid dua kolom. */
 @Composable
 fun PortfolioSection(
     total: Int,
@@ -335,12 +343,14 @@ private fun PortfolioCard(item: PortfolioItem, onClick: () -> Unit, modifier: Mo
             .clickable(role = Role.Button, onClick = onClick)
     ) {
         Box(Modifier.fillMaxWidth().height(138.654.dp).background(colors.surfaceContainer)) {
-            Image(
-                painter = painterResource(item.image),
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().height(138.654.dp)
-            )
+            item.image?.let { image ->
+                Image(
+                    painter = painterResource(image),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxWidth().height(138.654.dp)
+                )
+            }
             Text(
                 text = item.tag,
                 modifier = Modifier
@@ -382,7 +392,6 @@ private fun PortfolioCard(item: PortfolioItem, onClick: () -> Unit, modifier: Mo
     }
 }
 
-/** Figma "Section: Review Klien UMKM" (17:1886). */
 @Composable
 fun ReviewsSection(rating: String, reviews: List<ClientReview>, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -461,7 +470,6 @@ private fun ReviewCard(review: ClientReview) {
     }
 }
 
-/** Figma "Bottom Sticky Action Bar" (17:1947). */
 @Composable
 fun ProfileActionBar(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

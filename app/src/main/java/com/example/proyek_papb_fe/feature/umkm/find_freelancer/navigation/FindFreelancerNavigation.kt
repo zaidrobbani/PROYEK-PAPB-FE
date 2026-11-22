@@ -9,14 +9,9 @@ import com.example.proyek_papb_fe.feature.umkm.dashboard.navigation.UmkmDashboar
 import com.example.proyek_papb_fe.feature.umkm.find_freelancer.container.FindFreelancerScreen
 import kotlinx.serialization.Serializable
 
-/**
- * [query] berisi kata kunci awal, misalnya dari kolom cari di Beranda. [openFilter] = buka
- * overlay Filter Talenta langsung (tombol filter di Beranda).
- */
 @Serializable
 data class FindFreelancerRoute(val query: String = "", val openFilter: Boolean = false)
 
-/** Tab Freelancer: ditumpuk di atas Beranda tanpa salinan ganda. */
 fun NavController.navigateToFindFreelancer(query: String = "", openFilter: Boolean = false) {
     navigate(FindFreelancerRoute(query, openFilter)) {
         popUpTo(UmkmDashboardRoute)

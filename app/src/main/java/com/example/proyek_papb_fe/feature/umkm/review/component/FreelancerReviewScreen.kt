@@ -52,7 +52,6 @@ import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentColors
 import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentInnerShape
 import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentTypography
 
-/** Keunggulan yang bisa dipilih UMKM (Figma 17:6715). */
 val ReviewHighlightOptions = listOf(
     "Responsif & Komunikatif",
     "Hasil Siap Cetak Sempurna",
@@ -60,18 +59,15 @@ val ReviewHighlightOptions = listOf(
     "Paham Kebutuhan UMKM"
 )
 
-/** Data Beri Ulasan (Figma 17:6591). */
 data class FreelancerReviewUiState(
     val freelancerName: String,
     val freelancerFirstName: String,
     val freelancerPhotoUri: String?,
     val projectTitle: String,
-    /** "24 Okt 2026". */
     val completedDate: String,
     val rating: Int,
     val highlights: Set<String>,
     val text: String,
-    /** Gambar hasil yang disertakan; null = draf tidak memuat gambar. */
     val attachment: ReviewFileUi?,
     val includeAttachment: Boolean
 ) {
@@ -80,10 +76,6 @@ data class FreelancerReviewUiState(
 
 private val SmallCardShadow = Shadow(radius = 1.056.dp, color = PaymentColors.Shadow, offset = DpOffset(0.dp, 1.056.dp))
 
-/**
- * Figma: Beri Ulasan Freelancer (17:6591). Bintang wajib dipilih sebelum "Kirim ulasan";
- * keunggulan, teks, dan lampiran opsional. "Lewati untuk Sekarang" kembali ke Beranda.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FreelancerReviewScreen(
@@ -103,7 +95,6 @@ fun FreelancerReviewScreen(
             modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = P17, end = P17, top = 3.61.dp, bottom = 33.805.dp),
             verticalArrangement = Arrangement.spacedBy(P13)
         ) {
-            // 17:6605: kartu freelancer & project.
             Row(
                 modifier = Modifier.fillMaxWidth().dropShadow(PaymentCardShape, SmallCardShadow).background(TemuKaryaColors.SurfaceContainer, PaymentCardShape).padding(P17),
                 horizontalArrangement = Arrangement.spacedBy(14.79.dp)
@@ -137,7 +128,6 @@ fun FreelancerReviewScreen(
                     }
                 }
             }
-            // 17:6630: rating keseluruhan.
             Column(
                 modifier = Modifier.fillMaxWidth().dropShadow(PaymentCardShape, SmallCardShadow).background(TemuKaryaColors.SurfaceCard, PaymentCardShape)
                     .padding(start = P17, end = P17, top = 20.6.dp, bottom = P17),
@@ -156,7 +146,6 @@ fun FreelancerReviewScreen(
                     Text(sentimentLabel(state.rating), style = PaymentTypography.CaptionSemi, color = PaymentColors.Olive, textAlign = TextAlign.Center, modifier = Modifier.weight(1f, fill = false))
                 }
             }
-            // 17:6709: keunggulan utama.
             Column(
                 modifier = Modifier.fillMaxWidth().dropShadow(PaymentCardShape, SmallCardShadow).background(TemuKaryaColors.SurfaceCard, PaymentCardShape).padding(P17),
                 verticalArrangement = Arrangement.spacedBy(P8)
@@ -181,7 +170,6 @@ fun FreelancerReviewScreen(
                     }
                 }
             }
-            // 17:6747: ulasan tertulis + lampiran.
             Column(
                 modifier = Modifier.fillMaxWidth().dropShadow(PaymentCardShape, SmallCardShadow).background(TemuKaryaColors.SurfaceCard, PaymentCardShape).padding(P17),
                 verticalArrangement = Arrangement.spacedBy(4.226.dp)
@@ -243,7 +231,6 @@ fun FreelancerReviewScreen(
                     }
                 }
             }
-            // 17:6806: CTA.
             Column(modifier = Modifier.padding(top = 4.226.dp), verticalArrangement = Arrangement.spacedBy(P8)) {
                 Box(
                     modifier = Modifier

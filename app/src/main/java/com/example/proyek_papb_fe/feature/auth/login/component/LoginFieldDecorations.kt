@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Penanda "Perlu diperbaiki" di samping label, dari lapisan error frame Figma Login. */
 @Composable
 fun LoginFieldIssueLabel() {
     Row(
@@ -51,7 +50,6 @@ fun LoginFieldIssueLabel() {
     }
 }
 
-/** Ikon silang di ujung kolom saat isian bermasalah. */
 @Composable
 fun BoxScope.LoginFieldErrorIcon() {
     Image(
@@ -63,7 +61,6 @@ fun BoxScope.LoginFieldErrorIcon() {
     )
 }
 
-/** Pesan error di bawah kolom ("Error Feedback Callout" pada Figma). */
 @Composable
 fun LoginErrorCallout(message: String, modifier: Modifier = Modifier) {
     Row(
@@ -92,7 +89,6 @@ fun LoginErrorCallout(message: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Tombol mata 38dp sesuai frame Login. Figma hanya punya mata terbuka, jadi garis ditumpuk saat tersembunyi. */
 @Composable
 fun BoxScope.LoginPasswordToggle(
     visible: Boolean,

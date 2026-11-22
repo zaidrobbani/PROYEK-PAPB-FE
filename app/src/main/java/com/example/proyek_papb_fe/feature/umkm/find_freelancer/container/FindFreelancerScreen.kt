@@ -30,8 +30,13 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmBottomNav
 import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmTab
 import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmTopBar
-import com.example.proyek_papb_fe.feature.umkm.data.FreelancerCategories
-import com.example.proyek_papb_fe.feature.umkm.data.FreelancerDirectory
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.umkm.find_freelancer.viewmodel.FindFreelancerViewModel
 import com.example.proyek_papb_fe.feature.umkm.data.QuickFilter
 import com.example.proyek_papb_fe.feature.umkm.data.TalentFilter
 import com.example.proyek_papb_fe.feature.umkm.data.TalentLocation
@@ -44,7 +49,6 @@ import com.example.proyek_papb_fe.feature.umkm.find_freelancer.component.TalentF
 
 private val PageGutter = 16.903.dp
 
-/** Rating chip cepat "Rating 4.8+" dan pilihan 4.8+ di overlay memakai nilai yang sama. */
 private const val QuickRating = 4.8
 
 private val TalentFilterSaver = listSaver<TalentFilter, Any>(
@@ -60,10 +64,6 @@ private val TalentFilterSaver = listSaver<TalentFilter, Any>(
     }
 )
 
-/**
- * Cari Freelancer (Blueprint TK-F-U-06/07/08). Pencarian, chip, dan overlay Filter Talenta
- * berjalan lokal terhadap DATA DUMMY [FreelancerDirectory], bukan data dari server.
- */
 @Composable
 fun FindFreelancerScreen(
     initialQuery: String,
@@ -71,8 +71,14 @@ fun FindFreelancerScreen(
     onViewProfile: (freelancerId: String) -> Unit,
     onTabSelected: (UmkmTab) -> Unit,
     modifier: Modifier = Modifier,
-    initialShowFilter: Boolean = false
+    initialShowFilter: Boolean = false,
+    viewModel: FindFreelancerViewModel = viewModel(factory = FindFreelancerViewModel.factory(AppContainer.freelancerRepository))
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+    }
     var query by rememberSaveable { mutableStateOf(initialQuery) }
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var quickFilterNames by rememberSaveable { mutableStateOf(emptyList<String>()) }
@@ -81,10 +87,9 @@ fun FindFreelancerScreen(
     var showFilter by rememberSaveable { mutableStateOf(initialShowFilter) }
 
     fun resultsFor(filter: TalentFilter) =
-        searchFreelancers(FreelancerDirectory.freelancers, query, category, quickFilters, filter)
+        searchFreelancers(uiState.freelancers, query, category, quickFilters, filter)
 
     val results = resultsFor(talentFilter)
-    // Lencana di tombol filter: kategori + filter cepat + filter lanjutan yang aktif.
     val activeFilterCount = (if (category != null) 1 else 0) + quickFilters.size + talentFilter.activeCount
     val chipFilters = quickFilters + listOfNotNull(QuickFilter.Rating48.takeIf { talentFilter.minRating == QuickRating })
 
@@ -113,7 +118,7 @@ fun FindFreelancerScreen(
             }
             item(key = "filters") {
                 FindFreelancerFilters(
-                    categories = FreelancerCategories,
+                    categories = uiState.freelancers.map { it.category }.filter { it.isNotBlank() }.distinct(),
                     selectedCategory = category,
                     onCategorySelect = { category = it },
                     activeQuickFilters = chipFilters,
@@ -140,7 +145,6 @@ fun FindFreelancerScreen(
             }
             if (results.isEmpty()) {
                 item(key = "empty") {
-                    // Figma tidak punya keadaan kosong; teks sederhana ini tambahan.
                     Text(
                         text = "Tidak ada freelancer yang cocok. Coba kata kunci lain atau kurangi filter.",
                         modifier = Modifier
@@ -169,7 +173,6 @@ fun FindFreelancerScreen(
             onTabSelected = { tab -> if (tab != UmkmTab.Freelancer) onTabSelected(tab) }
         )
     }
-    // Overlay di atas seluruh screen; kata kunci, kategori, dan chip tetap dipertahankan.
     TalentFilterOverlay(
         visible = showFilter,
         applied = talentFilter,
@@ -183,15 +186,3 @@ fun FindFreelancerScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun FindFreelancerScreenPreview() {
-    PROYEKPAPBFETheme {
-        FindFreelancerScreen(
-            initialQuery = "Desain kemasan kuliner",
-            onNotificationsClick = {},
-            onViewProfile = {},
-            onTabSelected = {}
-        )
-    }
-}

@@ -29,10 +29,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/**
- * Panjang contoh di Figma (108 karakter) dipakai sebagai ambang petunjuk
- * "Deskripsi sudah cukup spesifik & jelas". Blueprint tidak menetapkan aturan ini.
- */
 private const val SpecificDescriptionLength = 100
 
 @Composable

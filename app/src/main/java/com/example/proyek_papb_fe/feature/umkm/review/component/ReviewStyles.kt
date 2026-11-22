@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-/** Tipografi tambahan frame review (17:1468, 17:5518, 17:6140, 17:6338, 17:6591); sisanya memakai PaymentTypography. */
 internal object ReviewTypography {
     private fun style(weight: FontWeight, size: Float, line: Float, tracking: Float = 0f, italic: Boolean = false) =
         TextStyle(
@@ -66,16 +65,15 @@ internal object ReviewColors {
     val OnSecondary = Color(0xFF281810)
     val DeepBrown = Color(0xFF5F3F31)
     val OnFreelancerChip = Color(0xFF424A33)
-    val RatingCallout = Color(0x99EDE0C2) // rgba(237,224,194,0.6)
-    val Scrim = Color(0x663F2C23) // rgba(63,44,35,0.4)
-    val BottomBar = Color(0xF2FEF7E6) // 95%
-    val BottomBarCompleted = Color(0xE6FEF7E6) // 90%
-    val ShadowWarm = Color(0x14684738) // rgba(104,71,56,0.08)
+    val RatingCallout = Color(0x99EDE0C2)
+    val Scrim = Color(0x663F2C23)
+    val BottomBar = Color(0xF2FEF7E6)
+    val BottomBarCompleted = Color(0xE6FEF7E6)
+    val ShadowWarm = Color(0x14684738)
 }
 
 internal val ReviewSheetShape = RoundedCornerShape(topStart = 29.579.dp, topEnd = 29.579.dp)
 
-/** Tombol ikon bulat (latar [background]). */
 @Composable
 internal fun RoundIconButton(
     @DrawableRes iconRes: Int,
@@ -99,7 +97,6 @@ internal fun RoundIconButton(
     }
 }
 
-/** Baris 5 bintang; [rating] 0..5, [onRate] null = hanya tampilan. */
 @Composable
 internal fun StarRow(
     rating: Int,
@@ -130,7 +127,6 @@ internal fun StarRow(
     }
 }
 
-/** "Puas Sekali" dst. untuk label rating singkat (Figma 17:6140 "5.0 (Puas Sekali)"). */
 internal fun shortRatingLabel(rating: Int): String = when (rating) {
     5 -> "Puas Sekali"
     4 -> "Puas"
@@ -140,7 +136,6 @@ internal fun shortRatingLabel(rating: Int): String = when (rating) {
     else -> "Belum dinilai"
 }
 
-/** Kalimat penilaian (Figma 17:6591 "Luar Biasa Memuaskan! Sangat Direkomendasikan"). */
 internal fun sentimentLabel(rating: Int): String = when (rating) {
     5 -> "Luar Biasa Memuaskan! Sangat Direkomendasikan"
     4 -> "Memuaskan, Direkomendasikan"
@@ -150,19 +145,16 @@ internal fun sentimentLabel(rating: Int): String = when (rating) {
     else -> "Pilih bintang untuk menilai"
 }
 
-/** Ikon & latar berkas menurut ekstensi (Figma: PDF, vector/AI, dokumen lain). */
 internal data class FileVisual(@param:DrawableRes val iconRes: Int, val background: Color, val iconWidth: Dp, val iconHeight: Dp)
 
 internal fun fileVisual(extension: String, index: Int): FileVisual = when (extension) {
     "ai", "eps", "svg" -> FileVisual(R.drawable.ic_rv_vector, Color(0xFFEADBC8), 18.399.dp, 17.431.dp)
     "pdf" -> FileVisual(R.drawable.ic_dn_pdf, Color(0xFFDEE6C7), 19.368.dp, 19.368.dp)
-    // Glyph arsip dari ekspor 17:1468, dipakai untuk berkas terkompresi.
     "png", "jpg", "jpeg", "webp", "gif", "heic" -> FileVisual(R.drawable.ic_rv_image, Color(0xFFECE2C8), 19.368.dp, 19.368.dp)
     "zip", "rar", "7z" -> FileVisual(R.drawable.ic_rv_pdf, Color(0xFFECE2C8), 19.368.dp, 19.368.dp)
     else -> FileVisual(R.drawable.ic_rv_guide, listOf(Color(0xFFECE2C8), Color(0xFFEADBC8), Color(0xFFDEE6C7))[index % 3], 21.304.dp, 15.494.dp)
 }
 
-/** 18400000 → "18.4 MB"; null = "Ukuran tidak diketahui". */
 internal fun formatFileSize(bytes: Long?): String = when {
     bytes == null -> "Ukuran tidak diketahui"
     bytes >= 1_000_000 -> String.format(java.util.Locale.US, "%.1f MB", bytes / 1_000_000.0)

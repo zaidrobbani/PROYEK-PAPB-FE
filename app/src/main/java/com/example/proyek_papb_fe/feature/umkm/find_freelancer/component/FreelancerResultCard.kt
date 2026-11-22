@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.example.proyek_papb_fe.core.ui.components.InitialsAvatar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): Text
         lineHeight = lineHeight
     )
 
-/** Cincin di luar lingkaran (box-shadow spread di Figma). */
 private fun Modifier.outerRing(color: Color, width: Float) = drawBehind {
     drawCircle(color = color, radius = size.minDimension / 2 + width.dp.toPx())
 }
@@ -91,13 +91,17 @@ fun FreelancerResultCard(
                     .clip(CircleShape)
                     .background(colors.surfaceContainerHigh)
             ) {
-                Image(
-                    painter = painterResource(freelancer.photo),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                // Titik status di pojok, terpotong lingkaran foto seperti di Figma.
+                val photo = freelancer.photo
+                if (photo != null) {
+                    Image(
+                        painter = painterResource(photo),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    InitialsAvatar(name = freelancer.name, modifier = Modifier.fillMaxSize(), fontSize = 18.sp)
+                }
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -138,7 +142,7 @@ fun FreelancerResultCard(
                         style = text(FontWeight.Medium, 11.621.sp, 14.79.sp)
                     )
                     Text(
-                        text = "Aktif ${freelancer.lastActiveMinutes} mnt lalu",
+                        text = "Siap menerima project",
                         modifier = Modifier.padding(start = 4.226.dp),
                         color = colors.secondary,
                         style = text(FontWeight.Medium, 11.621.sp, 14.79.sp)
@@ -271,7 +275,6 @@ fun FreelancerResultCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(painter = painterResource(R.drawable.ic_find_handshake), contentDescription = null)
-                    // Figma memberi label yang sama dengan tombol putih; dipertahankan apa adanya.
                     Text(
                         text = "Lihat Profil",
                         color = colors.onPrimary,

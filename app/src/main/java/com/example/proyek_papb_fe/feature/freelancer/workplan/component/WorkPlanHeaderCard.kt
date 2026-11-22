@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Figma: kartu header (88:15) — tahap, chip status rencana, judul, klien & deadline. */
 @Composable
 internal fun WorkPlanHeaderCard(
     projectTitle: String,
@@ -88,7 +87,6 @@ internal fun WorkPlanHeaderCard(
     }
 }
 
-/** Figma: kartu petunjuk (88:25). */
 @Composable
 internal fun WorkPlanInfoCard(modifier: Modifier = Modifier) {
     Row(
@@ -115,7 +113,6 @@ internal fun WorkPlanInfoCard(modifier: Modifier = Modifier) {
     }
 }
 
-/** Figma: chip "Draft" (88:18) / "Siap diajukan" (88:87) — px 12, py 4, gap 4, ikon 15. */
 @Composable
 internal fun WorkPlanChip(
     @DrawableRes iconRes: Int,

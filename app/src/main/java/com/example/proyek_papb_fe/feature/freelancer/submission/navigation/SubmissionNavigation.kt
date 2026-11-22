@@ -13,14 +13,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object SubmissionRoute
 
-/** Tab "Project": daftar project freelancer (dari penawaran terkirim), satu kartu per project. */
 fun NavGraphBuilder.submissionScreen(
-    /** Buka Status Pengajuan milik project kartu yang dipilih. */
-    onProposalClick: (projectId: Int) -> Unit,
+    onProposalClick: (projectId: String) -> Unit,
     onFindProjectsClick: () -> Unit
 ) {
     composable<SubmissionRoute> { backStackEntry ->
-        // Jaga posisi scroll saat membuka Status Pengajuan (bottom bar hilang) dari bawah daftar.
         KeepSizeWhileLeaving(entry = backStackEntry) {
             SubmissionScreen(
                 onProposalClick = onProposalClick,
@@ -30,12 +27,11 @@ fun NavGraphBuilder.submissionScreen(
     }
 }
 
-/** Figma: Status Pengajuan (Menunggu Kesepakatan) (27:2), untuk satu project. */
 @Serializable
-data class SubmissionStatusRoute(val projectId: Int)
+data class SubmissionStatusRoute(val projectId: String)
 
 fun NavController.navigateToSubmissionStatus(
-    projectId: Int,
+    projectId: String,
     builder: NavOptionsBuilder.() -> Unit = {}
 ) {
     navigate(SubmissionStatusRoute(projectId)) {
@@ -46,9 +42,9 @@ fun NavController.navigateToSubmissionStatus(
 
 fun NavGraphBuilder.submissionStatusScreen(
     onBack: () -> Unit,
-    onOpenNegotiation: (projectId: Int) -> Unit,
+    onOpenNegotiation: (projectId: String) -> Unit,
     onFindOtherProjects: () -> Unit,
-    onViewProjectDetail: (projectId: Int) -> Unit
+    onViewProjectDetail: (projectId: String) -> Unit
 ) {
     composable<SubmissionStatusRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<SubmissionStatusRoute>()

@@ -29,10 +29,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 private val ButtonHeight = 50.708.dp
 private val ButtonShape = RoundedCornerShape(12.dp)
 
-/**
- * Figma: Sticky Bottom Floating Action Bar (17:4379).
- * Latar 95% krem + bayangan ke atas; backdrop blur Figma tidak direplikasi.
- */
 @Composable
 internal fun ProjectDetailActionBar(
     onChatClick: () -> Unit,

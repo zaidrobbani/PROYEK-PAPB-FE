@@ -29,17 +29,6 @@ data class SubmissionStep(
     val state: StepState
 )
 
-/**
- * Lima tahap pengajuan di kartu "Tahapan Pengajuan" (27:35), diturunkan dari satu state:
- * - [isApproved] = false: terkirim (selesai) → ditinjau UMKM (sekarang) → tiga tahap berikutnya.
- * - [isApproved] = true: ditinjau UMKM selesai, negosiasi & kesepakatan menjadi tahap sekarang.
- * - [cancellationReason] terisi: tahap negosiasi berakhir "Project dibatalkan" (tidak ada
- *   tahap "Sekarang"), tahap berikutnya tetap belum dimulai.
- * - [isAgreed] = true: kesepakatan final (filter "Project Berjalan"); negosiasi & pembayaran
- *   selesai, "Mulai pengerjaan" menjadi tahap sekarang.
- * - [isCompleted] = true: project selesai (filter "Selesai"); semua tahap selesai,
- *   termasuk pengerjaan.
- */
 fun submissionSteps(
     submittedAtLabel: String,
     isApproved: Boolean,
@@ -85,7 +74,6 @@ fun submissionSteps(
     )
 )
 
-/** Figma: kartu "Tahapan Pengajuan" (27:35). */
 @Composable
 internal fun SubmissionTimeline(
     steps: List<SubmissionStep>,

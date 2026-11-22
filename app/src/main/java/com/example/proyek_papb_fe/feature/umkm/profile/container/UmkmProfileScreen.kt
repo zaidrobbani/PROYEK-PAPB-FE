@@ -10,6 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.umkm.profile.viewmodel.UmkmProfileViewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +30,6 @@ import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNotificationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransactionStore
 import com.example.proyek_papb_fe.feature.umkm.data.formatRupiahCompact
 import com.example.proyek_papb_fe.feature.umkm.profile.component.ProfileHeaderCard
 import com.example.proyek_papb_fe.feature.umkm.profile.component.ProfileMenuItem
@@ -32,13 +37,6 @@ import com.example.proyek_papb_fe.feature.umkm.profile.component.ProfileSectionT
 import com.example.proyek_papb_fe.feature.umkm.profile.component.ProfileStat
 import com.example.proyek_papb_fe.feature.umkm.profile.component.ProfileStatsRow
 
-/**
- * Profil Saya UMKM (Blueprint TK-F-U-01 Kelola Profil, TK-F-U-27 Logout). Semua angka
- * dihitung dari DATA DUMMY lokal (project, transaksi, notifikasi), bukan dari server.
- *
- * [onManageBusinessProfile] dan [onSecurity] null = screen tujuan belum dibuat; menu tetap
- * memberi respons berupa pesan singkat.
- */
 @Composable
 fun UmkmProfileScreen(
     onNotificationsClick: () -> Unit,
@@ -49,25 +47,33 @@ fun UmkmProfileScreen(
     onSecurity: (() -> Unit)?,
     onLogout: () -> Unit,
     onTabSelected: (UmkmTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmProfileViewModel = viewModel(
+        factory = UmkmProfileViewModel.factory(
+            AppContainer.authRepository,
+            AppContainer.profileRepository,
+            AppContainer.workflowRepository,
+            AppContainer.paymentRepository,
+            AppContainer.notificationRepository
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.load() }
+
     val context = LocalContext.current
     fun comingSoon(feature: String): () -> Unit = {
         Toast.makeText(context, "$feature belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
     }
 
     val profile = UmkmAccount.profile
-    val projects = UmkmProjectStore.projects
-    val paidTotal = UmkmTransactionStore.transactions
-        .filter { it.paymentStatus == PaymentStatus.Berhasil }
-        .sumOf { it.amount }
     val stats = listOf(
-        ProfileStat(projects.size.toString(), "Project dibuat"),
-        ProfileStat(projects.count { it.status == ProjectStatus.Selesai }.toString(), "Selesai"),
-        ProfileStat(formatRupiahCompact(paidTotal), "Total transaksi")
+        ProfileStat(uiState.projectCount.toString(), "Project dibuat"),
+        ProfileStat(uiState.completedCount.toString(), "Selesai"),
+        ProfileStat(formatRupiahCompact(uiState.paidTotal), "Total transaksi")
     )
-    val attention = projects.count { UmkmProjectStore.needsAction(it) }
-    val unread = UmkmNotificationStore.unreadCount
+    val attention = uiState.attentionCount
+    val unread = uiState.unreadNotifications
 
     Column(
         modifier = modifier
@@ -79,7 +85,6 @@ fun UmkmProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            // Figma: pt 84 (di bawah App Bar 64), pb 110 (termasuk Bottom Nav 72).
             contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 110.dp - 72.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -90,7 +95,8 @@ fun UmkmProfileScreen(
                 ProfileMenuItem(
                     icon = R.drawable.ic_symbol_storefront,
                     title = "Kelola Profil Usaha",
-                    subtitle = "Nama usaha, kategori, dan alamat",
+                    subtitle = if (UmkmAccount.hasBusinessProfile) "Nama usaha, kategori, dan alamat"
+                    else "Belum diisi. Wajib sebelum membuat project",
                     onClick = onManageBusinessProfile ?: comingSoon("Kelola Profil Usaha")
                 )
             }
@@ -98,7 +104,7 @@ fun UmkmProfileScreen(
                 ProfileMenuItem(
                     icon = R.drawable.ic_symbol_folder_open,
                     title = "Project Saya",
-                    subtitle = "${projects.size} project, $attention perlu perhatian",
+                    subtitle = "${uiState.projectCount} project, $attention perlu perhatian",
                     onClick = onOpenProjects
                 )
             }
@@ -139,23 +145,6 @@ fun UmkmProfileScreen(
         UmkmBottomNav(
             selectedTab = UmkmTab.Profil,
             onTabSelected = { tab -> if (tab != UmkmTab.Profil) onTabSelected(tab) }
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun UmkmProfileScreenPreview() {
-    PROYEKPAPBFETheme {
-        UmkmProfileScreen(
-            onNotificationsClick = {},
-            onManageBusinessProfile = null,
-            onOpenProjects = {},
-            onOpenTransactions = {},
-            onOpenNotifications = {},
-            onSecurity = null,
-            onLogout = {},
-            onTabSelected = {}
         )
     }
 }

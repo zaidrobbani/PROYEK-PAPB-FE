@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Figma: kartu ringkasan pengajuan (27:15). */
 @Composable
 internal fun SubmissionSummaryCard(
     submittedAgo: String,
@@ -28,11 +27,8 @@ internal fun SubmissionSummaryCard(
     duration: String,
     otherApplicants: String,
     isCancelled: Boolean = false,
-    /** Penawaran disetujui UMKM (tahap Negosiasi). */
     isApproved: Boolean = false,
-    /** Kesepakatan final tercapai (tahap Project Berjalan). */
     isAgreed: Boolean = false,
-    /** Project selesai dikerjakan (tahap Selesai). */
     isCompleted: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -49,7 +45,6 @@ internal fun SubmissionSummaryCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            // Chip mengikuti tahap tab Project (sama dengan chip kartu di daftar).
             when {
                 isCancelled -> CancelledStatusChip()
                 isCompleted -> CompletedStatusChip()

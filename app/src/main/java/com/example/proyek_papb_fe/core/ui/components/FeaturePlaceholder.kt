@@ -22,7 +22,6 @@ private val PlaceholderBackground = Color(0xFFFEF7E6)
 private val PlaceholderTitle = Color(0xFF4E3123)
 private val PlaceholderBody = Color(0xFF50443F)
 
-/** Halaman sementara untuk tab yang fiturnya belum dikembangkan. */
 @Composable
 fun FeaturePlaceholder(
     title: String,

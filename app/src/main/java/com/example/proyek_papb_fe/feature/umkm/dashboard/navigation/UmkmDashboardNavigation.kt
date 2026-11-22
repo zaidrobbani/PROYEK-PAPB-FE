@@ -10,14 +10,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object UmkmDashboardRoute
 
-/** Dipanggil setelah login; halaman Auth dilepas dari back stack agar back tidak kembali ke Login. */
 fun NavController.navigateToUmkmDashboard() {
     navigate(UmkmDashboardRoute) {
         popUpTo(graph.id) { inclusive = true }
     }
 }
 
-/** Tab Beranda dari tab UMKM lain: kembali ke Beranda yang sudah ada di back stack. */
 fun NavController.backToUmkmDashboard() {
     popBackStack(UmkmDashboardRoute, inclusive = false)
 }

@@ -21,21 +21,11 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 private val ScreenHorizontalPadding = 16.903.dp
 private val SectionSpacing = 12.677.dp
 
-/**
- * Figma: Container pb 118.318 + margin section terakhir 12.677 — ruang agar kartu
- * terakhir tidak tertutup sticky action bar (±68.59dp).
- */
 private val ContentBottomPadding = 118.318.dp + 12.677.dp
 
-/**
- * Figma: Form Pengajuan Freelancer (17:4405).
- * Top bar tetap di atas, action bar tetap di bawah (menumpang di atas konten),
- * empat kartu form di-scroll di antaranya.
- */
 @Composable
 fun OfferFormScreen(
     project: FreelancerProject,
-    /** Selalu = pagu klien project; read-only. */
     offerAmount: Long,
     selectedDuration: DurationOption,
     onDurationSelect: (DurationOption) -> Unit,
@@ -66,7 +56,6 @@ fun OfferFormScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    // Figma: Main pt 67.61 dikurangi app bar 64.
                     .padding(
                         start = ScreenHorizontalPadding,
                         end = ScreenHorizontalPadding,
@@ -102,7 +91,6 @@ fun OfferFormScreen(
             OfferFormActionBar(
                 onSaveDraftClick = onSaveDraftClick,
                 onSubmitClick = onSubmitClick,
-                // Validasi dilakukan saat tombol ditekan agar pesan kesalahan bisa ditampilkan.
                 isSubmitEnabled = true,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

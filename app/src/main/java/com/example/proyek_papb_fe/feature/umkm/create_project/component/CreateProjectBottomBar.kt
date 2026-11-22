@@ -28,14 +28,12 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthPrimaryButton
 
-/** Bilah bawah tetap: tombol simpan (ikon bookmark) dan Publikasikan Project Sekarang. */
 @Composable
 fun CreateProjectBottomBar(
     onSaveDraft: () -> Unit,
     onPublish: () -> Unit,
     modifier: Modifier = Modifier,
     publishLabel: String = "Publikasikan Project Sekarang",
-    /** Mode Edit Project tidak memakai draf. */
     showSaveDraft: Boolean = true
 ) {
     val colors = MaterialTheme.colorScheme

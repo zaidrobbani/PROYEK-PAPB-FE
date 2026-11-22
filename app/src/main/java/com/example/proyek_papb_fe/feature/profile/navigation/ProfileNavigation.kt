@@ -10,26 +10,22 @@ import kotlinx.serialization.Serializable
 data object ProfileRoute
 
 fun NavGraphBuilder.profileScreen(
-    /** Menu "Kelola Profil Profesional" dan "Kelola" di Keahlian (Figma 534:961). */
     onProfessionalProfileClick: () -> Unit,
-    /** Menu "Kelola Portofolio" (Figma 535:1081). */
     onPortfolioClick: () -> Unit,
-    /** Menu "Kelola Pengalaman" (Figma 538:1235). */
     onExperienceClick: () -> Unit,
-    /** Menu "Dompet & Rekening" (Figma 27:80). */
     onWalletClick: () -> Unit,
-    /** Menu "Notifikasi" dan lonceng app bar (Figma 539:1407). */
-    onNotificationsClick: () -> Unit
+    onNotificationsClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     composable<ProfileRoute> { backStackEntry ->
-        // Jaga posisi scroll saat membuka halaman detail (bottom bar hilang).
         KeepSizeWhileLeaving(entry = backStackEntry) {
             ProfileScreen(
                 onProfessionalProfileClick = onProfessionalProfileClick,
                 onPortfolioClick = onPortfolioClick,
                 onExperienceClick = onExperienceClick,
                 onWalletClick = onWalletClick,
-                onNotificationsClick = onNotificationsClick
+                onNotificationsClick = onNotificationsClick,
+                onLogoutClick = onLogoutClick
             )
         }
     }

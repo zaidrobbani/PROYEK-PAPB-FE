@@ -29,29 +29,16 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan "Pencairan sedang diproses" (sudah diformat). */
 data class WithdrawResultUiState(
-    /** "TMK-WD-20261011-0042". */
     val withdrawalId: String,
-    /** "Rp 2.850.000". */
     val amount: String,
-    /** "BCA akhiran 4821". */
     val accountTitle: String,
-    /** "BCA". */
     val bankName: String,
-    /** "1x24 jam kerja". */
     val estimate: String,
-    /** "11 Okt 2026, 10.20 WIB". */
     val requestedAt: String,
-    /** "Saldo tersedia kini", mis. "Rp 0". */
     val remainingBalance: String
 )
 
-/**
- * Figma: Pencairan Sedang Diproses (27:218), tampil setelah "Ajukan Pencairan".
- * Tanpa app bar (Main pt 80, px 17, gap 16, rata tengah); Back sistem dan
- * "Kembali ke Dompet" sama-sama kembali ke Dompet & Rekening.
- */
 @Composable
 fun WithdrawResultScreen(
     state: WithdrawResultUiState,

@@ -26,7 +26,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: App Bar varian Chat (161:44) — kembali, avatar, nama kontak + UMKM, menu. */
 @Composable
 internal fun ChatRoomTopBar(
     contactName: String,

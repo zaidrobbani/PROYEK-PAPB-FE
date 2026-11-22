@@ -20,6 +20,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.feature.umkm.create_project.viewmodel.CreateProjectViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -47,28 +58,11 @@ import com.example.proyek_papb_fe.feature.umkm.create_project.component.ProjectF
 import com.example.proyek_papb_fe.feature.umkm.create_project.component.ProjectFormSection
 import com.example.proyek_papb_fe.feature.umkm.create_project.component.ProjectTextInput
 import com.example.proyek_papb_fe.feature.umkm.create_project.component.SkillSelector
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectAttachment
 import kotlinx.coroutines.launch
 
-/**
- * Figma: padding bawah konten 101.415 di belakang bilah tombol setinggi 67.61.
- * Bilah diletakkan di bawah area scroll (bukan menimpanya) agar field yang digulir otomatis
- * tidak tertutup, jadi sisanya 33.805 dipakai sebagai jarak akhir konten.
- */
 private val BottomBarClearance = 101.415.dp - 67.61.dp
 
-/**
- * Form Buat Project (Blueprint TK-F-U-02). Publikasi hanya simulasi lokal:
- * tidak ada data yang dikirim ke server, dan [onPublished] menerima hasil form.
- *
- * [editProjectId] terisi = mode Edit Project (Blueprint TK-F-U-04). Figma tidak punya frame
- * Edit Project, jadi form yang sama dipakai ulang dengan judul "Edit Project" dan tombol
- * "Simpan Perubahan" (tanpa tombol draf).
- *
- * [copyFromProjectId] terisi = Pesan Lagi: isian disalin dari pesanan sebelumnya kecuali batas
- * waktu (tanggal lama sudah lewat), lalu dipublikasikan sebagai project baru berstatus Terbuka.
- */
 @Composable
 fun CreateProjectScreen(
     onBack: () -> Unit,
@@ -76,16 +70,69 @@ fun CreateProjectScreen(
     onPublished: (CreateProjectDraft) -> Unit,
     modifier: Modifier = Modifier,
     editProjectId: String? = null,
-    copyFromProjectId: String? = null
+    copyFromProjectId: String? = null,
+    viewModel: CreateProjectViewModel = viewModel(
+        factory = CreateProjectViewModel.factory(
+            AppContainer.projectRepository,
+            AppContainer.masterDataRepository,
+            editProjectId,
+            copyFromProjectId
+        )
+    )
 ) {
-    val editing = editProjectId?.let { UmkmProjectStore.project(it) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isEdit = editProjectId != null
-    val source = editing ?: copyFromProjectId?.let { UmkmProjectStore.project(it) }
-    val state = rememberCreateProjectFormState(initial = source, keepDeadline = isEdit)
-    val errors = state.visibleErrors
+    val state = rememberCreateProjectFormState()
+    var sourceApplied by rememberSaveable { mutableStateOf(false) }
+    var lastDraft by remember { mutableStateOf<CreateProjectDraft?>(null) }
+    val localErrors = state.visibleErrors
+    val errors = CreateProjectErrors(
+        title = localErrors.title ?: uiState.fieldErrors["title"],
+        category = localErrors.category ?: uiState.fieldErrors["category"],
+        description = localErrors.description ?: uiState.fieldErrors["description"],
+        skills = localErrors.skills ?: uiState.fieldErrors["skills"],
+        budget = localErrors.budget ?: uiState.fieldErrors["budget"],
+        deadline = localErrors.deadline ?: uiState.fieldErrors["deadline"]
+    )
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val requesters = remember { ProjectFormField.entries.associateWith { BringIntoViewRequester() } }
+
+    LaunchedEffect(uiState.skills) {
+        if (uiState.skills.isNotEmpty()) {
+            val names = uiState.skills.map { it.name }
+            state.skillOptions.clear()
+            state.skillOptions.addAll(names + state.selectedSkills.filterNot { it in names })
+        }
+    }
+    LaunchedEffect(uiState.source) {
+        val source = uiState.source
+        if (source != null && !sourceApplied) {
+            state.fillFrom(source, keepDeadline = isEdit)
+            sourceApplied = true
+        }
+    }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.savedProjectId) {
+        if (uiState.savedProjectId != null) {
+            viewModel.onSavedHandled()
+            lastDraft?.let(onPublished)
+        }
+    }
+
+    if (uiState.isLoading) {
+        LoadingContent(modifier.background(MaterialTheme.colorScheme.background))
+        return
+    }
+    uiState.loadError?.let { message ->
+        ErrorContent(message, onRetry = viewModel::load, modifier = modifier.background(MaterialTheme.colorScheme.background))
+        return
+    }
 
     val filePicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
@@ -110,41 +157,9 @@ fun CreateProjectScreen(
             state.firstErrorField()?.let { field ->
                 scope.launch { requesters.getValue(field).bringIntoView() }
             }
-        } else if (isEdit) {
-            val saved = editProjectId != null && UmkmProjectStore.update(
-                projectId = editProjectId,
-                title = draft.title,
-                category = draft.category,
-                description = draft.description,
-                skills = draft.skills,
-                budget = draft.budget,
-                deadlineUtcMillis = draft.deadlineUtcMillis,
-                attachments = draft.attachments
-            )
-            Toast.makeText(
-                context,
-                if (saved) "Perubahan project disimpan (simulasi). Belum tersimpan di server."
-                else "Project sudah masuk tahap pengerjaan dan tidak bisa diubah.",
-                Toast.LENGTH_LONG
-            ).show()
-            if (saved) onPublished(draft)
         } else {
-            // Disimpan ke penyimpanan lokal sementara agar muncul di Project Saya (status Terbuka).
-            UmkmProjectStore.publish(
-                title = draft.title,
-                category = draft.category,
-                description = draft.description,
-                skills = draft.skills,
-                budget = draft.budget,
-                deadlineUtcMillis = draft.deadlineUtcMillis,
-                attachments = draft.attachments
-            )
-            Toast.makeText(
-                context,
-                "Project dipublikasikan (simulasi). Belum tersimpan di server.",
-                Toast.LENGTH_LONG
-            ).show()
-            onPublished(draft)
+            lastDraft = draft
+            viewModel.submit(draft)
         }
     }
 
@@ -173,7 +188,6 @@ fun CreateProjectScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(16.903.dp)
             ) {
-                // Banner ajakan membuat project baru tidak relevan saat mengedit.
                 if (!isEdit) CreateProjectIntroBanner()
                 ProjectFormSection(
                     label = "Judul Project",
@@ -197,7 +211,7 @@ fun CreateProjectScreen(
                 ) {
                     CategoryDropdown(
                         selected = state.category,
-                        options = DummyProjectCategories,
+                        options = uiState.categories.map { it.name },
                         onSelected = { state.category = it },
                         error = errors.category
                     )
@@ -223,7 +237,11 @@ fun CreateProjectScreen(
                         options = state.skillOptions,
                         selected = state.selectedSkills,
                         onToggle = state::toggleSkill,
-                        onAddCustomSkill = state::addCustomSkill
+                        onAddCustomSkill = { raw ->
+                            val known = viewModel.findSkillName(raw)
+                            if (known != null) state.addCustomSkill(known)
+                            else viewModel.showMessage("Keahlian \"${raw.trim()}\" belum tersedia. Pilih dari daftar keahlian TEMUKARYA.")
+                        }
                     )
                     ProjectFieldError(errors.skills)
                 }
@@ -278,16 +296,23 @@ fun CreateProjectScreen(
                 }
             }
             CreateProjectBottomBar(
-                onSaveDraft = onSaveDraft,
+                onSaveDraft = {
+                    // BE belum punya status draf: project langsung TERBUKA saat dipublikasikan.
+                    viewModel.showMessage("Simpan draf belum tersedia. Lengkapi form lalu publikasikan project.")
+                    onSaveDraft()
+                },
                 onPublish = onPublish,
-                publishLabel = if (isEdit) "Simpan Perubahan" else "Publikasikan Project Sekarang",
+                publishLabel = when {
+                    uiState.isSubmitting -> "Menyimpan..."
+                    isEdit -> "Simpan Perubahan"
+                    else -> "Publikasikan Project Sekarang"
+                },
                 showSaveDraft = !isEdit
             )
         }
     }
 }
 
-/** Membaca nama dan ukuran file dari penyedia dokumen Android. */
 private fun readAttachment(context: Context, uri: Uri): ProjectAttachment? =
     context.contentResolver
         .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
@@ -299,10 +324,3 @@ private fun readAttachment(context: Context, uri: Uri): ProjectAttachment? =
             ProjectAttachment(uri = uri.toString(), name = name ?: "file", sizeBytes = size)
         }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun CreateProjectScreenPreview() {
-    PROYEKPAPBFETheme {
-        CreateProjectScreen(onBack = {}, onSaveDraft = {}, onPublished = {})
-    }
-}

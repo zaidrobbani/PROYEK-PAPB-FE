@@ -10,17 +10,11 @@ import com.example.proyek_papb_fe.feature.freelancer.chat.component.DraftFileUi
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.UploadDraftUiState
 import java.util.Locale
 
-/** Figma 17:5174: "Mendukung AI, PSD, PDF, ZIP, PNG (Maks. 50 MB)". */
 private val SupportedExtensions = setOf("ai", "psd", "pdf", "zip", "png")
 private const val MaxDraftFileBytes = 50L * 1024 * 1024
 
-/** Hasil memilih file: yang lolos cek dan nama file yang ditolak (format / ukuran). */
 internal data class PickedDraftFiles(val accepted: List<DraftFile>, val rejected: List<String>)
 
-/**
- * Baca nama & ukuran tiap file dari pemilih dokumen sistem lalu cek format & ukuran.
- * Tidak ada yang diunggah: hanya metadata lokal untuk ditampilkan di modal.
- */
 internal fun Context.readDraftFiles(uris: List<Uri>): PickedDraftFiles {
     val accepted = mutableListOf<DraftFile>()
     val rejected = mutableListOf<String>()
@@ -40,7 +34,6 @@ internal fun Context.readDraftFiles(uris: List<Uri>): PickedDraftFiles {
     return PickedDraftFiles(accepted, rejected)
 }
 
-/** Satuan desimal seperti pemilih file Android: 12_400_000 → "12.4 MB"; 850_000 → "850 KB". */
 private fun formatSize(bytes: Long): String = when {
     bytes >= 1_000_000L -> String.format(Locale.US, "%.1f MB", bytes / 1_000_000.0)
     bytes >= 1_000L -> "${bytes / 1_000} KB"

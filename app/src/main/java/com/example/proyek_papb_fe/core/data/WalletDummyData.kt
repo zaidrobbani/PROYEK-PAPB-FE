@@ -7,11 +7,6 @@ import com.example.proyek_papb_fe.core.data.model.WalletTransactionType
 import java.util.Calendar
 import java.util.TimeZone
 
-/**
- * Data Dompet & Rekening freelancer (sementara, sebelum ada backend), sesuai Figma
- * "Dompet Freelancer" (27:80). Satu sumber saldo untuk layar Dompet & Rekening, kartu
- * saldo di Beranda, dan menu di Profil.
- */
 object WalletDummyData {
 
     private fun date(year: Int, month: Int, day: Int): Long =

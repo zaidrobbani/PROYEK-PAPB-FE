@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-// Figma "Bottom Nav" (161:265): aktif #684738 + pill #EADBC8, tidak aktif #8C7B71, latar #FBF3E0.
 private val BarBackground = Color(0xFFFBF3E0)
 private val BarBorder = Color(0xFFEADFC6)
 private val BarActive = Color(0xFF684738)

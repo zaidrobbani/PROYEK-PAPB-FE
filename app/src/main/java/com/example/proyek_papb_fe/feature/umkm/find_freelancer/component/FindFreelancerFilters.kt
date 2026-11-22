@@ -32,10 +32,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.QuickFilter
 
-/**
- * Baris chip: kategori (pilih satu, "Semua Kategori" = tanpa kategori) lalu filter cepat
- * (bisa lebih dari satu). Gaya aktif/tidak aktif mengikuti chip di Figma.
- */
 @Composable
 fun FindFreelancerFilters(
     categories: List<String>,
@@ -57,7 +53,6 @@ fun FindFreelancerFilters(
         item(key = "all") {
             FilterChip(
                 label = "Semua Kategori",
-                // Figma: "Semua Kategori" tidak aktif saat kategori lain dipilih.
                 background = if (selectedCategory == null) colors.primary else colors.surfaceContainerHigh,
                 contentColor = if (selectedCategory == null) colors.onPrimary else colors.onSurface,
                 shadow = selectedCategory == null,
@@ -143,7 +138,6 @@ private fun FilterChip(
     }
 }
 
-/** "18 freelancer sesuai filter" dengan label "Sesuai Kriteria". */
 @Composable
 fun FindFreelancerResultHeader(count: Int, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

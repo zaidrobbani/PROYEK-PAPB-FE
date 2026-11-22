@@ -28,10 +28,8 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Cukup untuk nominal sampai ratusan miliar rupiah; mencegah angka meluap dari Long. */
 private const val BudgetMaxDigits = 12
 
-/** Kolom budget: hanya angka (rupiah bulat), tampil dengan pemisah ribuan "1.500.000". */
 @Composable
 fun BudgetField(
     digits: String,
@@ -97,7 +95,6 @@ fun BudgetField(
     )
 }
 
-/** Menampilkan "1500000" sebagai "1.500.000" tanpa mengubah nilai yang disimpan. */
 private object ThousandSeparatorTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val digits = text.text

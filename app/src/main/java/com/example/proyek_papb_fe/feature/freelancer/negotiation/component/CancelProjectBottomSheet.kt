@@ -42,11 +42,6 @@ import kotlinx.coroutines.launch
 private val SheetButtonHeight = 51.dp
 private val OptionShape = RoundedCornerShape(12.dp)
 
-/**
- * Figma: "Bottom Sheet Batalkan" (26:172) di atas frame Negosiasi (26:87).
- * Stateless: alasan terpilih dan aksi dikelola container. Sheet ditutup dengan
- * animasi dulu, baru callback dipanggil, agar tidak hilang mendadak.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CancelProjectBottomSheet(
@@ -57,7 +52,6 @@ fun CancelProjectBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
-    // Cegah tap ganda selama animasi tutup (mis. konfirmasi terpanggil dua kali).
     var isClosing by remember { mutableStateOf(false) }
     val hideThen: (() -> Unit) -> Unit = { action ->
         if (!isClosing) {
@@ -75,7 +69,6 @@ fun CancelProjectBottomSheet(
         tonalElevation = 0.dp,
         scrimColor = NegotiationColors.SheetScrim,
         dragHandle = {
-            // Figma: pt 12, handle 40×4 radius 2, lalu gap 14 ke konten.
             Box(
                 modifier = Modifier
                     .padding(top = 12.dp, bottom = 14.dp)
@@ -87,7 +80,6 @@ fun CancelProjectBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // Konten tidak di-scroll di Figma; scroll hanya aktif di layar pendek.
                 .verticalScroll(rememberScrollState())
                 .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -166,7 +158,6 @@ private fun SheetHeader() {
     }
 }
 
-/** Figma: "Opsi …" (26:183–26:192) — terpilih: krem + border cokelat; lainnya putih. */
 @Composable
 private fun ReasonOption(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(

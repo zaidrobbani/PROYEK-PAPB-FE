@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ikon tab "Project": Material Symbols Rounded "folder_open" (weight 400, fill 0),
-     sama dengan ikon "Nav Project" UMKM di Figma 17:2709 (layer I162:60;161:108) dan tab
-     Project freelancer di Figma 449:862. Path diekspor dari Figma (glyph 22px), diletakkan
-     pada offset aslinya di dalam kotak ikon 22x22. Apache License 2.0. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="22dp"
     android:height="22dp"

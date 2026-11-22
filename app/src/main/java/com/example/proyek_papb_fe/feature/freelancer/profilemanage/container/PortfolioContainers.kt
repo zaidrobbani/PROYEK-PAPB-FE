@@ -19,28 +19,30 @@ import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.Por
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.PortfolioFormErrors
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.PortfolioFormScreen
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.PortfolioListScreen
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.FreelancerProfileViewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.freelancerProfileViewModelFactory
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
-/** Chip filter Figma (535:1081): Semua · Desain Kemasan · Logo · Konten. */
 private val FigmaFilters = listOf(PortfolioCategory.PACKAGING, PortfolioCategory.LOGO, PortfolioCategory.SOCIAL_CONTENT)
 
 private fun PortfolioItem.toCardUi() = PortfolioCardUi(id, title, category.label, description, link, coverRes, coverUri)
 
-/** "https://behance.net/x/" → "behance.net/x" (tampilan kartu Figma tanpa skema). */
 private fun normalizeLink(link: String): String =
     link.trim().removePrefix("https://").removePrefix("http://").removeSuffix("/")
 
-/**
- * Container Kelola Portofolio (Figma 535:1081). Daftar dari [FreelancerProfileStore];
- * hapus lewat sheet konfirmasi (535:1285).
- */
 @Composable
 fun PortfolioListContainer(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
-    onEditClick: (String) -> Unit
+    onEditClick: (String) -> Unit,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory())
 ) {
+    LaunchedEffect(Unit) { viewModel.load() }
     val portfolio = FreelancerProfileStore.portfolio
-    // Kategori Figma + kategori lain yang benar-benar dipakai karya.
     val categories = FigmaFilters + portfolio.map { it.category }.distinct().filterNot { it in FigmaFilters }
     var selectedFilter by rememberSaveable { mutableIntStateOf(0) }
     if (selectedFilter > categories.size) selectedFilter = 0
@@ -58,7 +60,7 @@ fun PortfolioListContainer(
         onEditClick = onEditClick,
         onDeleteClick = { pendingDeleteId = it },
         onConfirmDelete = {
-            pendingDeleteId?.let(FreelancerProfileStore::deletePortfolio)
+            pendingDeleteId?.let(viewModel::deletePortfolio)
             pendingDeleteId = null
         },
         onDismissDelete = { pendingDeleteId = null },
@@ -66,17 +68,22 @@ fun PortfolioListContainer(
     )
 }
 
-/**
- * Container Tambah Portofolio (535:1163, [portfolioId] null) / Edit Portofolio (535:1222).
- * Cover dipilih lewat Photo Picker dan disimpan sebagai Uri lokal (tanpa unggah ke server).
- * [onDone] dipanggil setelah simpan atau hapus untuk kembali ke Kelola Portofolio.
- */
 @Composable
 fun PortfolioFormContainer(
     portfolioId: String?,
     onBack: () -> Unit,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory())
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.savedCount) { if (uiState.savedCount > 0) onDone() }
     val existing = portfolioId?.let(FreelancerProfileStore::portfolioItem)
     var form by remember {
         mutableStateOf(
@@ -98,8 +105,7 @@ fun PortfolioFormContainer(
     val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) form = form.copy(coverUri = uri.toString())
     }
-    // Keahlian terkait diambil dari Profil Profesional; keahlian lama karya tetap bisa dilepas.
-    val skillOptions = (FreelancerProfileStore.profile.skills + form.skills).distinct()
+    val skillOptions = (FreelancerProfileStore.profile.skills + uiState.skillOptions + form.skills).distinct()
 
     PortfolioFormScreen(
         isEdit = existing != null,
@@ -113,8 +119,9 @@ fun PortfolioFormContainer(
             val e = validate(form)
             if (e.title != null || e.category != null || e.description != null) {
                 submitted = true
-            } else {
-                FreelancerProfileStore.savePortfolio(
+            } else if (!uiState.isSaving) {
+                viewModel.savePortfolio(
+                    existing?.id,
                     PortfolioItem(
                         id = existing?.id.orEmpty(),
                         title = form.title.trim(),
@@ -126,14 +133,12 @@ fun PortfolioFormContainer(
                         coverUri = form.coverUri
                     )
                 )
-                onDone()
             }
         },
         onDeleteClick = { showDelete = true },
         onConfirmDelete = {
             showDelete = false
-            existing?.let { FreelancerProfileStore.deletePortfolio(it.id) }
-            onDone()
+            existing?.let { viewModel.deletePortfolio(it.id) } ?: onDone()
         },
         onDismissDelete = { showDelete = false },
         onBack = onBack

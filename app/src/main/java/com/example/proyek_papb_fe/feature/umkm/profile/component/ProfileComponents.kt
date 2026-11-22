@@ -35,7 +35,6 @@ import com.example.proyek_papb_fe.core.ui.theme.VerifiedChip
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProfile
 
-/** Figma memakai line-height 1.4 untuk teks di screen ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(
@@ -44,7 +43,6 @@ private fun text(weight: FontWeight, size: Float): TextStyle =
         lineHeight = (size * 1.4f).sp
     )
 
-/** Kartu identitas: avatar inisial, nama, usaha, kota, chip verifikasi dan kategori. */
 @Composable
 fun ProfileHeaderCard(profile: UmkmProfile, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -72,7 +70,6 @@ fun ProfileHeaderCard(profile: UmkmProfile, modifier: Modifier = Modifier) {
                     Text(text = profile.initials, color = colors.primary, style = text(FontWeight.Bold, 19f))
                 }
             }
-            // Foto dari Kelola Profil Usaha; tanpa foto tetap inisial seperti Figma.
             val photo = profile.photoUri
             if (photo != null) {
                 UriImage(
@@ -129,7 +126,6 @@ fun ProfileHeaderCard(profile: UmkmProfile, modifier: Modifier = Modifier) {
 
 data class ProfileStat(val value: String, val label: String)
 
-/** Tiga kotak ringkasan: Project dibuat, Selesai, Total transaksi. */
 @Composable
 fun ProfileStatsRow(stats: List<ProfileStat>, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -160,7 +156,6 @@ fun ProfileSectionTitle(title: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Baris menu Kelola Akun. [destructive] = gaya merah untuk "Keluar". */
 @Composable
 fun ProfileMenuItem(
     @DrawableRes icon: Int,

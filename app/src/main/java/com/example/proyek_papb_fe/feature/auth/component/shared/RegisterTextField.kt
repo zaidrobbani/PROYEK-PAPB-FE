@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 
-/** Bayangan kolom input dan kotak centang pada frame Registrasi. */
 internal fun Modifier.registerInputShadow(shape: Shape): Modifier = dropShadow(
     shape = shape,
     shadow = Shadow(
@@ -186,7 +185,6 @@ fun RegisterFieldHint(
     }
 }
 
-/** Ikon kolom, diposisikan sesuai koordinat frame Figma. */
 @Composable
 fun BoxScope.RegisterFieldIcon(
     @DrawableRes iconRes: Int,
@@ -205,10 +203,6 @@ fun BoxScope.RegisterFieldIcon(
     )
 }
 
-/**
- * Area sentuh 48dp, dengan titik tengah ikon tetap di posisi Figma.
- * Figma hanya punya ikon mata terbuka, jadi garis ditumpuk saat kata sandi disembunyikan.
- */
 @Composable
 fun BoxScope.RegisterPasswordToggle(
     visible: Boolean,

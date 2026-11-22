@@ -26,41 +26,27 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: teks maks 264 + padding 14×2 (±71% lebar layar 412). */
 private val BubbleMaxWidth = 292.dp
 private val AttachmentWidth = 264.dp
 
-/** Data tampilan satu pesan di ruang chat. */
 data class ChatBubbleUi(
     val id: String,
     val isMine: Boolean,
     val text: String,
-    /** "09.15 WIB". */
     val time: String,
-    /** Pesan pertama dari pengirim ini setelah pengirim lain / pemisah tanggal. */
     val isFirstInGroup: Boolean,
-    /** Jarak atas: 0 setelah pemisah tanggal, 12 saat pengirim berganti, 4 untuk pesan lanjutan. */
     val topGap: Int,
-    /** Label pengirim di atas pesan masuk pertama dalam grup; null = tidak ditampilkan. */
     val senderLabel: String? = null,
     val attachmentName: String? = null,
-    /** true = lampiran gambar (pratinjau besar); false = dokumen (baris file ringkas). */
     val attachmentIsImage: Boolean = true
 )
 
-/** Item di daftar pesan: pemisah tanggal atau bubble. */
 sealed interface ChatRoomItem {
     val key: String
     data class DateSeparator(val label: String) : ChatRoomItem { override val key = "date-$label" }
     data class Message(val bubble: ChatBubbleUi) : ChatRoomItem { override val key = bubble.id }
 }
 
-/**
- * Figma: Message / Masuk & Message / Keluar (17:4612).
- * Masuk = putih + garis tipis di kiri; keluar = cokelat di kanan dengan centang baca.
- * Selain warna, pengirim dibedakan lewat posisi dan sudut kecil (6) di sisi pengirim
- * pada bubble pertama tiap grup.
- */
 @Composable
 internal fun ChatMessageBubble(bubble: ChatBubbleUi, modifier: Modifier = Modifier) {
     val mine = bubble.isMine
@@ -205,7 +191,6 @@ private fun MessageMeta(time: String, mine: Boolean) {
     }
 }
 
-/** Figma: Date Separator — label kecil di tengah, bukan kartu. */
 @Composable
 internal fun ChatDateSeparator(label: String, modifier: Modifier = Modifier) {
     Box(

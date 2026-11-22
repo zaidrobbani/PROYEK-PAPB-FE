@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.example.proyek_papb_fe.core.ui.components.InitialsAvatar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +34,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.dashboard.container.DashboardFreelancer
 
-/** Cincin 2.113 di luar foto (box-shadow spread pada Figma), jadi tidak menutupi foto. */
 private fun Modifier.photoRing(color: Color): Modifier = drawBehind {
     val spread = 2.113.dp.toPx()
     val radius = 12.dp.toPx() + spread
@@ -66,15 +66,27 @@ fun FreelancerRecommendationCard(
             .padding(16.903.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.677.dp)) {
-            Image(
-                painter = painterResource(freelancer.photo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(50.708.dp)
-                    .photoRing(colors.primary.copy(alpha = 0.2f))
-                    .clip(photoShape),
-                contentScale = ContentScale.Crop
-            )
+            val photo = freelancer.photo
+            if (photo != null) {
+                Image(
+                    painter = painterResource(photo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(50.708.dp)
+                        .photoRing(colors.primary.copy(alpha = 0.2f))
+                        .clip(photoShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                InitialsAvatar(
+                    name = freelancer.name,
+                    modifier = Modifier
+                        .size(50.708.dp)
+                        .photoRing(colors.primary.copy(alpha = 0.2f)),
+                    shape = photoShape,
+                    fontSize = 16.sp
+                )
+            }
             Column {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.226.dp),

@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.container.ChatRoomScreen
 import kotlinx.serialization.Serializable
 
-/** Membawa id percakapan saja; isi percakapan dibaca dari UmkmConversationStore. */
 @Serializable
 data class UmkmChatRoomRoute(val conversationId: String)
 

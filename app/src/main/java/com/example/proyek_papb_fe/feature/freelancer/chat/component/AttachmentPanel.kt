@@ -26,19 +26,11 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 private val PanelShape = RoundedCornerShape(20.dp)
 
-/**
- * Figma: Attachment Panel (varian "Attachment Open" Message Composer, 17:4612).
- * Muncul di atas composer (composer tetap terlihat). Aksi dengan lebar sama: Galeri, Kamera,
- * Dokumen, dan "Unggah Draf Pekerjaan" HANYA bila [onUploadDraftClick] diisi (status project
- * "Project Berjalan"); di status lain aksi itu tidak ada sama sekali (bukan dinonaktifkan).
- * Lingkaran bergantian pasir / hijau lembut.
- */
 @Composable
 internal fun AttachmentPanel(
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
     onDocumentClick: () -> Unit,
-    /** null = aksi "Unggah Draf Pekerjaan" tidak tersedia untuk status project ini. */
     onUploadDraftClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
@@ -98,7 +90,7 @@ private fun AttachmentAction(
 @Composable
 private fun AttachmentPanelPreview() {
     androidx.compose.foundation.layout.Column {
-        AttachmentPanel({}, {}, {}, onUploadDraftClick = {}) // Project Berjalan
-        AttachmentPanel({}, {}, {}, onUploadDraftClick = null) // status lain
+        AttachmentPanel({}, {}, {}, onUploadDraftClick = {})
+        AttachmentPanel({}, {}, {}, onUploadDraftClick = null)
     }
 }

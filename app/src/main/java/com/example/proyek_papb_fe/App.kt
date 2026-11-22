@@ -4,7 +4,14 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.umkm.profile.navigation.logoutToLogin
+import com.example.proyek_papb_fe.navigation.AppSessionViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -20,10 +27,20 @@ import com.example.proyek_papb_fe.navigation.isTopLevelDestination
 fun App() {
     PROYEKPAPBFETheme {
         val navController = rememberNavController()
+        val sessionViewModel: AppSessionViewModel = viewModel(
+            factory = AppSessionViewModel.factory(AppContainer.authRepository, AppContainer.sessionManager)
+        )
+        val context = LocalContext.current
+        LaunchedEffect(Unit) {
+            sessionViewModel.sessionExpired.collect {
+                sessionViewModel.clearCaches()
+                Toast.makeText(context, "Sesi berakhir, silakan login kembali", Toast.LENGTH_LONG).show()
+                navController.logoutToLogin()
+            }
+        }
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = backStackEntry?.destination
 
-        // Bottom bar hanya muncul di halaman tab utama (bukan di halaman detail)
         val showBottomBar = TopLevelDestination.entries.any {
             currentDestination.isTopLevelDestination(it)
         }
@@ -41,6 +58,7 @@ fun App() {
         ) { innerPadding ->
             AppNavHost(
                 navController = navController,
+                sessionViewModel = sessionViewModel,
                 modifier = Modifier
                     .padding(innerPadding)
                     .consumeWindowInsets(innerPadding)

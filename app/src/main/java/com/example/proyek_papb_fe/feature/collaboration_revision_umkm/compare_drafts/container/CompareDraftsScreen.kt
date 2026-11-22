@@ -31,21 +31,17 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
 private val SentTime = DateTimeFormatter.ofPattern("HH.mm")
 private val ShortDate = DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("id-ID"))
 
-/**
- * Blueprint (Menyetujui hasil): UMKM hanya bisa menyetujui kiriman terbaru saat project
- * berstatus Menunggu Review; setelah itu project Selesai dan dana dilepas (modul Payment).
- */
 fun canApproveFinalDraft(status: ProjectStatus?): Boolean = status == ProjectStatus.MenungguReview
 
-/**
- * Bandingkan Draf UMKM (Figma 17:5903): draf sebelumnya vs perbaikan terbaru dari percakapan yang
- * sama, berdampingan. DATA DUMMY lokal; UMKM hanya melihat, tidak mengubah file freelancer.
- * [onApproveFinal] null = alur persetujuan hasil & pelepasan dana belum terhubung.
- */
 @Composable
 fun CompareDraftsScreen(
     conversationId: String,
@@ -53,7 +49,8 @@ fun CompareDraftsScreen(
     onBack: () -> Unit,
     onOpenChat: () -> Unit,
     onApproveFinal: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(conversationId))
 ) {
     val context = LocalContext.current
     fun toast(message: String) = Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -69,7 +66,6 @@ fun CompareDraftsScreen(
             val latestAttachment = latest?.attachment
             val previousAttachment = previous?.attachment
             if (conversation == null || latestAttachment == null || previousAttachment == null) {
-                // Tidak ada di Figma: pengaman bila draf atau versi sebelumnya tidak ditemukan.
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Belum ada dua versi draf untuk dibandingkan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -114,20 +110,17 @@ fun CompareDraftsScreen(
                             previewTag = latestAttachment.previewTag.orEmpty(),
                             noteTitle = "Telah Disempurnakan",
                             note = latestAttachment.draftNote.orEmpty(),
-                            // Titik yang sama dengan draf lama, ditandai sudah diperbaiki.
                             markers = previousAttachment.issueMarkers,
                             latest = true
                         )
                     )
                 }
-                // Figma: ruang kosong agar konten tidak tertutup baki keputusan.
                 Spacer(Modifier.height(118.318.dp))
             }
         }
         if (conversation != null && latest != null && previous != null) {
             CompareDecisionTray(
                 onDiscuss = onOpenChat,
-                // Minta revisi memakai layar Review Hasil milik modul Putri (belum digabung).
                 onRequestRevision = { toast("Minta revisi belum tersedia di versi ini.") },
                 onApprove = {
                     val status = conversation.projectId?.let { UmkmProjectStore.project(it)?.status }
@@ -143,10 +136,3 @@ fun CompareDraftsScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun CompareDraftsScreenPreview() {
-    PROYEKPAPBFETheme {
-        CompareDraftsScreen("dummy-chat-andi", "andi-6", onBack = {}, onOpenChat = {}, onApproveFinal = null)
-    }
-}

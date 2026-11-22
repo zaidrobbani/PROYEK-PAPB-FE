@@ -16,6 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.domain.model.ApplicationStatusCode
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
+import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.viewmodel.FreelancerApplicationsViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,8 +40,6 @@ import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthAppBar
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
-import com.example.proyek_papb_fe.feature.umkm.data.SelectFreelancerResult
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.component.ApplicantCard
 import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.component.ApplicantSelection
 import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.component.ApplicationSort
@@ -41,29 +48,49 @@ import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.component
 
 private val PageGutter = 16.903.dp
 
-/** Jarak antarbagian di Figma: gap 20 ditambah margin atas 16.903 pada tiap bagian. */
 private val SectionSpacing = 20.dp + 16.903.dp
 
-/**
- * Pengajuan Freelancer (Blueprint TK-F-U-11 dan aturan "Memilih freelancer" Fungsi 2).
- * Data dan perubahan status hanya simulasi lokal di [UmkmProjectStore].
- */
 @Composable
 fun FreelancerApplicationsScreen(
     projectId: String,
     onBack: () -> Unit,
-    onViewProfile: (applicationId: String) -> Unit,
+    onViewProfile: (freelancerId: String, applicationId: String) -> Unit,
     onFreelancerSelected: (applicationId: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: FreelancerApplicationsViewModel = viewModel(
+        factory = FreelancerApplicationsViewModel.factory(
+            projectId,
+            AppContainer.projectRepository,
+            AppContainer.workflowRepository,
+            AppContainer.freelancerRepository,
+            AppContainer.masterDataRepository
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var sort by rememberSaveable { mutableStateOf(ApplicationSort.PalingRelevan) }
     var pendingApproveId by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
-    val project = UmkmProjectStore.project(projectId)
-    val applications = UmkmProjectStore.applicationsFor(projectId).let { list ->
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.selectedApplicationId) {
+        uiState.selectedApplicationId?.let {
+            viewModel.onSelectionHandled()
+            onFreelancerSelected(it)
+        }
+    }
+
+    val project = uiState.project
+    val applications = uiState.applications.let { list ->
         when (sort) {
-            ApplicationSort.PalingRelevan -> list.sortedByDescending { it.isTopRecommendation }
+            ApplicationSort.PalingRelevan -> list.sortedWith(
+                compareByDescending<ProjectApplication> { it.isTopRecommendation }.thenByDescending { it.matchPercent ?: 0 }
+            )
             ApplicationSort.HargaTerendah -> list.sortedBy { it.bid }
             ApplicationSort.WaktuTercepat -> list.sortedBy { it.workingDays }
         }
@@ -75,8 +102,12 @@ fun FreelancerApplicationsScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         AuthAppBar(title = "Pengajuan", onBack = onBack)
+        if (uiState.isLoading && project == null) {
+            LoadingContent()
+            return@Column
+        }
         if (project == null) {
-            CenteredNote("Project tidak ditemukan.")
+            ErrorContent(uiState.errorMessage ?: "Project tidak ditemukan.", onRetry = viewModel::load)
             return@Column
         }
         LazyColumn(
@@ -92,7 +123,7 @@ fun FreelancerApplicationsScreen(
             verticalArrangement = Arrangement.spacedBy(SectionSpacing)
         ) {
             item(key = "summary") {
-                ApplicationsProjectSummary(project = project, ownerLabel = UmkmProjectStore.OwnerLabel)
+                ApplicationsProjectSummary(project = project, ownerLabel = uiState.ownerLabel)
             }
             item(key = "header") {
                 ApplicationsListHeader(
@@ -108,12 +139,12 @@ fun FreelancerApplicationsScreen(
             items(applications, key = { it.id }) { application ->
                 ApplicantCard(
                     application = application,
-                    selection = when (project.selectedApplicationId) {
-                        null -> ApplicantSelection.Open
-                        application.id -> ApplicantSelection.Selected
+                    selection = when {
+                        application.status == ApplicationStatusCode.ACCEPTED -> ApplicantSelection.Selected
+                        project.status == ProjectStatus.Terbuka -> ApplicantSelection.Open
                         else -> ApplicantSelection.Closed
                     },
-                    onViewProfile = { onViewProfile(application.id) },
+                    onViewProfile = { onViewProfile(application.freelancerId, application.id) },
                     onApprove = { pendingApproveId = application.id }
                 )
             }
@@ -125,15 +156,7 @@ fun FreelancerApplicationsScreen(
             application = target,
             onConfirm = {
                 pendingApproveId = null
-                val message = when (UmkmProjectStore.selectFreelancer(projectId, target.id)) {
-                    SelectFreelancerResult.Selected -> {
-                        onFreelancerSelected(target.id)
-                        "${target.freelancerName} dipilih. Status project: Menunggu Kesepakatan (simulasi)."
-                    }
-                    SelectFreelancerResult.AlreadySelected -> "Project ini sudah memiliki freelancer terpilih."
-                    SelectFreelancerResult.NotAllowed -> "Freelancer tidak dapat dipilih pada status project ini."
-                }
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                viewModel.select(target)
             },
             onDismiss = { pendingApproveId = null }
         )
@@ -157,7 +180,6 @@ private fun CenteredNote(text: String) {
     )
 }
 
-/** Konfirmasi karena satu project hanya boleh punya satu freelancer terpilih; tidak ada di Figma. */
 @Composable
 internal fun ApproveDialog(
     application: ProjectApplication,
@@ -199,17 +221,4 @@ internal fun ApproveDialog(
             TextButton(onClick = onDismiss) { Text("Batal", color = colors.onSurfaceVariant) }
         }
     )
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun FreelancerApplicationsScreenPreview() {
-    PROYEKPAPBFETheme {
-        FreelancerApplicationsScreen(
-            projectId = "dummy-project-website",
-            onBack = {},
-            onViewProfile = {},
-            onFreelancerSelected = {}
-        )
-    }
 }

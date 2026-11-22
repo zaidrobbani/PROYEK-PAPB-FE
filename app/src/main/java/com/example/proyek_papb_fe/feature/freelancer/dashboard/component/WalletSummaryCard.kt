@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 
-/** Figma: Section - Escrow Wallet Summary Card (17:3718). */
 @Composable
 internal fun WalletSummaryCard(
     balance: String,

@@ -54,10 +54,8 @@ import com.example.proyek_papb_fe.core.ui.theme.SandContainer
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ChatMessage
 
-/** Warna ikon pratinjau gambar Figma (#B8A68A); belum ada di tema, disimpan lokal. */
 private val AttachmentIcon = Color(0xFFB8A68A)
 
-/** Lebar teks bubble di Figma 264 + padding 14 kiri-kanan. */
 private val BubbleMaxWidth = 264.dp + 28.dp
 
 @Composable
@@ -98,7 +96,6 @@ private fun IconButtonBox(
     }
 }
 
-/** App Bar varian Chat: kembali, avatar inisial, nama + peran, dan menu. */
 @Composable
 fun ChatRoomTopBar(
     initials: String,
@@ -135,10 +132,6 @@ fun ChatRoomTopBar(
     }
 }
 
-/**
- * Strip konteks project. [heldFunds] dan [deadline] hanya tampil bila datanya ada.
- * [deadline] = (sisa hari, tanggal) dari deadline project.
- */
 @Composable
 fun ChatProjectContext(
     projectTitle: String,
@@ -210,11 +203,6 @@ fun ChatDateSeparator(label: String) {
     }
 }
 
-/**
- * Satu pesan. Keluar (UMKM): bubble cokelat di kanan, sudut kanan atas 6. Masuk: bubble putih
- * bergaris di kiri, sudut kiri atas 6, dengan label pengirim bila [showSender]. Pesan bergambar
- * memakai sudut 18 penuh. Centang ganda hanya untuk pesan dummy yang ditandai sudah dibaca.
- */
 @Composable
 fun ChatBubble(
     message: ChatMessage,
@@ -245,7 +233,6 @@ fun ChatBubble(
             .clip(shape)
             .background(if (outgoing) colors.primary else colors.surfaceContainerLowest)
             .then(if (outgoing) Modifier else Modifier.border(1.dp, AppBarBorder, shape))
-            // Draf hasil kerja bisa diketuk untuk mengajukan catatan & revisi.
             .then(
                 if (onOpenDraft != null) {
                     Modifier.clickable(role = Role.Button, onClickLabel = "Ajukan revisi draf", onClick = onOpenDraft)
@@ -309,7 +296,6 @@ private fun BubbleMeta(time: String, outgoing: Boolean, read: Boolean) {
     }
 }
 
-/** Composer: tombol tambah, kolom pesan (gambar, suara), dan tombol kirim. */
 @Composable
 fun ChatComposer(
     value: String,

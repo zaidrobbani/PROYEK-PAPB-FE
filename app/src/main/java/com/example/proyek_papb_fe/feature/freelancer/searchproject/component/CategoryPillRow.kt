@@ -22,7 +22,6 @@ import com.example.proyek_papb_fe.core.data.model.ProjectCategory
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Category Pills Scrollable (2011:274), melebar sampai tepi layar. */
 @Composable
 internal fun CategoryPillRow(
     categories: List<CategoryFilterOption>,

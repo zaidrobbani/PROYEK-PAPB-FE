@@ -29,7 +29,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Section - Form Pesan Proposal & Solusi (17:4509). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ProposalMessageCard(
@@ -75,7 +74,6 @@ internal fun ProposalMessageCard(
     }
 }
 
-/** Figma: Quick Snippets Button (17:4518). */
 @Composable
 private fun SnippetChip(label: String, onClick: () -> Unit) {
     Row(
@@ -101,10 +99,6 @@ private fun SnippetChip(label: String, onClick: () -> Unit) {
     }
 }
 
-/**
- * Figma: Textarea (17:4526). Tinggi tetap 135.22dp; teks panjang di-scroll di dalam
- * field (BasicTextField multi-baris menangani scroll internal sendiri).
- */
 @Composable
 private fun ProposalTextArea(value: String, onValueChange: (String) -> Unit) {
     val textStyle = OfferFormTypography.ProposalBody

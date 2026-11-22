@@ -49,7 +49,6 @@ fun SkillSelector(
 ) {
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
-    // Jarak antarpill diambil dari posisi pill pada Figma (horizontal ±13.5, vertikal 8.35).
     FlowRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(13.5.dp),
@@ -127,10 +126,6 @@ private fun AddSkillPill(onClick: () -> Unit) {
     }
 }
 
-/**
- * Figma hanya punya tombol "Tambah Skill Lain" tanpa tampilan lanjutannya,
- * jadi dialog sederhana ini tambahan agar keahlian di luar saran bisa diisi.
- */
 @Composable
 private fun AddSkillDialog(
     onDismiss: () -> Unit,

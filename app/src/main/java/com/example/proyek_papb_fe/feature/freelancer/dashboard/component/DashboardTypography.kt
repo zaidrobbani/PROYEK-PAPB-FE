@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-/** Text style dari Figma "Beranda Freelancer" (ukuran px Figma = sp). */
 internal object DashboardTypography {
     private fun style(
         weight: FontWeight,

@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.compare_drafts.container.CompareDraftsScreen
 import kotlinx.serialization.Serializable
 
-/** Percakapan asal dan pesan draf terbaru; versi sebelumnya dibaca dari draf tersebut. */
 @Serializable
 data class UmkmCompareDraftsRoute(val conversationId: String, val draftMessageId: String)
 

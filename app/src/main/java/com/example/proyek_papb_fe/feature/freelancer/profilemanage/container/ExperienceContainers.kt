@@ -17,14 +17,19 @@ import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.Exp
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.label
 import java.util.Calendar
 import java.util.TimeZone
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.FreelancerProfileViewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.freelancerProfileViewModelFactory
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
-/** Bulan berjalan (WIB) untuk "Sekarang" dan batas pemilih bulan. */
 private fun currentMonth(): MonthYear {
     val cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta"))
     return MonthYear(cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR))
 }
 
-/** Lama bekerja inklusif: Mar 2022 – Des 2023 → "1 thn 10 bln" (sesuai Figma). */
 private fun durationLabel(start: MonthYear, end: MonthYear): String {
     val months = (end.totalMonths - start.totalMonths + 1).coerceAtLeast(1)
     val y = months / 12
@@ -40,13 +45,14 @@ private fun WorkExperience.toItemUi(now: MonthYear) = ExperienceItemUi(
     description = description
 )
 
-/** Container Kelola Pengalaman (Figma 538:1235); hapus lewat sheet konfirmasi (538:1424). */
 @Composable
 fun ExperienceListContainer(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
-    onEditClick: (String) -> Unit
+    onEditClick: (String) -> Unit,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory())
 ) {
+    LaunchedEffect(Unit) { viewModel.load() }
     val now = currentMonth()
     val experiences = FreelancerProfileStore.experiences
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -58,7 +64,7 @@ fun ExperienceListContainer(
         onEditClick = onEditClick,
         onDeleteClick = { pendingDeleteId = it },
         onConfirmDelete = {
-            pendingDeleteId?.let(FreelancerProfileStore::deleteExperience)
+            pendingDeleteId?.let(viewModel::deleteExperience)
             pendingDeleteId = null
         },
         onDismissDelete = { pendingDeleteId = null },
@@ -82,16 +88,22 @@ private fun validate(f: ExperienceForm) = ExperienceFormErrors(
 private val ExperienceFormErrors.hasAny: Boolean
     get() = listOfNotNull(position, organization, employmentType, start, end).isNotEmpty()
 
-/**
- * Container Tambah Pengalaman (538:1305, [experienceId] null) / Edit Pengalaman (538:1363).
- * [onDone] dipanggil setelah simpan atau hapus untuk kembali ke Kelola Pengalaman.
- */
 @Composable
 fun ExperienceFormContainer(
     experienceId: String?,
     onBack: () -> Unit,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory())
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.savedCount) { if (uiState.savedCount > 0) onDone() }
     val existing = experienceId?.let(FreelancerProfileStore::experience)
     var form by remember {
         mutableStateOf(
@@ -113,8 +125,8 @@ fun ExperienceFormContainer(
         onSave = {
             if (validate(form).hasAny) {
                 submitted = true
-            } else {
-                FreelancerProfileStore.saveExperience(
+            } else if (!uiState.isSaving) {
+                viewModel.saveExperience(
                     WorkExperience(
                         id = existing?.id.orEmpty(),
                         position = form.position.trim(),
@@ -125,14 +137,12 @@ fun ExperienceFormContainer(
                         description = form.description.trim()
                     )
                 )
-                onDone()
             }
         },
         onDeleteClick = { showDelete = true },
         onConfirmDelete = {
             showDelete = false
-            existing?.let { FreelancerProfileStore.deleteExperience(it.id) }
-            onDone()
+            existing?.let { viewModel.deleteExperience(it.id) } ?: onDone()
         },
         onDismissDelete = { showDelete = false },
         onBack = onBack

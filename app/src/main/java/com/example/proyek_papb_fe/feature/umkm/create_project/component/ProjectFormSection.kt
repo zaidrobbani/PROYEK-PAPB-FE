@@ -35,7 +35,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputSha
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.auth.login.component.LoginErrorCallout
 
-/** Kartu bagian form: latar #FBF3E0, sudut 16, padding 16.903, label di atas. */
 @Composable
 fun ProjectFormSection(
     label: String,
@@ -66,7 +65,6 @@ fun ProjectFormSection(
     }
 }
 
-/** Kolom teks satu baris berlatar putih dengan bayangan tipis seperti input Figma. */
 @Composable
 fun ProjectTextInput(
     value: String,
@@ -114,7 +112,6 @@ fun ProjectTextInput(
     )
 }
 
-/** Catatan kecil berikon di bawah kolom, misalnya keterangan escrow atau durasi. */
 @Composable
 fun ProjectFieldNote(
     @DrawableRes iconRes: Int,
@@ -141,7 +138,6 @@ fun ProjectFieldNote(
     }
 }
 
-/** Gaya pesan validasi mengikuti satu-satunya desain error di Figma (callout Login). */
 @Composable
 fun ProjectFieldError(message: String?) {
     if (message != null) {

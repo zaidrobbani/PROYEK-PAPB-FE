@@ -35,7 +35,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectAttachment
 import java.util.Locale
 
-/** "2.4 MB" seperti Figma (titik desimal), atau KB untuk file kecil. */
 internal fun formatFileSize(bytes: Long): String {
     val mb = bytes / (1024.0 * 1024.0)
     return if (mb >= 1) {
@@ -157,7 +156,6 @@ fun AttachedFileItem(
                     )
                 }
                 Text(
-                    // Teks status mengikuti Figma; file hanya dilampirkan lokal, belum dikirim ke server.
                     text = "${formatFileSize(attachment.sizeBytes)}, Berhasil diunggah",
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.withFrameMetrics(

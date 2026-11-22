@@ -25,14 +25,12 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Pihak di negosiasi: UMKM atau freelancer. */
 data class NegotiationParty(
     val initials: String,
     val name: String,
     val role: String
 )
 
-/** Figma: kartu konteks project (26:15) — chip status, judul, UMKM ⇄ freelancer. */
 @Composable
 internal fun NegotiationHeaderCard(
     projectTitle: String,
@@ -146,7 +144,6 @@ private fun PartyInfo(
     }
 }
 
-/** Avatar inisial (Figma: kotak radius 16 — praktis lingkaran pada ukuran 32–34). */
 @Composable
 internal fun InitialsAvatar(
     initials: String,

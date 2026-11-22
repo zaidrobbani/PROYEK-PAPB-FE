@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-/** Figma: header section ("Project Aktif Saya" / "Rekomendasi Proyek" + "Lihat Semua"). */
 @Composable
 internal fun SectionHeader(
     title: String,

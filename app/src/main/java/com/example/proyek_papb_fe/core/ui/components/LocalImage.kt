@@ -20,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Sisi terpanjang hasil decode; cukup untuk cover kartu/avatar dan hemat memori. */
 private const val MaxDecodeSize = 1280
 
 private fun decodeSampled(context: Context, uri: android.net.Uri): ImageBitmap? = runCatching {
@@ -33,11 +32,6 @@ private fun decodeSampled(context: Context, uri: android.net.Uri): ImageBitmap? 
     resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }?.asImageBitmap()
 }.getOrNull()
 
-/**
- * Gambar lokal: [uri] (dipilih dari galeri lewat Photo Picker) didahulukan, lalu [fallbackRes].
- * Tanpa library gambar/jaringan: Uri di-decode di background. Bila keduanya tidak ada atau
- * gagal dibaca, [placeholder] yang ditampilkan.
- */
 @Composable
 fun LocalImage(
     uri: String?,

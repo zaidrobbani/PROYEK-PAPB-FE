@@ -3,7 +3,6 @@ package com.example.proyek_papb_fe.feature.umkm.data
 import androidx.annotation.DrawableRes
 import com.example.proyek_papb_fe.R
 
-/** Keahlian di profil; [isTool] = chip krem (alat kerja) seperti "Adobe Illustrator" di Figma. */
 data class ProfileSkill(val name: String, val isTool: Boolean = false)
 
 data class PortfolioItem(
@@ -11,9 +10,9 @@ data class PortfolioItem(
     val title: String,
     val summary: String,
     val tag: String,
-    /** Figma: label "Kemasan" cokelat transparan, label "Kuliner" hijau. */
     val tagIsSage: Boolean,
-    @param:DrawableRes val image: Int
+    @param:DrawableRes val image: Int? = null,
+    val link: String? = null
 )
 
 data class ClientReview(
@@ -25,15 +24,11 @@ data class ClientReview(
     val quote: String
 )
 
-/**
- * Profil freelancer yang dilihat UMKM (Blueprint TK-F-U-09). Nilai null = data belum ada di
- * Figma/sumber dummy, sehingga screen menampilkan "-" atau catatan kosong, bukan angka karangan.
- */
 data class FreelancerProfile(
     val id: String,
     val name: String,
     val headline: String,
-    @param:DrawableRes val photo: Int,
+    @param:DrawableRes val photo: Int? = null,
     val verified: Boolean,
     val location: String?,
     val rating: String,
@@ -41,7 +36,6 @@ data class FreelancerProfile(
     val completedProjects: Int?,
     val onTimeLabel: String?,
     val experienceLabel: String?,
-    /** Rupiah bulat. */
     val startingPrice: Long?,
     val priceUnit: String?,
     val skills: List<ProfileSkill>,
@@ -50,11 +44,6 @@ data class FreelancerProfile(
     val reviews: List<ClientReview>
 )
 
-/**
- * DATA DUMMY lokal. Profil Andi disalin dari frame Figma Profil Freelancer (17:1665); profil
- * lain hanya memakai data yang sudah tampil di Beranda, Cari Freelancer, atau Pengajuan.
- * Bukan data dari server.
- */
 object FreelancerProfileStore {
     private val profiles: List<FreelancerProfile> = listOf(
         FreelancerProfile(

@@ -29,10 +29,6 @@ import java.util.Locale
 
 private val FullTime = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy, HH.mm", Locale.forLanguageTag("id-ID"))
 
-/**
- * Detail Notifikasi UMKM (Blueprint TK-F-U-26). Tidak ada frame Figma; gaya mengikuti kartu di
- * Notifikasi UMKM. Tombol aksi membuka layar yang dirujuk notifikasi bila layarnya tersedia.
- */
 @Composable
 fun NotificationDetailScreen(
     notificationId: String,
@@ -46,7 +42,6 @@ fun NotificationDetailScreen(
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         AuthAppBar(title = "Detail Notifikasi", onBack = onBack)
         if (notification == null) {
-            // Tidak ada di Figma: pengaman bila notifikasi tidak ditemukan.
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Notifikasi tidak ditemukan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

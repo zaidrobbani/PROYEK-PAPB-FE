@@ -17,6 +17,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.auth.role_selection.container.UserRole
+import com.example.proyek_papb_fe.feature.auth.splash.viewmodel.SplashViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -29,11 +36,34 @@ import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthPrimaryButton
 import com.example.proyek_papb_fe.feature.auth.splash.component.TemuKaryaLogoBadge
 
-/** Tinggi minimum isi layar: padding, spacer atas, blok branding, dan footer. */
 private val SplashMinContentHeight = 424.042.dp
 
 @Composable
 fun SplashScreen(
+    onStartClick: () -> Unit,
+    onLoggedIn: (UserRole) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SplashViewModel = viewModel(
+        factory = SplashViewModel.factory(AppContainer.authRepository)
+    )
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.loggedInRole) {
+        uiState.loggedInRole?.let { role ->
+            viewModel.onNavigated()
+            onLoggedIn(role)
+        }
+    }
+
+    SplashContent(
+        onStartClick = { if (!uiState.isCheckingSession) onStartClick() },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun SplashContent(
     onStartClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -42,7 +72,6 @@ fun SplashScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Tinggi harus pasti agar weight(1f) tetap bekerja di dalam area scroll.
         val contentHeight = max(maxHeight, SplashMinContentHeight)
 
         Column(
@@ -127,6 +156,6 @@ private fun SplashFooter(onStartClick: () -> Unit) {
 @Composable
 private fun SplashScreenPreview() {
     PROYEKPAPBFETheme {
-        SplashScreen(onStartClick = {})
+        SplashContent(onStartClick = {})
     }
 }

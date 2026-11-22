@@ -20,19 +20,11 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data header (sudah diformat) untuk Rencana Pengerjaan satu project. */
 data class WorkPlanHeader(
     val projectTitle: String,
-    /** Mis. "Kedai Kopi Senja, Deadline 7 Nov 2026 (14 hari)". */
     val clientAndDeadline: String
 )
 
-/**
- * Figma: Rencana Pengerjaan (Freelancer) (88:2).
- * Konten di-scroll; top bar dan bottom bar tetap. Bottom bar ditaruh di bawah area
- * scroll (bukan menimpa) dan ikut naik di atas keyboard, agar input yang sedang
- * difokus tidak tertutup.
- */
 @Composable
 fun WorkPlanScreen(
     header: WorkPlanHeader,
@@ -49,7 +41,6 @@ fun WorkPlanScreen(
     onSaveDraftClick: () -> Unit,
     onSubmitClick: () -> Unit,
     modifier: Modifier = Modifier,
-    /** Kartu simulasi sisi UMKM; null = tidak ditampilkan. */
     umkmEntry: UmkmSimulationEntry? = null,
     onOpenUmkmSimulation: () -> Unit = {}
 ) {
@@ -73,7 +64,6 @@ fun WorkPlanScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    // Figma: Main pt 84 (app bar 64 + 20), px 17, pb 120 (bottom bar 80 + 40).
                     .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

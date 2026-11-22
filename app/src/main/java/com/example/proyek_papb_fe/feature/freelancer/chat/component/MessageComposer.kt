@@ -38,16 +38,8 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 private val InputShape = RoundedCornerShape(22.dp)
 
-/** Tombol kirim saat input kosong (Figma: Message Composer State=Empty). */
 private const val DisabledAlpha = 0.4f
 
-/**
- * Figma: Message Composer (komponen, varian Empty / Typing / Attachment Open) di 17:4612.
- * Pola WhatsApp dengan gaya TemuKarya: [+] [input + kamera] [kirim]. Tanpa pesan suara.
- * - Input kosong → tombol kirim tampil nonaktif (redup); ada teks → kirim aktif.
- * - Panel lampiran terbuka → tombol + menjadi tutup (×).
- * Tetap menempel di bawah; hanya garis tipis di atas, tanpa bayangan/blur.
- */
 @Composable
 internal fun MessageComposer(
     draft: String,
@@ -134,7 +126,6 @@ internal fun MessageComposer(
             }
         )
 
-        // Kirim selalu di posisi yang sama; redup & nonaktif saat input masih kosong.
         CircleButton(
             iconRes = R.drawable.ic_send,
             description = "Kirim pesan",

@@ -11,7 +11,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ProjectListRoute
 
-/** Tab Project: ditumpuk di atas Beranda tanpa salinan ganda. */
 fun NavController.navigateToProjectList() {
     navigate(ProjectListRoute) {
         popUpTo(UmkmDashboardRoute)
@@ -28,7 +27,9 @@ fun NavGraphBuilder.projectListScreen(
     onViewApplications: (projectId: String) -> Unit,
     onFinalFiles: (projectId: String) -> Unit,
     onOrderAgain: (projectId: String) -> Unit,
-    onTabSelected: (UmkmTab) -> Unit
+    onTabSelected: (UmkmTab) -> Unit,
+    onOpenAgreement: (projectId: String) -> Unit,
+    onPay: (projectId: String) -> Unit
 ) {
     composable<ProjectListRoute> {
         ProjectListScreen(
@@ -40,7 +41,9 @@ fun NavGraphBuilder.projectListScreen(
             onViewApplications = onViewApplications,
             onFinalFiles = onFinalFiles,
             onOrderAgain = onOrderAgain,
-            onTabSelected = onTabSelected
+            onTabSelected = onTabSelected,
+            onOpenAgreement = onOpenAgreement,
+            onPay = onPay
         )
     }
 }

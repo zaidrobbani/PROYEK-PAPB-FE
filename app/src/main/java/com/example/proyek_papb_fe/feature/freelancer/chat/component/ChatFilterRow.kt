@@ -25,10 +25,6 @@ import com.example.proyek_papb_fe.core.data.model.ProjectFilter
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/**
- * Pill filter status tab Chat, gaya sama dengan pill "Cari Project" / "Project":
- * aktif = cokelat + bayangan, tidak aktif = container pasir. Melebar sampai tepi layar.
- */
 @Composable
 internal fun ChatFilterRow(
     options: List<ChatFilterOption>,

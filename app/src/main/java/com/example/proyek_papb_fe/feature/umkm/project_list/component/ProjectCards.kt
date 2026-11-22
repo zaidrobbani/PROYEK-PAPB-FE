@@ -57,7 +57,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-/** "Rp 1.500.000" seperti Figma. */
 internal fun formatRupiah(value: Long): String {
     val digits = value.toString()
     val grouped = buildString {
@@ -69,13 +68,11 @@ internal fun formatRupiah(value: Long): String {
     return "Rp $grouped"
 }
 
-/** "15 Nov 2026" / "12 Okt 2026" seperti Figma. */
 internal fun formatShortDate(utcMillis: Long): String =
     SimpleDateFormat("d MMM yyyy", Locale.forLanguageTag("id-ID"))
         .apply { timeZone = TimeZone.getTimeZone("UTC") }
         .format(utcMillis)
 
-/** Aksi kartu. Tujuan yang belum dibuat diteruskan sebagai placeholder dari NavHost. */
 data class ProjectCardActions(
     val onViewProgress: (UmkmProject) -> Unit,
     val onReviewResult: (UmkmProject) -> Unit,
@@ -83,7 +80,11 @@ data class ProjectCardActions(
     val onDelete: (UmkmProject) -> Unit,
     val onViewApplications: (UmkmProject) -> Unit,
     val onFinalFiles: (UmkmProject) -> Unit,
-    val onOrderAgain: (UmkmProject) -> Unit
+    val onOrderAgain: (UmkmProject) -> Unit,
+    /** Status MENUNGGU_KESEPAKATAN: buka kesepakatan & rencana kerja. */
+    val onOpenAgreement: (UmkmProject) -> Unit = {},
+    /** Status MENUNGGU_PEMBAYARAN: buka pembayaran QRIS. */
+    val onPay: (UmkmProject) -> Unit = {}
 )
 
 @Composable
@@ -93,10 +94,11 @@ fun ProjectCard(
     modifier: Modifier = Modifier
 ) {
     when (project.status) {
-        ProjectStatus.SedangDikerjakan -> InProgressCard(project, actions, modifier)
+        ProjectStatus.SedangDikerjakan,
+        ProjectStatus.SiapDikerjakan,
+        ProjectStatus.Revisi -> InProgressCard(project, actions, modifier)
         ProjectStatus.MenungguReview -> ReviewCard(project, actions, modifier)
         ProjectStatus.Selesai -> CompletedCard(project, actions, modifier)
-        // Figma hanya mendesain kartu Menunggu Kesepakatan; status lain memakai susunan yang sama.
         else -> AgreementCard(project, actions, modifier)
     }
 }
@@ -508,22 +510,29 @@ private fun AgreementCard(project: UmkmProject, actions: ProjectCardActions, mod
                 MetaItem(R.drawable.ic_project_list_deadline, "Batas: ${formatShortDate(it)}")
             }
         }
-        if (project.offersCount > 0) {
+        val nextStep: Pair<String, () -> Unit>? = when {
+            project.status == ProjectStatus.Terbuka && project.offersCount > 0 ->
+                "Lihat ${project.offersCount} Pengajuan Freelancer" to { actions.onViewApplications(project) }
+            project.status == ProjectStatus.MenungguKesepakatan ->
+                "Lihat Kesepakatan & Rencana Kerja" to { actions.onOpenAgreement(project) }
+            project.status == ProjectStatus.MenungguPembayaran ->
+                "Bayar Sekarang" to { actions.onPay(project) }
+            else -> null
+        }
+        if (nextStep != null) {
             val shape = CircleShape
             Box(
                 modifier = Modifier
                     .padding(top = 8.451.dp)
                     .fillMaxWidth()
                     .height(46.482.dp)
-                    // Figma: latar transparan dengan bayangan tipis yang hanya tampak di luar tepi.
-                    // Bayangan Compose akan tergambar di bawah latar transparan, jadi tidak dipakai.
                     .clip(shape)
-                    .clickable(role = Role.Button) { actions.onViewApplications(project) }
+                    .clickable(role = Role.Button) { nextStep.second() }
                     .padding(horizontal = 16.903.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Lihat ${project.offersCount} Pengajuan Freelancer",
+                    text = nextStep.first,
                     color = colors.onTertiaryContainer,
                     style = cardText(FontWeight.SemiBold, 12.677.sp, 16.903.sp)
                 )

@@ -50,37 +50,31 @@ import com.example.proyek_papb_fe.feature.auth.login.component.LoginFieldErrorIc
 import com.example.proyek_papb_fe.feature.auth.login.component.LoginFieldIssueLabel
 import com.example.proyek_papb_fe.feature.auth.login.component.LoginHeader
 import com.example.proyek_papb_fe.feature.auth.login.component.LoginPasswordToggle
-import com.example.proyek_papb_fe.feature.auth.role_selection.container.UserRole
+import com.example.proyek_papb_fe.feature.auth.login.viewmodel.LoginUiState
 
-/**
- * Login dengan akun dummy (lihat [authenticateDummy]). Tidak ada autentikasi sungguhan
- * maupun pemanggilan API; [onLoginSuccess] menerima peran akun untuk navigasi berikutnya.
- */
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (UserRole) -> Unit,
+    uiState: LoginUiState,
+    onSubmit: (email: String, password: String) -> Unit,
+    onInputChanged: () -> Unit,
+    onResendVerification: (email: String) -> Unit,
     onForgotPassword: () -> Unit,
     onGoogleLogin: () -> Unit,
     onRegister: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var email by rememberSaveable { mutableStateOf("") }
-    // Kata sandi sengaja hanya di memori agar tidak ikut tersimpan di saved instance state.
     var password by remember { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
-    var loginFailed by rememberSaveable { mutableStateOf(false) }
 
-    // Pesan muncul setelah tombol ditekan, lalu ikut hilang saat isian diperbaiki.
     val errors = if (submitted) validateLogin(email, password) else LoginErrors()
-    val passwordError = errors.password ?: LoginFailedMessage.takeIf { loginFailed }
+    val emailError = errors.email ?: uiState.fieldErrors["email"]
+    val passwordError = errors.password ?: uiState.fieldErrors["password"] ?: uiState.errorMessage
 
-    val onSubmit: () -> Unit = {
+    val submit: () -> Unit = {
         submitted = true
-        if (!validateLogin(email, password).hasError) {
-            val role = authenticateDummy(email, password)
-            if (role == null) loginFailed = true else onLoginSuccess(role)
-        }
+        if (!validateLogin(email, password).hasError) onSubmit(email, password)
     }
 
     val colors = MaterialTheme.colorScheme
@@ -112,16 +106,16 @@ fun LoginScreen(
                     value = email,
                     onValueChange = {
                         email = it
-                        loginFailed = false
+                        onInputChanged()
                     },
-                    error = errors.email,
-                    labelTrailing = if (errors.email != null) {
+                    error = emailError,
+                    labelTrailing = if (emailError != null) {
                         { LoginFieldIssueLabel() }
                     } else {
                         null
                     },
                     leadingContent = { MailIcon() },
-                    trailingContent = { if (errors.email != null) LoginFieldErrorIcon() },
+                    trailingContent = { if (emailError != null) LoginFieldErrorIcon() },
                     textEndPadding = 42.256.dp,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -137,7 +131,7 @@ fun LoginScreen(
                     value = password,
                     onValueChange = {
                         password = it
-                        loginFailed = false
+                        onInputChanged()
                     },
                     error = passwordError,
                     labelTrailing = { ForgotPasswordLink(onClick = onForgotPassword) },
@@ -154,7 +148,7 @@ fun LoginScreen(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     ),
-                    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                    keyboardActions = KeyboardActions(onDone = { submit() }),
                     visualTransformation = if (passwordVisible) {
                         VisualTransformation.None
                     } else {
@@ -165,10 +159,18 @@ fun LoginScreen(
                 )
                 AuthPrimaryButton(
                     text = "Masuk",
-                    onClick = onSubmit,
+                    onClick = submit,
                     modifier = Modifier.padding(top = 4.226.dp),
-                    shadowStyle = AuthShadowStyle.Subtle
+                    shadowStyle = AuthShadowStyle.Subtle,
+                    isLoading = uiState.isLoading
                 )
+                if (uiState.needsEmailVerification) {
+                    ResendVerificationLink(
+                        isSending = uiState.isResendingVerification,
+                        onClick = { onResendVerification(email) },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
             }
             LoginAlternativeOption(onGoogleClick = onGoogleLogin)
         }
@@ -182,7 +184,6 @@ fun LoginScreen(
                 .padding(top = 16.903.dp),
             spacing = 6.338.dp
         )
-        // Frame "Dedicated Admin Portal Access" pada Figma kosong, hanya menyisakan ruang.
         Spacer(Modifier.height(25.354.dp + 38.031.dp))
     }
 }
@@ -202,6 +203,24 @@ private fun ForgotPasswordLink(onClick: () -> Unit) {
 }
 
 @Composable
+private fun ResendVerificationLink(
+    isSending: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = if (isSending) "Mengirim tautan verifikasi..." else "Kirim ulang email verifikasi",
+        modifier = modifier.clickable(enabled = !isSending, role = Role.Button, onClick = onClick),
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.labelSmall.withFrameMetrics(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.677.sp,
+            lineHeight = 16.903.sp
+        )
+    )
+}
+
+@Composable
 private fun BoxScope.MailIcon() {
     RegisterFieldIcon(R.drawable.ic_register_mail, 18.66.dp, 18.31.dp, 16.667.dp, 13.333.dp)
 }
@@ -216,7 +235,10 @@ private fun BoxScope.LockIcon() {
 private fun LoginScreenPreview() {
     PROYEKPAPBFETheme {
         LoginScreen(
-            onLoginSuccess = {},
+            uiState = LoginUiState(),
+            onSubmit = { _, _ -> },
+            onInputChanged = {},
+            onResendVerification = {},
             onForgotPassword = {},
             onGoogleLogin = {},
             onRegister = {}

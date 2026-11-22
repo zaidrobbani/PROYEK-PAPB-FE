@@ -14,7 +14,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.notification.viewmodel.NotificationsViewModel
+import com.example.proyek_papb_fe.feature.umkm.data.UmkmNotificationStore
+import com.example.proyek_papb_fe.core.ui.components.EmptyContent
+import com.example.proyek_papb_fe.core.ui.components.InlineErrorContent
+import com.example.proyek_papb_fe.feature.umkm.dashboard.viewmodel.UmkmDashboardUiState
+import com.example.proyek_papb_fe.feature.umkm.dashboard.viewmodel.UmkmDashboardViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -35,10 +46,8 @@ import com.example.proyek_papb_fe.feature.umkm.dashboard.component.DashboardSear
 import com.example.proyek_papb_fe.feature.umkm.dashboard.component.DashboardSectionHeader
 import com.example.proyek_papb_fe.feature.umkm.dashboard.component.FreelancerRecommendationCard
 
-/** Jarak horizontal halaman pada frame Figma. */
 private val PageGutter = 16.903.dp
 
-/** Setiap bagian: jarak antarbagian 28 ditambah margin atas 21.128 dari frame Figma. */
 private val SectionTopMargin = 21.128.dp
 
 @Composable
@@ -53,8 +62,58 @@ fun UmkmDashboardScreen(
     onFreelancerClick: (freelancerId: String) -> Unit,
     onTabSelected: (UmkmTab) -> Unit,
     modifier: Modifier = Modifier,
-    data: UmkmDashboardData = DummyUmkmDashboard
+    viewModel: UmkmDashboardViewModel = viewModel(
+        factory = UmkmDashboardViewModel.factory(
+            AppContainer.authRepository,
+            AppContainer.profileRepository,
+            AppContainer.workflowRepository,
+            AppContainer.freelancerRepository
+        )
+    ),
+    notificationsViewModel: NotificationsViewModel = viewModel(
+        factory = NotificationsViewModel.factory(AppContainer.notificationRepository)
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val notifications by notificationsViewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        viewModel.load()
+        notificationsViewModel.load()
+    }
+    // Isi cache notifikasi agar titik merah di top bar sesuai data BE.
+    LaunchedEffect(notifications.items) { UmkmNotificationStore.replace(notifications.items) }
+    UmkmDashboardContent(
+        uiState = uiState,
+        onRetry = viewModel::load,
+        onNotificationsClick = onNotificationsClick,
+        onSearch = onSearch,
+        onFilterClick = onFilterClick,
+        onCreateProject = onCreateProject,
+        onSeeAllProjects = onSeeAllProjects,
+        onProjectClick = onProjectClick,
+        onSeeAllFreelancers = onSeeAllFreelancers,
+        onFreelancerClick = onFreelancerClick,
+        onTabSelected = onTabSelected,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun UmkmDashboardContent(
+    uiState: UmkmDashboardUiState,
+    onRetry: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onSearch: (query: String) -> Unit,
+    onFilterClick: () -> Unit,
+    onCreateProject: () -> Unit,
+    onSeeAllProjects: () -> Unit,
+    onProjectClick: (projectId: String) -> Unit,
+    onSeeAllFreelancers: () -> Unit,
+    onFreelancerClick: (freelancerId: String) -> Unit,
+    onTabSelected: (UmkmTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val data = uiState
     var query by rememberSaveable { mutableStateOf("") }
     val colors = MaterialTheme.colorScheme
 
@@ -87,7 +146,6 @@ fun UmkmDashboardScreen(
                 query = query,
                 onQueryChange = { query = it },
                 onSearch = {
-                    // Kata kunci dibawa ke Cari Freelancer; kolom di Beranda dikosongkan lagi.
                     val keyword = query.trim()
                     query = ""
                     onSearch(keyword)
@@ -113,6 +171,12 @@ fun UmkmDashboardScreen(
                     actionColor = colors.secondary,
                     onActionClick = onSeeAllProjects
                 )
+                when {
+                    uiState.isLoading && data.activeProjects.isEmpty() -> LinearProgressIndicator(Modifier.fillMaxWidth())
+                    uiState.errorMessage != null -> InlineErrorContent(message = uiState.errorMessage, onRetry = onRetry)
+                    !uiState.hasBusinessProfile -> EmptyContent("Lengkapi profil usaha di menu Profil sebelum membuat project.")
+                    data.activeProjects.isEmpty() -> EmptyContent("Belum ada project aktif. Buat project pertamamu.")
+                }
                 data.activeProjects.forEach { project ->
                     ActiveProjectCard(
                         project = project,
@@ -131,7 +195,6 @@ fun UmkmDashboardScreen(
                     onActionClick = onSeeAllFreelancers,
                     modifier = Modifier.padding(horizontal = PageGutter)
                 )
-                // Carousel selebar layar; ruang bawah 4.23 untuk bayangan kartu seperti di Figma.
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -164,7 +227,9 @@ fun UmkmDashboardScreen(
 @Composable
 private fun UmkmDashboardScreenPreview() {
     PROYEKPAPBFETheme {
-        UmkmDashboardScreen(
+        UmkmDashboardContent(
+            uiState = UmkmDashboardUiState(isLoading = false, ownerFirstName = "Rina"),
+            onRetry = {},
             onNotificationsClick = {},
             onSearch = {},
             onFilterClick = {},

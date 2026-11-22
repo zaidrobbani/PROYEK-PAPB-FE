@@ -38,66 +38,74 @@ import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.
 import com.example.proyek_papb_fe.feature.umkm.data.FundStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransactionStore
 import com.example.proyek_papb_fe.feature.umkm.data.utcMillisToDate
 import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupiah
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
 private val IndonesianLocale: Locale = Locale.forLanguageTag("id-ID")
 private val SeparatorFormat = DateTimeFormatter.ofPattern("EEEE, d MMM yyyy", IndonesianLocale)
 private val DeadlineFormat = DateTimeFormatter.ofPattern("d MMM yyyy", IndonesianLocale)
 private val BubbleTime = DateTimeFormatter.ofPattern("HH.mm")
 
-/**
- * Ruang Chat UMKM untuk satu percakapan dari [UmkmConversationStore] (DATA DUMMY lokal).
- * Kirim pesan hanya simulasi: pesan ditambahkan ke memori, tidak dikirim ke server/freelancer.
- *
- * [onOpenProject] null = project ini belum punya halaman detail; menu/lampiran/suara belum ada
- * desain lanjutannya, jadi hanya memberi pesan singkat.
- */
 @Composable
 fun ChatRoomScreen(
     conversationId: String,
     onBack: () -> Unit,
     onOpenProject: ((projectId: String) -> Unit)?,
     onCompareDrafts: ((conversationId: String, draftMessageId: String) -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(conversationId))
 ) {
     val context = LocalContext.current
     fun notAvailable(feature: String): () -> Unit = {
         Toast.makeText(context, "$feature belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
     }
 
+    val chatState by viewModel.uiState.collectAsStateWithLifecycle()
     val conversation = UmkmConversationStore.conversation(conversationId)
     if (conversation == null) {
-        // Tidak ada di Figma: id percakapan tidak ditemukan.
         Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             AuthAppBar(title = "Chat", onBack = onBack)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Percakapan tidak ditemukan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            run {
+                val vmState by viewModel.uiState.collectAsStateWithLifecycle()
+                when {
+                    vmState.isLoading -> com.example.proyek_papb_fe.core.ui.components.LoadingContent()
+                    vmState.errorMessage != null -> com.example.proyek_papb_fe.core.ui.components.ErrorContent(vmState.errorMessage.orEmpty(), onRetry = viewModel::load)
+                    else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Percakapan tidak ditemukan.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
             }
         }
         return
     }
 
-    // Membuka ruang chat = membaca pesan baru; lencana di Daftar Percakapan ikut hilang.
-    LaunchedEffect(conversationId) { UmkmConversationStore.markRead(conversationId) }
+    LaunchedEffect(conversationId) {
+        while (true) {
+            kotlinx.coroutines.delay(5_000)
+            viewModel.refreshMessages()
+        }
+    }
+    LaunchedEffect(chatState.message) {
+        chatState.message?.let {
+            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.onMessageShown()
+        }
+    }
 
     var draft by rememberSaveable(conversationId) { mutableStateOf("") }
     val messages = UmkmConversationStore.messages(conversationId)
     val listState = rememberLazyListState()
-    // Mulai dari pesan terbaru, dan ikut turun setiap ada pesan baru.
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) listState.scrollToItem(listState.layoutInfo.totalItemsCount.coerceAtLeast(1) - 1)
     }
 
     val project = conversation.projectId?.let { UmkmProjectStore.project(it) }
-    val heldFunds = conversation.projectId?.let { id ->
-        UmkmTransactionStore.transactions.firstOrNull { it.projectId == id && it.fundStatus == FundStatus.Tertahan }
-    }?.let { formatRupiah(it.amount) }
+    val heldFunds = project?.takeIf { it.isPaid && !it.fundsReleased }?.let { formatRupiah(it.budget) }
     val today = LocalDate.now()
     val deadline = project?.deadlineUtcMillis?.let(::utcMillisToDate)?.let { date ->
         val days = ChronoUnit.DAYS.between(today, date)
@@ -124,14 +132,12 @@ fun ChatRoomScreen(
             onBack = onBack,
             onMore = notAvailable("Menu percakapan")
         )
-        // Modal revisi menutupi area di bawah App Bar, seperti Figma.
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             Column(modifier = Modifier.fillMaxSize()) {
                 ChatProjectContext(
                     projectTitle = conversation.projectTitle,
                     heldFunds = heldFunds,
                     deadline = deadline,
-                    // Detail project = Pemantauan Progres, hanya untuk project yang punya data milestone.
                     onOpenProject = if (project != null && project.milestones.isNotEmpty() && onOpenProject != null) {
                         { onOpenProject(project.id) }
                     } else {
@@ -178,8 +184,6 @@ fun ChatRoomScreen(
                                     sameSender -> 4.dp
                                     else -> 12.dp
                                 },
-                                // Draf perbaikan membuka Bandingkan Draf. Minta revisi memakai layar
-                                // Review Hasil milik modul Putri (belum digabung ke branch ini).
                                 onOpenDraft = if (message.attachment?.previousDraftMessageId != null && onCompareDrafts != null) {
                                     { onCompareDrafts(conversationId, message.id) }
                                 } else {
@@ -193,7 +197,10 @@ fun ChatRoomScreen(
                     value = draft,
                     onValueChange = { draft = it },
                     onSend = {
-                        if (UmkmConversationStore.sendMessage(conversationId, draft)) draft = ""
+                        if (draft.isNotBlank()) {
+                            viewModel.send(draft.trim())
+                            draft = ""
+                        }
                     },
                     onAdd = notAvailable("Aksi tambahan"),
                     onAttachImage = notAvailable("Lampiran gambar"),
@@ -204,10 +211,3 @@ fun ChatRoomScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ChatRoomScreenPreview() {
-    PROYEKPAPBFETheme {
-        ChatRoomScreen(conversationId = "dummy-chat-andi", onBack = {}, onOpenProject = null)
-    }
-}

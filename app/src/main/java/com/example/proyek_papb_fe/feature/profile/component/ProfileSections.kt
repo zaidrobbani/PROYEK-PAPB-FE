@@ -28,10 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Satu kotak statistik (Figma 27:279): nilai tebal + label. */
 data class ProfileStat(val value: String, val label: String)
 
-/** Figma 27:278: tiga kotak statistik lebar sama, jarak 10. */
 @Composable
 internal fun ProfileStatsRow(stats: List<ProfileStat>, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -51,7 +49,6 @@ internal fun ProfileStatsRow(stats: List<ProfileStat>, modifier: Modifier = Modi
     }
 }
 
-/** Judul bagian ("Keahlian", "Kelola Akun") dengan aksi teks opsional di kanan ("Kelola"). */
 @Composable
 internal fun ProfileSectionHeader(
     title: String,
@@ -78,7 +75,6 @@ internal fun ProfileSectionHeader(
     }
 }
 
-/** Figma 27:291: chip keahlian hijau, membungkus ke baris berikutnya (jarak 8). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ProfileSkills(skills: List<String>, modifier: Modifier = Modifier) {
@@ -93,10 +89,6 @@ internal fun ProfileSkills(skills: List<String>, modifier: Modifier = Modifier) 
     }
 }
 
-/**
- * Figma: baris menu "Kelola Akun" (27:302): lencana ikon 38, judul + keterangan, chevron.
- * [isDanger] = baris "Keluar" (lencana & judul merah).
- */
 @Composable
 internal fun ProfileMenuItem(
     @DrawableRes iconRes: Int,

@@ -7,10 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.umkm.freelancer_profile.container.FreelancerProfileScreen
 import kotlinx.serialization.Serializable
 
-/**
- * [applicationId] terisi bila dibuka dari Pengajuan Freelancer, sehingga tombol "Pilih & Buat
- * Kesepakatan" memilih pengajuan itu. Dari Beranda/Cari Freelancer bernilai null.
- */
 @Serializable
 data class UmkmFreelancerProfileRoute(val freelancerId: String, val applicationId: String? = null)
 

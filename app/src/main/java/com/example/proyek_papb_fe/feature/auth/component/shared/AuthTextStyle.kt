@@ -5,10 +5,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
-/**
- * Menyesuaikan gaya teks dari tema dengan nilai pada frame Figma.
- * Font tetap mengikuti tema, jadi bukan token typography baru.
- */
 internal fun TextStyle.withFrameMetrics(
     fontWeight: FontWeight,
     fontSize: TextUnit,

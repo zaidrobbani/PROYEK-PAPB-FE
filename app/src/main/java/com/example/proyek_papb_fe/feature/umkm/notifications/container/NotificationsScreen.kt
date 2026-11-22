@@ -10,7 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.notification.viewmodel.NotificationsViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,16 +41,20 @@ import com.example.proyek_papb_fe.feature.umkm.notifications.component.Notificat
 import com.example.proyek_papb_fe.feature.umkm.notifications.component.NotificationGroupLabel
 import java.time.LocalDateTime
 
-/**
- * Notifikasi UMKM (Blueprint TK-F-U-26). Data berasal dari DATA DUMMY lokal
- * [UmkmNotificationStore]; membuka notifikasi menandainya sudah dibaca.
- */
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
     onNotificationClick: (UmkmNotification) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: NotificationsViewModel = viewModel(factory = NotificationsViewModel.factory(AppContainer.notificationRepository))
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) { viewModel.load() }
+    LaunchedEffect(uiState.items) { UmkmNotificationStore.replace(uiState.items) }
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+    }
     var categoryName by rememberSaveable { mutableStateOf<String?>(null) }
     val category = categoryName?.let { NotificationCategory.valueOf(it) }
 
@@ -74,7 +85,6 @@ fun NotificationsScreen(
             }
             if (shown.isEmpty()) {
                 item(key = "empty") {
-                    // Figma tidak punya keadaan kosong; teks sederhana ini tambahan.
                     Text(
                         text = "Belum ada notifikasi di kategori ini.",
                         modifier = Modifier
@@ -100,6 +110,7 @@ fun NotificationsScreen(
                         timeLabel = { formatNotificationTime(it.time, now) },
                         onClick = { notification ->
                             UmkmNotificationStore.markRead(notification.id)
+                            viewModel.markRead(notification.id)
                             onNotificationClick(notification)
                         }
                     )
@@ -109,10 +120,3 @@ fun NotificationsScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun NotificationsScreenPreview() {
-    PROYEKPAPBFETheme {
-        NotificationsScreen(onBack = {}, onNotificationClick = {})
-    }
-}

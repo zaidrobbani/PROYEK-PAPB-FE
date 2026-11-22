@@ -32,10 +32,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/**
- * Kolom pencarian tab Chat. Gaya sama dengan pencarian "Cari Project":
- * putih, sudut 12, bayangan lembut, tanpa border.
- */
 @Composable
 internal fun ChatSearchField(
     query: String,

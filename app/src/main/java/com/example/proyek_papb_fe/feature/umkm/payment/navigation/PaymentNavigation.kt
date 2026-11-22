@@ -9,28 +9,26 @@ import com.example.proyek_papb_fe.feature.umkm.payment.container.PaymentContaine
 import com.example.proyek_papb_fe.feature.umkm.payment.container.PaymentProofContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Detail Pembayaran QRIS (17:1267), pembayaran UMKM untuk project [projectId]. */
 @Serializable
-data class PaymentRoute(val projectId: Int)
+data class PaymentRoute(val projectId: String)
 
-/** Figma: Bukti Pembayaran Berhasil (17:3177) untuk pembayaran [paymentId]. */
 @Serializable
-data class PaymentProofRoute(val paymentId: String)
+data class PaymentProofRoute(val projectId: String)
 
-fun NavController.navigateToPayment(projectId: Int, builder: NavOptionsBuilder.() -> Unit = {}) =
+fun NavController.navigateToPayment(projectId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
     navigate(PaymentRoute(projectId)) { launchSingleTop = true; builder() }
 
-fun NavController.navigateToPaymentProof(paymentId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
-    navigate(PaymentProofRoute(paymentId)) { launchSingleTop = true; builder() }
+fun NavController.navigateToPaymentProof(projectId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
+    navigate(PaymentProofRoute(projectId)) { launchSingleTop = true; builder() }
 
 fun NavGraphBuilder.paymentScreens(
     onBack: () -> Unit,
-    onPaid: (paymentId: String) -> Unit
+    onPaid: (projectId: String) -> Unit
 ) {
     composable<PaymentRoute> { entry ->
         PaymentContainer(projectId = entry.toRoute<PaymentRoute>().projectId, onBack = onBack, onPaid = onPaid)
     }
     composable<PaymentProofRoute> { entry ->
-        PaymentProofContainer(paymentId = entry.toRoute<PaymentProofRoute>().paymentId, onBack = onBack)
+        PaymentProofContainer(projectId = entry.toRoute<PaymentProofRoute>().projectId, onBack = onBack)
     }
 }

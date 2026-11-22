@@ -35,20 +35,21 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
 private val CancelledTime = DateTimeFormatter.ofPattern("d MMM yyyy, HH.mm", Locale.forLanguageTag("id-ID"))
 
-/**
- * Status Project setelah pembatalan (Figma 26:201). Membaca negosiasi yang baru dibatalkan dari
- * [UmkmNegotiationStore] (SIMULASI lokal, bukan data server). Hanya tampil untuk status
- * Dibatalkan; selain itu menampilkan pesan bahwa project tidak dibatalkan.
- */
 @Composable
 fun ProjectCancelledScreen(
     conversationId: String,
     onBackToProjects: () -> Unit,
     onFindOtherOptions: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(conversationId))
 ) {
     val conversation = UmkmConversationStore.conversation(conversationId)
     val negotiation = UmkmNegotiationStore.negotiation(conversationId)
@@ -60,7 +61,6 @@ fun ProjectCancelledScreen(
     ) {
         StatusAppBar()
         if (conversation == null || negotiation == null || negotiation.status != ProjectStatus.Dibatalkan) {
-            // Tidak ada di Figma: pengaman bila screen dibuka untuk project yang tidak dibatalkan.
             Box(Modifier.fillMaxSize().padding(17.dp), contentAlignment = Alignment.Center) {
                 Text("Project ini tidak berstatus Dibatalkan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -71,7 +71,6 @@ fun ProjectCancelledScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                // Figma: pt 110 dari atas layar (App Bar 64), pb 32.
                 .padding(start = 17.dp, end = 17.dp, top = 110.dp - 64.dp, bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -86,7 +85,6 @@ fun ProjectCancelledScreen(
                     CancelledDetail("Freelancer", conversation.freelancerName),
                     negotiation.cancellationReason?.let { CancelledDetail("Alasan", it.label) },
                     negotiation.cancelledAt?.let { CancelledDetail("Waktu", "${it.format(CancelledTime)} WIB") },
-                    // Pembatalan hanya diizinkan sebelum pembayaran berhasil (Blueprint).
                     CancelledDetail("Dana", if (negotiation.isPaid) "Sudah dibayar" else "Tidak ada pembayaran", positive = !negotiation.isPaid)
                 )
             )
@@ -96,7 +94,6 @@ fun ProjectCancelledScreen(
     }
 }
 
-/** App Bar Figma tanpa tombol kembali: hanya judul "Status Project". */
 @Composable
 private fun StatusAppBar() {
     Box(
@@ -126,10 +123,3 @@ private fun StatusAppBar() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ProjectCancelledScreenPreview() {
-    PROYEKPAPBFETheme {
-        ProjectCancelledScreen(conversationId = "dummy-chat-maya", onBackToProjects = {}, onFindOtherOptions = {})
-    }
-}

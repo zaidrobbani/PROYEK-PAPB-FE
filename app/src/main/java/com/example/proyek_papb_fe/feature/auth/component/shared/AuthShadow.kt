@@ -8,13 +8,11 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 
-/** Prominent dipakai di frame Splash, Subtle di Pilih Peran, None di Lupa Password. */
 enum class AuthShadowStyle { Prominent, Subtle, None }
 
 private val ProminentShadowColor = Color.Black.copy(alpha = 0.1f)
 private val SubtleShadowColor = Color.Black.copy(alpha = 0.05f)
 
-/** Bayangan sesuai nilai pada frame Figma Authentication. */
 internal fun Modifier.authDropShadow(
     shape: Shape,
     style: AuthShadowStyle = AuthShadowStyle.Prominent

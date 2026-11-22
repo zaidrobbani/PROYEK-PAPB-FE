@@ -16,7 +16,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.components.RootTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Menu "Kelola Akun" sesuai urutan Figma 27:302–27:337. */
 enum class ProfileMenu(val title: String, val iconRes: Int, val isDanger: Boolean = false) {
     PROFESSIONAL_PROFILE("Kelola Profil Profesional", R.drawable.ic_profile_badge),
     PORTFOLIO("Kelola Portofolio", R.drawable.ic_profile_photo_library),
@@ -26,28 +25,20 @@ enum class ProfileMenu(val title: String, val iconRes: Int, val isDanger: Boolea
     LOGOUT("Keluar", R.drawable.ic_profile_logout, isDanger = true)
 }
 
-/** Data tampilan Profil (sudah diformat). */
 data class ProfileUiState(
     val initials: String,
-    /** Foto profil yang dipilih di Kelola Profil Profesional; null = avatar inisial. */
     val photoUri: String? = null,
     val name: String,
     val headline: String,
     val city: String,
-    /** "4.9, 48 ulasan". */
     val ratingLabel: String,
     val isAvailableForWork: Boolean,
     val stats: List<ProfileStat>,
     val skills: List<String>,
-    /** Keterangan tiap menu, mis. PORTFOLIO → "24 karya ditampilkan". */
     val menuSubtitles: Map<ProfileMenu, String>,
     val hasUnreadNotification: Boolean
 )
 
-/**
- * Figma: Profil Saya (Freelancer) (27:250).
- * App bar Root tetap di atas; isi di-scroll (pt 20 di bawah app bar, px 17, jarak antar bagian 16).
- */
 @Composable
 fun ProfileContent(
     state: ProfileUiState,

@@ -40,7 +40,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.RegisterTextFiel
 import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Kartu akun yang sedang masuk; gaya mengikuti kartu di layar Auth (tidak ada frame Figma). */
 @Composable
 fun SecurityAccountCard(email: String, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -88,7 +87,6 @@ fun SecurityAccountCard(email: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Kolom kata sandi yang sama dengan form Registrasi (ikon gembok + tombol lihat). */
 @Composable
 fun PasswordInputField(
     label: String,
@@ -126,7 +124,6 @@ private fun BoxScope.LockIcon() {
     RegisterFieldIcon(R.drawable.ic_register_lock, 17.96.dp, 16.64.dp, 12.dp, 15.75.dp)
 }
 
-/** Tautan di samping label "Kata Sandi Saat Ini", membuka panel Lupa Password. */
 @Composable
 fun ForgotCurrentPasswordLink(onClick: () -> Unit) {
     Text(
@@ -141,7 +138,6 @@ fun ForgotCurrentPasswordLink(onClick: () -> Unit) {
     )
 }
 
-/** Catatan aman yang sama gayanya dengan kartu info Lupa Password. */
 @Composable
 fun SecurityInfoCard(text: String, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

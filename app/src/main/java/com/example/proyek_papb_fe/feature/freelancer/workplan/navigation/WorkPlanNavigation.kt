@@ -7,11 +7,10 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.freelancer.workplan.container.WorkPlanContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Rencana Pengerjaan (Freelancer) (88:2), dibuka dari "Lanjut Project" di Negosiasi. */
 @Serializable
-data class WorkPlanRoute(val projectId: Int)
+data class WorkPlanRoute(val projectId: String)
 
-fun NavController.navigateToWorkPlan(projectId: Int) {
+fun NavController.navigateToWorkPlan(projectId: String) {
     navigate(WorkPlanRoute(projectId)) {
         launchSingleTop = true
     }
@@ -19,8 +18,7 @@ fun NavController.navigateToWorkPlan(projectId: Int) {
 
 fun NavGraphBuilder.workPlanScreen(
     onBack: () -> Unit,
-    /** Kartu simulasi sisi UMKM (belum ada aplikasi UMKM): Tinjau Rencana / Pembayaran / Bukti. */
-    onOpenUmkmSimulation: (projectId: Int) -> Unit
+    onOpenUmkmSimulation: (projectId: String) -> Unit
 ) {
     composable<WorkPlanRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<WorkPlanRoute>()

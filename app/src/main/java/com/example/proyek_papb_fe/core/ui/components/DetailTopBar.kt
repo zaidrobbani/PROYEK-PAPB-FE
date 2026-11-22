@@ -25,7 +25,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: App Bar varian Detail (halaman turunan dengan tombol kembali). */
 @Composable
 fun DetailTopBar(
     title: String,

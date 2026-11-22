@@ -6,16 +6,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.proyek_papb_fe.core.data.FreelancerProfileStore
-import com.example.proyek_papb_fe.core.data.NotificationStore
-import com.example.proyek_papb_fe.core.data.WalletStore
 import com.example.proyek_papb_fe.core.data.model.FreelancerProfile
 import com.example.proyek_papb_fe.feature.profile.component.ProfileContent
 import com.example.proyek_papb_fe.feature.profile.component.ProfileMenu
 import com.example.proyek_papb_fe.feature.profile.component.ProfileStat
 import com.example.proyek_papb_fe.feature.profile.component.ProfileUiState
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.FreelancerProfileViewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.freelancerProfileViewModelFactory
+import androidx.compose.runtime.getValue
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.notification.viewmodel.NotificationsViewModel
 
-/** 2850000 → "Rp 2.850.000". */
 private fun formatRupiah(amount: Long): String =
     "Rp " + amount.toString().reversed().chunked(3).joinToString(".").reversed()
 
@@ -49,13 +54,6 @@ private fun FreelancerProfile.toUiState(
     hasUnreadNotification = unreadNotificationCount > 0
 )
 
-/**
- * Container tab "Profil" (Figma 27:250). Data dari [FreelancerProfileStore],
- * [NotificationStore], dan [WalletStore], sehingga perubahan di layar Kelola langsung
- * tampil di sini. Menu membuka Kelola Profil Profesional, Kelola Portofolio, Kelola
- * Pengalaman, Dompet & Rekening (27:80), dan Notifikasi; lonceng juga membuka Notifikasi
- * dan "Kelola" di Keahlian membuka Kelola Profil Profesional. "Keluar" belum ada di aplikasi.
- */
 @Composable
 fun ProfileScreen(
     onProfessionalProfileClick: () -> Unit,
@@ -63,14 +61,24 @@ fun ProfileScreen(
     onExperienceClick: () -> Unit,
     onWalletClick: () -> Unit,
     onNotificationsClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory()),
+    notificationsViewModel: NotificationsViewModel = viewModel(
+        factory = NotificationsViewModel.factory(AppContainer.notificationRepository)
+    )
 ) {
-    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val notifications by notificationsViewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        viewModel.load()
+        notificationsViewModel.load()
+    }
     val state = FreelancerProfileStore.profile.toUiState(
-        availableBalance = WalletStore.summary.availableBalance,
+        availableBalance = uiState.availableBalance,
         portfolioCount = FreelancerProfileStore.portfolio.size,
         workExperienceCount = FreelancerProfileStore.experiences.size,
-        unreadNotificationCount = NotificationStore.unreadCount
+        unreadNotificationCount = notifications.unreadCount
     )
 
     ProfileContent(
@@ -84,15 +92,10 @@ fun ProfileScreen(
                 ProfileMenu.EXPERIENCE -> onExperienceClick()
                 ProfileMenu.WALLET -> onWalletClick()
                 ProfileMenu.NOTIFICATIONS -> onNotificationsClick()
-                ProfileMenu.LOGOUT -> Toast.makeText(context, "${menu.title} segera hadir", Toast.LENGTH_SHORT).show()
+                ProfileMenu.LOGOUT -> onLogoutClick()
             }
         },
         modifier = modifier
     )
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 843)
-@Composable
-private fun ProfileScreenPreview() {
-    ProfileScreen(onProfessionalProfileClick = {}, onPortfolioClick = {}, onExperienceClick = {}, onWalletClick = {}, onNotificationsClick = {})
-}

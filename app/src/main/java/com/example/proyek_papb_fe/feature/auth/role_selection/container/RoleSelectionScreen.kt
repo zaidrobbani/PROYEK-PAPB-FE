@@ -42,11 +42,9 @@ import com.example.proyek_papb_fe.feature.auth.role_selection.component.RoleOpti
 
 enum class UserRole { Umkm, Freelancer }
 
-/** Tinggi seluruh isi layar di Figma tanpa area kosong di bawah kartu. */
 private val ContentHeightWithoutSpacer = 709.275.dp
 private val MaxSpacerHeight = 101.708.dp
 
-/** Area minimum di atas tombol, agar pesan validasi tidak menggeser layout. */
 private val MinSpacerHeight = 29.579.dp
 
 private val UmkmOption = RoleOptionContent(
@@ -96,7 +94,6 @@ fun RoleSelectionScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Area kosong mengecil lebih dulu di layar pendek, agar tombol tetap terlihat.
         val spacerHeight = (maxHeight - ContentHeightWithoutSpacer)
             .coerceIn(MinSpacerHeight, MaxSpacerHeight)
 

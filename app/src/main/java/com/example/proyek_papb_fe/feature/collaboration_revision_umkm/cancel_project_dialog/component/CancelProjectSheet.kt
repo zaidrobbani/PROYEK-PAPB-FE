@@ -37,15 +37,10 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmCancellationReason
 
-/** Figma memakai line-height 1.4 untuk teks di modal ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(fontWeight = weight, fontSize = size.sp, lineHeight = (size * 1.4f).sp)
 
-/**
- * Isi bottom sheet "Batalkan project ini?" (Figma 270:599). Hanya tampilan; state pilihan dan
- * aksinya dikelola container. [canConfirm] false = tombol konfirmasi redup dan tidak aktif.
- */
 @Composable
 fun CancelProjectSheet(
     selected: UmkmCancellationReason?,

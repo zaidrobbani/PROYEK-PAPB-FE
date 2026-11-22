@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.data.model.ChatProjectContext
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan ruang chat (sudah diformat). */
 data class ChatRoomUiState(
     val contactName: String,
     val contactInitials: String,
@@ -36,12 +35,6 @@ data class ChatRoomUiState(
     val items: List<ChatRoomItem>
 )
 
-/**
- * Figma: Ruang Chat (Freelancer) (17:4612).
- * App bar + strip konteks project tetap di atas; daftar pesan di-scroll di tengah;
- * panel lampiran (bila terbuka) + composer menempel di bawah dan ikut naik bersama
- * keyboard lewat [imePadding], sehingga daftar pesan tetap terlihat di atasnya.
- */
 @Composable
 fun ChatRoomScreen(
     state: ChatRoomUiState,
@@ -53,7 +46,6 @@ fun ChatRoomScreen(
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
     onDocumentClick: () -> Unit,
-    /** null = "Unggah Draf Pekerjaan" tidak tersedia (status project selain Project Berjalan). */
     onUploadDraftClick: (() -> Unit)?,
     onInputFocused: () -> Unit,
     onBack: () -> Unit,
@@ -61,15 +53,11 @@ fun ChatRoomScreen(
     onProjectDetailClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
-    /** Terisi saat project ruang ini sedang negosiasi; null = ruang chat biasa. */
     negotiation: ChatNegotiationUi? = null,
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
-    /** Kartu tambahan di bawah konteks project (mis. simulasi sisi UMKM); null = tidak ada. */
     topBanner: (@Composable () -> Unit)? = null
 ) {
-    // Saat mengetik (keyboard terbuka) atau memilih lampiran, kartu & aksi negosiasi
-    // disembunyikan sementara agar daftar pesan dan composer tetap lega.
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val showNegotiationExtras = negotiation != null && !isImeVisible && !isAttachmentOpen
     Column(
@@ -119,8 +107,6 @@ fun ChatRoomScreen(
                 }
             }
         }
-        // Aksi negosiasi (Negosiasi 26:86, dipakai ulang) di atas composer: mengubah status
-        // project, terpisah jelas dari composer yang mengirim pesan.
         AnimatedVisibility(
             visible = showNegotiationExtras,
             enter = expandVertically() + fadeIn(),

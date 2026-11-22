@@ -21,11 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/**
- * Figma: kartu "Ringkasan Kesepakatan" (26:38). Dipakai bersama oleh layar Negosiasi dan
- * Ruang Chat tahap negosiasi. [footer] (opsional) tampil sebagai bagian terakhir kartu,
- * dipisah garis setelah "Metode bayar" (Figma 438:772: info pembatalan tanpa biaya).
- */
 @Composable
 internal fun AgreementSummaryCard(
     projectValue: String,
@@ -93,7 +88,6 @@ private fun SummaryRow(label: String, value: String, valueStyle: TextStyle) {
             style = NegotiationTypography.RowLabel,
             color = TemuKaryaColors.TextBody
         )
-        // Nilai panjang (mis. Output) membungkus ke baris berikut, tetap rata kanan.
         Text(
             text = value,
             style = valueStyle,

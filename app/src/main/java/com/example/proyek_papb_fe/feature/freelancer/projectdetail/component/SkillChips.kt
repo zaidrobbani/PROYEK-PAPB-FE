@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: chip keahlian putih (17:4363 dst.), membungkus ke baris berikutnya. */
 @Composable
 internal fun SkillChips(
     skills: List<String>,

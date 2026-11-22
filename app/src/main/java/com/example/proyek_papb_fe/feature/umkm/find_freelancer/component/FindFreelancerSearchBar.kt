@@ -38,7 +38,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.AuthShadowStyle
 import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Kolom cari aktif dengan tombol hapus kata kunci dan tombol filter lanjutan berlencana. */
 @Composable
 fun FindFreelancerSearchBar(
     query: String,
@@ -79,7 +78,6 @@ fun FindFreelancerSearchBar(
                         .padding(horizontal = 12.677.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Aset Figma sudah memuat jarak kanan ikon (lebar 25.88).
                     Image(painter = painterResource(R.drawable.ic_find_search), contentDescription = null)
                     Box(modifier = Modifier.weight(1f)) {
                         if (query.isEmpty()) {

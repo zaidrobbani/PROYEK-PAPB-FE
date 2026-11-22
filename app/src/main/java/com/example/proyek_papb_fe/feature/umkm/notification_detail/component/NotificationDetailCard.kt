@@ -26,7 +26,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNotification
 
-/** Line-height 1.4 seperti teks di Notifikasi UMKM. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(
@@ -35,7 +34,6 @@ private fun text(weight: FontWeight, size: Float): TextStyle =
         lineHeight = (size * 1.4f).sp
     )
 
-/** Isi lengkap satu notifikasi: ikon jenis, kategori, judul, waktu, dan isi pesan. */
 @Composable
 fun NotificationDetailCard(notification: UmkmNotification, timeLabel: String, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

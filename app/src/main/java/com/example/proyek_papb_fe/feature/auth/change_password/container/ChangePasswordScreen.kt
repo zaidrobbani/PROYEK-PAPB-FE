@@ -33,8 +33,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.AuthAppBar
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthPrimaryButton
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthShadowStyle
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
-import com.example.proyek_papb_fe.feature.auth.login.container.ChangePasswordResult
-import com.example.proyek_papb_fe.feature.auth.login.container.changeDummyPassword
 
 internal data class ChangePasswordErrors(
     val current: String? = null,
@@ -44,10 +42,6 @@ internal data class ChangePasswordErrors(
     val hasError: Boolean get() = current != null || new != null || confirm != null
 }
 
-/**
- * Aturan sama dengan Registrasi/Login (Blueprint tidak memberi aturan panjang kata sandi):
- * semua wajib, konfirmasi harus sama, dan kata sandi baru tidak boleh sama dengan yang lama.
- */
 internal fun validateChangePassword(current: String, new: String, confirm: String) = ChangePasswordErrors(
     current = "Kata sandi saat ini wajib diisi.".takeIf { current.isEmpty() },
     new = when {
@@ -62,11 +56,6 @@ internal fun validateChangePassword(current: String, new: String, confirm: Strin
     }
 )
 
-/**
- * Keamanan & Kata Sandi, dipakai bersama UMKM dan Freelancer (modul Auth). Tidak ada frame Figma;
- * gaya mengikuti form Registrasi dan Lupa Password. SIMULASI LOKAL: kata sandi hanya diganti pada
- * akun dummy di memori aplikasi, tidak dikirim atau disimpan di server.
- */
 @Composable
 fun ChangePasswordScreen(
     email: String,
@@ -82,27 +71,18 @@ fun ChangePasswordScreen(
     var currentVisible by rememberSaveable { mutableStateOf(false) }
     var newVisible by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
-    var wrongCurrent by rememberSaveable { mutableStateOf(false) }
-
     val errors = if (submitted) validateChangePassword(current, new, confirm) else ChangePasswordErrors()
-    val currentError = errors.current ?: "Kata sandi saat ini salah.".takeIf { wrongCurrent }
+    val currentError = errors.current
 
     val onSubmit: () -> Unit = {
         submitted = true
         if (!validateChangePassword(current, new, confirm).hasError) {
-            when (changeDummyPassword(email, current, new)) {
-                ChangePasswordResult.Changed -> {
-                    Toast.makeText(
-                        context,
-                        "Kata sandi diperbarui (simulasi lokal). Gunakan kata sandi baru saat login.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    onChanged()
-                }
-                ChangePasswordResult.WrongCurrent -> wrongCurrent = true
-                ChangePasswordResult.AccountNotFound ->
-                    Toast.makeText(context, "Akun tidak ditemukan.", Toast.LENGTH_SHORT).show()
-            }
+            // BE belum punya endpoint ubah kata sandi saat login (docs/api/auth.md keputusan #26).
+            Toast.makeText(
+                context,
+                "Ubah kata sandi belum tersedia di server. Gunakan \"Lupa kata sandi?\" untuk mengatur ulang lewat email.",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -134,7 +114,7 @@ fun ChangePasswordScreen(
             PasswordInputField(
                 label = "Kata Sandi Saat Ini",
                 value = current,
-                onValueChange = { current = it; wrongCurrent = false },
+                onValueChange = { current = it },
                 error = currentError,
                 visible = currentVisible,
                 onToggleVisible = { currentVisible = !currentVisible },

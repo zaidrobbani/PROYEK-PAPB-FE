@@ -45,7 +45,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): Text
         lineHeight = lineHeight
     )
 
-/** Judul kelompok bulan, misalnya "Oktober 2026 •  3 Transaksi". */
 @Composable
 fun TransactionMonthHeader(
     title: String,
@@ -70,7 +69,6 @@ fun TransactionMonthHeader(
                 color = colors.onTertiaryContainer,
                 style = text(FontWeight.SemiBold, 14.79.sp, 21.128.sp)
             )
-            // Figma: titik hijau untuk bulan terbaru, krem untuk bulan sebelumnya.
             Box(
                 modifier = Modifier
                     .size(8.451.dp)
@@ -162,7 +160,6 @@ fun TransactionCard(
         ) {
             Column {
                 Text(
-                    // Label mengikuti Figma; lihat laporan tentang kecocokannya dengan Blueprint.
                     text = if (released) "Sudah Ditransfer ke Mitra" else "Nominal",
                     color = colors.outline,
                     style = text(FontWeight.Medium, 11.621.sp, 14.79.sp)

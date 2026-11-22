@@ -43,34 +43,22 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan Pembayaran (sudah diformat). */
 data class PaymentUiState(
     val projectTitle: String,
     val freelancerName: String,
     val freelancerPhotoUri: String?,
-    /** "4.9". */
     val freelancerRating: String,
-    /** "Desainer Grafis". */
     val freelancerRole: String,
-    /** "14 Hari Kalender". */
     val duration: String,
-    /** Sisa waktu QRIS, mis. "14:52". */
     val countdown: String,
     val total: String,
     val agreedValue: String,
-    /** "Biaya Platform TEMUKARYA (5%)". */
     val platformFeeLabel: String,
     val platformFee: String,
     val freelancerNet: String,
     val isProcessing: Boolean
 )
 
-/**
- * Figma: Detail Pembayaran QRIS (17:1267), judul "Pembayaran". Satu kolom scroll seperti
- * Figma (Main pt 67.61 − app bar 64, px 16.9, jarak antar kartu 12.68) dengan tombol
- * "Bayar (simulasi)" di akhir. Saat [PaymentUiState.isProcessing], tombol menampilkan proses
- * dan tidak bisa ditekan lagi.
- */
 @Composable
 fun PaymentScreen(
     state: PaymentUiState,
@@ -97,7 +85,6 @@ fun PaymentScreen(
     }
 }
 
-/** 17:1270: "Menunggu pembayaran" + chip "Simulasi". */
 @Composable
 private fun StatusCard() {
     Row(
@@ -129,7 +116,6 @@ private fun StatusCard() {
     }
 }
 
-/** 17:1283: judul project dan freelancer + durasi kerja. */
 @Composable
 private fun ProjectCard(state: PaymentUiState) {
     Column(
@@ -170,7 +156,6 @@ private fun ProjectCard(state: PaymentUiState) {
     }
 }
 
-/** Foto freelancer (Kelola Profil Profesional) atau foto contoh dari Figma. */
 @Composable
 internal fun FreelancerAvatar(photoUri: String?, sizeDp: Float) {
     LocalImage(
@@ -181,7 +166,6 @@ internal fun FreelancerAvatar(photoUri: String?, sizeDp: Float) {
     )
 }
 
-/** 17:1311: QRIS, kode QR, batas waktu, total, dan catatan escrow. */
 @Composable
 private fun QrisCard(state: PaymentUiState) {
     Column(
@@ -245,7 +229,6 @@ private fun QrisCard(state: PaymentUiState) {
     }
 }
 
-/** 17:1373: "Rincian pembayaran" dan total ditransfer UMKM. */
 @Composable
 private fun BreakdownCard(state: PaymentUiState) {
     Column(
@@ -293,7 +276,6 @@ private fun BreakdownCard(state: PaymentUiState) {
     }
 }
 
-/** 17:1441: tombol "Bayar (simulasi)" 50.7 dengan bayangan; saat proses: indikator + teks proses. */
 @Composable
 private fun PayButton(isProcessing: Boolean, onPay: () -> Unit, modifier: Modifier = Modifier) {
     Row(

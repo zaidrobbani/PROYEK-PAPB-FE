@@ -11,7 +11,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object UmkmConversationListRoute
 
-/** Tab Chat: ditumpuk di atas Beranda tanpa salinan ganda, sama seperti tab UMKM lain. */
 fun NavController.navigateToUmkmConversationList() {
     navigate(UmkmConversationListRoute) {
         popUpTo(UmkmDashboardRoute)

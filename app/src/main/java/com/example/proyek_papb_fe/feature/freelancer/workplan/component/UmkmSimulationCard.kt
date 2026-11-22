@@ -27,16 +27,10 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Isi kartu simulasi sisi UMKM (sudah diformat). */
 data class UmkmSimulationEntry(val message: String, val actionLabel: String)
 
 private val CardShape = RoundedCornerShape(16.dp)
 
-/**
- * Kartu demo (bukan bagian Figma 88:2): aplikasi belum punya sisi UMKM, jadi langkah UMKM
- * (Tinjau Rencana 270:663 → Pembayaran 17:1267 → Bukti 17:3177) dibuka dari sini.
- * Gaya mengikuti kartu info hijau yang sudah ada di Rencana Pengerjaan.
- */
 @Composable
 internal fun UmkmSimulationCard(entry: UmkmSimulationEntry, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val body = TextStyle(fontFamily = PlusJakartaSans, fontWeight = FontWeight.Normal, fontSize = 12.7.sp, lineHeight = 17.78.sp)

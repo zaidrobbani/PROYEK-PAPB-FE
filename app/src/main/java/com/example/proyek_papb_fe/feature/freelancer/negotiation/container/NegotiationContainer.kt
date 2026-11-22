@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,112 +12,111 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.proyek_papb_fe.core.data.CurrentFreelancer
-import com.example.proyek_papb_fe.core.data.FreelancerProjectDummyData
-import com.example.proyek_papb_fe.core.data.NegotiationDummyData
-import com.example.proyek_papb_fe.core.data.SubmittedOfferStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyek_papb_fe.core.data.model.CancellationReason
-import com.example.proyek_papb_fe.core.data.model.SubmittedOffer
+import com.example.proyek_papb_fe.core.data.model.MessageSender
+import com.example.proyek_papb_fe.core.data.model.NegotiationMessage
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
-import com.example.proyek_papb_fe.core.ui.components.FeaturePlaceholder
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.core.ui.components.initialsOf
+import com.example.proyek_papb_fe.core.util.formatTime
+import com.example.proyek_papb_fe.core.util.rupiah
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.CancelProjectBottomSheet
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.NegotiationParty
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.NegotiationScreen
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.NegotiationUiState
+import com.example.proyek_papb_fe.feature.freelancer.negotiation.viewmodel.FreelancerNegotiationViewModel
 
-/** 1500000 → "Rp 1.500.000". */
-private fun formatRupiah(amount: Long): String =
-    "Rp " + amount.toString().reversed().chunked(3).joinToString(".").reversed()
-
-/** "Rina Pratiwi" → "RP". */
-private fun initialsOf(name: String): String =
-    name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }
-
-/** Alasan terpilih saat modal dibuka — sesuai Figma 26:87 ("Harga belum sesuai"). */
 private val DefaultCancellationReason = CancellationReason.PRICE_MISMATCH
 
-/**
- * Container "Negosiasi": lookup project + penawaran terkirim, lalu menyusun
- * ringkasan kesepakatan dan percakapan milik project ini saja.
- * Juga memegang state modal "Batalkan Project" (26:87) dan mencatat pembatalan
- * ke [SubmittedOfferStore] untuk projectId ini saja.
- */
 @Composable
 fun NegotiationContainer(
-    projectId: Int,
+    projectId: String,
     onBack: () -> Unit,
-    /** Dipanggil setelah pembatalan tersimpan dan modal tertutup. */
-    onProjectCancelled: (projectId: Int) -> Unit,
-    onContinueProject: (projectId: Int) -> Unit
+    onProjectCancelled: (projectId: String) -> Unit,
+    onContinueProject: (projectId: String) -> Unit,
+    viewModel: FreelancerNegotiationViewModel = viewModel(
+        factory = FreelancerNegotiationViewModel.factory(projectId, AppContainer.workflowRepository, AppContainer.chatRepository)
+    )
 ) {
-    val project = remember(projectId) { FreelancerProjectDummyData.getById(projectId) }
-    // Dibaca langsung (snapshot state) agar ringkasan selalu sesuai isi store.
-    val offer = SubmittedOfferStore.get(projectId)
-    // Diperiksa sekali saat layar dibuka: project yang sudah dibatalkan tidak boleh
-    // dinegosiasikan lagi. Tidak reaktif, agar layar tidak berkedip ke placeholder
-    // selama animasi keluar setelah pengguna sendiri membatalkan.
-    val wasCancelledOnEntry = remember(projectId) { offer?.isCancelled == true }
-
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var isCancelSheetVisible by rememberSaveable(projectId) { mutableStateOf(false) }
     var selectedReason by rememberSaveable(projectId) { mutableStateOf(DefaultCancellationReason) }
 
-    if (wasCancelledOnEntry) {
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.cancelled) {
+        if (uiState.cancelled) {
+            viewModel.onCancelledHandled()
+            onProjectCancelled(projectId)
+        }
+    }
+
+    val detail = uiState.detail
+    if (detail == null) {
         Column(modifier = Modifier.fillMaxSize()) {
             DetailTopBar(title = "Negosiasi", onBack = onBack)
-            FeaturePlaceholder(
-                title = "Proyek dibatalkan",
-                description = "Negosiasi untuk proyek ini sudah dibatalkan dan tidak dapat dilanjutkan."
+            if (uiState.isLoading) LoadingContent() else ErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load)
+        }
+        return
+    }
+    if (detail.project.status == ProjectStatusCode.DIBATALKAN) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            DetailTopBar(title = "Negosiasi", onBack = onBack)
+            ErrorContent(
+                message = "Negosiasi untuk proyek ini sudah dibatalkan" +
+                    (detail.cancellation?.reasonLabel?.let { " ($it)" } ?: "") + " dan tidak dapat dilanjutkan.",
+                onRetry = viewModel::load
             )
         }
         return
     }
 
-    if (project == null || offer == null) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            DetailTopBar(title = "Negosiasi", onBack = onBack)
-            FeaturePlaceholder(
-                title = "Negosiasi tidak ditemukan",
-                description = "Belum ada penawaran terkirim untuk proyek dengan id $projectId."
+    val agreement = detail.agreement
+    val umkm = detail.umkm
+    val myId = AppContainer.currentUserId
+    val state = NegotiationUiState(
+        projectTitle = detail.project.title,
+        client = NegotiationParty(
+            initials = initialsOf(umkm.name),
+            name = umkm.subtitle ?: umkm.name,
+            role = "${umkm.name}, UMKM"
+        ),
+        freelancer = NegotiationParty(
+            initials = initialsOf(detail.freelancer?.name.orEmpty()),
+            name = detail.freelancer?.name ?: "Freelancer",
+            role = "Freelancer"
+        ),
+        projectValue = rupiah(agreement?.agreedPrice ?: detail.project.budget),
+        duration = "${agreement?.durationDays ?: 0} hari kalender",
+        output = agreement?.scopeOfWork ?: detail.project.description,
+        paymentMethod = agreement?.paymentMethodLabel ?: "QRIS (simulasi)",
+        dayLabel = "Riwayat pesan",
+        messages = uiState.messages.map { message ->
+            NegotiationMessage(
+                id = message.id,
+                sender = if (message.senderUserId == myId) MessageSender.FREELANCER else MessageSender.CLIENT,
+                text = message.text.ifBlank { message.attachmentNames.joinToString() },
+                time = formatTime(message.sentAtMillis)
             )
         }
-        return
-    }
+    )
 
-    val state = remember(project, offer) {
-        val offerAmount = formatRupiah(offer.offerAmount)
-        NegotiationUiState(
-            projectTitle = project.title,
-            client = NegotiationParty(
-                initials = initialsOf(project.ownerName),
-                name = project.clientName,
-                role = "${project.ownerName}, UMKM"
-            ),
-            freelancer = NegotiationParty(
-                initials = CurrentFreelancer.INITIALS,
-                name = CurrentFreelancer.NAME,
-                role = "Freelancer"
-            ),
-            projectValue = offerAmount,
-            duration = "${offer.durationDays} hari kalender",
-            output = NegotiationDummyData.agreedOutputFor(projectId),
-            paymentMethod = "QRIS (simulasi)",
-            dayLabel = "Hari ini",
-            messages = NegotiationDummyData.conversationFor(project, offerAmount, offer.durationDays)
-        )
-    }
-
-    val context = LocalContext.current
     NegotiationScreen(
         state = state,
         onBack = onBack,
         onCancelClick = {
-            // Pembatalan hanya sebelum kesepakatan final (tab Project "Project Berjalan").
-            if (SubmittedOfferStore.get(projectId)?.isAgreed == true) {
-                Toast.makeText(context, "Proyek sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.", Toast.LENGTH_SHORT).show()
-            } else {
-                isCancelSheetVisible = true
-            }
+            if (uiState.canCancel) isCancelSheetVisible = true
+            else Toast.makeText(context, "Proyek sudah dibayar dan resmi dikerjakan, tidak dapat dibatalkan.", Toast.LENGTH_SHORT).show()
         },
         onContinueClick = { onContinueProject(projectId) }
     )
@@ -126,32 +126,13 @@ fun NegotiationContainer(
             selectedReason = selectedReason,
             onReasonSelected = { selectedReason = it },
             onConfirm = {
-                SubmittedOfferStore.markCancelled(projectId, selectedReason)
                 isCancelSheetVisible = false
-                onProjectCancelled(projectId)
+                viewModel.cancel(selectedReason)
             },
             onDismiss = {
-                // Tutup tanpa perubahan; pilihan alasan kembali ke awal untuk pembukaan berikutnya.
                 isCancelSheetVisible = false
                 selectedReason = DefaultCancellationReason
             }
         )
     }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun NegotiationContainerPreview() {
-    SubmittedOfferStore.submit(
-        SubmittedOffer(
-            projectId = 101,
-            offerAmount = 1_500_000,
-            platformFee = 75_000,
-            netAmount = 1_425_000,
-            durationDays = 14,
-            message = "Contoh pesan proposal.",
-            submittedAtMillis = System.currentTimeMillis()
-        )
-    )
-    NegotiationContainer(projectId = 101, onBack = {}, onProjectCancelled = {}, onContinueProject = {})
 }

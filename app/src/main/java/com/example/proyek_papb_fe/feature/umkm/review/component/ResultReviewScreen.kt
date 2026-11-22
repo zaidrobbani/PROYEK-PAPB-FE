@@ -46,39 +46,28 @@ import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentInnerSha
 import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentTypography
 import com.example.proyek_papb_fe.feature.umkm.payment.component.paymentCardShadow
 
-/** Satu berkas yang dikirim freelancer (sudah diformat). */
 data class ReviewFileUi(
     val name: String,
-    /** "18.4 MB, Berkas PDF". */
     val meta: String,
     val extension: String,
     val uri: String,
     val isImage: Boolean
 )
 
-/** Data tampilan Review Hasil Project (sudah diformat, dari draf terkirim project ini). */
 data class ResultReviewUiState(
     val projectTitle: String,
     val freelancerName: String,
     val freelancerPhotoUri: String?,
     val freelancerRating: String,
     val projectValue: String,
-    /** Catatan freelancer saat mengirim draf; kosong = tidak ada catatan. */
     val note: String,
-    /** "Draf Pengiriman v2.0". */
     val draftLabel: String,
-    /** "Hari ini, 10.45 WIB". */
     val sentAt: String,
     val files: List<ReviewFileUi>
 ) {
     val previewImage: ReviewFileUi? get() = files.firstOrNull { it.isImage }
 }
 
-/**
- * Figma: Review Hasil Project (17:1468), judul "Review Hasil". UMKM meninjau draf terbaru yang
- * dikirim freelancer lalu memilih "Minta Revisi" (17:5518) atau "Setujui & Selesai" (17:6140).
- * Isi di-scroll; Sticky Bottom Actions Bar tetap di bawah.
- */
 @Composable
 fun ResultReviewScreen(
     state: ResultReviewUiState,
@@ -110,7 +99,6 @@ fun ResultReviewScreen(
     }
 }
 
-/** 17:1472: "Dana ditahan" dan "Menunggu Review". */
 @Composable
 private fun StatusChips() {
     Row(
@@ -140,7 +128,6 @@ private fun StatusChips() {
     }
 }
 
-/** 17:1494: judul project, freelancer, nilai proyek di rekening TEMUKARYA. */
 @Composable
 private fun ContextCard(state: ResultReviewUiState, onChatClick: () -> Unit, modifier: Modifier) {
     Column(
@@ -203,7 +190,6 @@ private fun ContextCard(state: ResultReviewUiState, onChatClick: () -> Unit, mod
     }
 }
 
-/** 17:1532: "Catatan dari {freelancer}" berisi catatan kiriman draf. */
 @Composable
 private fun NoteCard(state: ResultReviewUiState, modifier: Modifier) {
     Column(
@@ -238,7 +224,6 @@ private fun NoteCard(state: ResultReviewUiState, modifier: Modifier) {
     }
 }
 
-/** 17:1547: pratinjau hasil (gambar pertama bila ada), spesifikasi berkas, aksi cepat. */
 @Composable
 private fun PreviewCard(state: ResultReviewUiState, onZoomClick: () -> Unit, onDownloadFile: (ReviewFileUi) -> Unit, modifier: Modifier) {
     val main = state.previewImage ?: state.files.firstOrNull()
@@ -320,7 +305,6 @@ private fun QuickAction(iconRes: Int, iconSize: Float, label: String, modifier: 
     }
 }
 
-/** 17:1576: "Daftar Berkas Siap Unduh (n)". */
 @Composable
 private fun FilesCard(files: List<ReviewFileUi>, onDownloadFile: (ReviewFileUi) -> Unit, modifier: Modifier) {
     Column(
@@ -358,7 +342,6 @@ private fun FilesCard(files: List<ReviewFileUi>, onDownloadFile: (ReviewFileUi) 
     }
 }
 
-/** 17:1642: "Minta Revisi" (1 bagian) dan "Setujui & Selesai" (1.4 bagian) + keterangan. */
 @Composable
 private fun ActionBar(onRequestRevision: () -> Unit, onApprove: () -> Unit, modifier: Modifier) {
     Column(

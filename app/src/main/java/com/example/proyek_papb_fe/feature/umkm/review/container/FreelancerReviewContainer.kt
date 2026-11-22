@@ -9,52 +9,74 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.proyek_papb_fe.core.data.FreelancerProfileStore
-import com.example.proyek_papb_fe.core.data.FreelancerProjectDummyData
-import com.example.proyek_papb_fe.core.data.ProjectReview
-import com.example.proyek_papb_fe.core.data.ResultReviewStage
-import com.example.proyek_papb_fe.core.data.ResultReviewStore
-import com.example.proyek_papb_fe.core.data.SubmittedOfferStore
-import com.example.proyek_papb_fe.feature.freelancer.chat.container.formatShortDate
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.core.util.formatShortDate
 import com.example.proyek_papb_fe.feature.umkm.review.component.FreelancerReviewScreen
 import com.example.proyek_papb_fe.feature.umkm.review.component.FreelancerReviewUiState
+import com.example.proyek_papb_fe.feature.umkm.review.component.ReviewHighlightOptions
+import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ProjectResultViewModel
+import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ResultStage
 
-/**
- * Container Beri Ulasan (Figma 17:6591) untuk [projectId] yang sudah Selesai. Ulasan yang
- * sudah ada (mis. bintang dari sheet persetujuan) dipakai sebagai isian awal. "Kirim ulasan"
- * menyimpan ulasan lalu [onDone]; "Lewati untuk Sekarang" langsung [onSkip].
- */
 @Composable
 fun FreelancerReviewContainer(
-    projectId: Int,
+    projectId: String,
     onBack: () -> Unit,
     onDone: () -> Unit,
-    onSkip: () -> Unit
+    onSkip: () -> Unit,
+    viewModel: ProjectResultViewModel = viewModel(
+        factory = ProjectResultViewModel.factory(
+            projectId,
+            AppContainer.workflowRepository,
+            AppContainer.submissionRepository,
+            AppContainer.fileRepository
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val project = FreelancerProjectDummyData.getById(projectId)
-    if (ResultReviewStore.stageOf(projectId) != ResultReviewStage.COMPLETED || project == null) {
-        LaunchedEffect(projectId) { onBack() }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+    val freelancerName = uiState.detail?.freelancer?.name ?: "Freelancer"
+    LaunchedEffect(uiState.reviewSent) {
+        if (uiState.reviewSent) {
+            viewModel.onReviewSentHandled()
+            Toast.makeText(context, "Ulasan untuk $freelancerName terkirim", Toast.LENGTH_SHORT).show()
+            onDone()
+        }
+    }
+
+    val detail = uiState.detail
+    if (detail == null || uiState.stage != ResultStage.COMPLETED) {
+        if (uiState.isLoading) LoadingContent()
+        else ErrorContent(uiState.errorMessage ?: "Ulasan hanya bisa diberikan setelah project selesai.", onRetry = viewModel::load)
         return
     }
-    val existing = remember(projectId) { ResultReviewStore.review(projectId) }
-    val attachment = remember(projectId) { ResultReviewStore.latestDraft(projectId)?.fileUis()?.firstOrNull { it.isImage } }
-    var rating by remember { mutableIntStateOf(existing?.rating ?: 0) }
-    var highlights by remember { mutableStateOf(existing?.tags?.toSet() ?: emptySet()) }
-    var text by remember { mutableStateOf(existing?.text.orEmpty()) }
+    val existing = uiState.review
+    val attachment = remember(uiState.latest, uiState.localUris) {
+        uiState.latest?.files?.firstOrNull { it.mimeType.startsWith("image/") }?.let { file -> file.toReviewFileUi(uiState.localUris[file.id]) }
+    }
+    var rating by remember(existing) { mutableIntStateOf(existing?.rating ?: 0) }
+    var highlights by remember(existing) {
+        mutableStateOf(existing?.highlightLabels?.filter { it in ReviewHighlightOptions }?.toSet() ?: emptySet())
+    }
+    var text by remember(existing) { mutableStateOf(existing?.text.orEmpty()) }
     var includeAttachment by remember { mutableStateOf(true) }
-    var submitted by remember { mutableStateOf(false) }
-
-    val profile = FreelancerProfileStore.profile
-    val completedAt = SubmittedOfferStore.get(projectId)?.completedAtMillis ?: System.currentTimeMillis()
 
     FreelancerReviewScreen(
         state = FreelancerReviewUiState(
-            freelancerName = profile.fullName,
-            freelancerFirstName = firstName(profile.fullName),
-            freelancerPhotoUri = profile.photoUri,
-            projectTitle = project.title,
-            completedDate = formatShortDate(completedAt),
+            freelancerName = freelancerName,
+            freelancerFirstName = firstName(freelancerName),
+            freelancerPhotoUri = detail.freelancer?.photoUrl,
+            projectTitle = detail.project.title,
+            completedDate = formatShortDate(detail.project.completedAtMillis ?: System.currentTimeMillis()),
             rating = rating,
             highlights = highlights,
             text = text,
@@ -67,11 +89,9 @@ fun FreelancerReviewContainer(
         onTextChange = { text = it },
         onToggleAttachment = { includeAttachment = !includeAttachment },
         onSubmit = {
-            if (!submitted && rating in 1..5) {
-                submitted = true
-                ResultReviewStore.submitReview(projectId, ProjectReview(rating, highlights.toList(), text.trim(), System.currentTimeMillis()))
-                Toast.makeText(context, "Ulasan untuk ${profile.fullName} terkirim", Toast.LENGTH_SHORT).show()
-                onDone()
+            when {
+                existing != null -> Toast.makeText(context, "Ulasan untuk project ini sudah terkirim.", Toast.LENGTH_SHORT).show()
+                rating in 1..5 -> viewModel.submitReview(rating, highlights, text, ReviewHighlightOptions)
             }
         },
         onSkip = onSkip

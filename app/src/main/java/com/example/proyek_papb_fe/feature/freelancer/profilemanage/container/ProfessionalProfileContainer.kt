@@ -17,8 +17,13 @@ import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.Pro
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.ProfessionalProfileForm
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.component.ProfessionalProfileScreen
 import kotlinx.coroutines.delay
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.FreelancerProfileViewModel
+import com.example.proyek_papb_fe.feature.freelancer.profilemanage.viewmodel.freelancerProfileViewModelFactory
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
-/** Pilihan "Bidang keahlian utama" (Figma hanya menampilkan nilai terpilih). */
 private val PrimaryFieldOptions = listOf(
     "Desain Grafis & Branding",
     "Desain Kemasan",
@@ -43,11 +48,9 @@ private fun FreelancerProfile.toForm() = ProfessionalProfileForm(
     acceptsRemoteWork = acceptsRemoteWork
 )
 
-/** "Andi Ramadhan" → "AR". */
 private fun initialsOf(name: String): String =
     name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") { it.first().uppercase() }
 
-/** Validasi sesuai Figma state Validasi (534:1067). */
 private fun validate(form: ProfessionalProfileForm): ProfessionalProfileErrors {
     val headline = form.headline.trim()
     return ProfessionalProfileErrors(
@@ -62,26 +65,40 @@ private fun validate(form: ProfessionalProfileForm): ProfessionalProfileErrors {
     )
 }
 
-/**
- * Container Kelola Profil Profesional (Figma 534:961). Isian diawali dari
- * [FreelancerProfileStore]; "Simpan Perubahan" memvalidasi lalu menyimpan ke store sehingga
- * Profil langsung menampilkan data baru. Foto dipilih lewat Photo Picker (lokal, tanpa unggah).
- */
 @Composable
-fun ProfessionalProfileContainer(onBack: () -> Unit) {
+fun ProfessionalProfileContainer(
+    onBack: () -> Unit,
+    viewModel: FreelancerProfileViewModel = viewModel(factory = freelancerProfileViewModelFactory())
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val saved = FreelancerProfileStore.profile
     var form by remember { mutableStateOf(saved.toForm()) }
+    var formLoaded by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
-    var savedTick by rememberSaveable { mutableIntStateOf(0) }
     var showSnackbar by rememberSaveable { mutableStateOf(false) }
     val errors = if (submitted) validate(form) else ProfessionalProfileErrors()
+
+    LaunchedEffect(Unit) { viewModel.load() }
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading && !formLoaded && uiState.errorMessage == null) {
+            form = FreelancerProfileStore.profile.toForm()
+            formLoaded = true
+        }
+    }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            if (uiState.savedCount == 0) Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
 
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) form = form.copy(photoUri = uri.toString())
     }
 
-    LaunchedEffect(savedTick) {
-        if (savedTick > 0) {
+    LaunchedEffect(uiState.savedCount) {
+        if (uiState.savedCount > 0) {
             showSnackbar = true
             delay(SnackbarMillis)
             showSnackbar = false
@@ -94,32 +111,28 @@ fun ProfessionalProfileContainer(onBack: () -> Unit) {
         showErrorBanner = submitted,
         fieldOptions = PrimaryFieldOptions,
         showSavedSnackbar = showSnackbar,
-        onFormChange = { form = it },
+        onFormChange = { updated ->
+            // Nama mengikuti akun (BE belum punya endpoint ubah nama).
+            form = updated.copy(fullName = saved.fullName.ifBlank { updated.fullName })
+        },
         onPickPhoto = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onSave = {
             if (validate(form).count > 0) {
                 submitted = true
                 showSnackbar = false
-            } else {
+            } else if (!uiState.isSaving) {
                 submitted = false
-                val name = form.fullName.trim()
-                FreelancerProfileStore.updateProfile(
-                    FreelancerProfileStore.profile.copy(
-                        fullName = name,
-                        initials = initialsOf(name),
-                        headline = form.headline.trim(),
-                        bio = form.bio.trim(),
-                        primaryField = form.primaryField,
-                        skills = form.skills,
-                        startingRate = form.rateDigits.toLongOrNull() ?: 0L,
-                        city = form.city.trim(),
-                        isAvailableForWork = form.isAvailableForWork,
-                        acceptsRemoteWork = form.acceptsRemoteWork,
-                        photoUri = form.photoUri
-                    )
+                viewModel.saveProfile(
+                    headline = form.headline.trim(),
+                    bio = form.bio.trim(),
+                    city = form.city.trim(),
+                    rate = form.rateDigits.toLongOrNull()?.takeIf { it > 0 },
+                    isAvailable = form.isAvailableForWork,
+                    skills = form.skills,
+                    primaryField = form.primaryField,
+                    acceptsRemote = form.acceptsRemoteWork,
+                    photoUri = form.photoUri
                 )
-                form = FreelancerProfileStore.profile.toForm()
-                savedTick++
             }
         },
         onViewProfile = onBack,

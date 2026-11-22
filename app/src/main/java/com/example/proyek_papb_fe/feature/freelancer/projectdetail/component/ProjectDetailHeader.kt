@@ -21,7 +21,6 @@ import com.example.proyek_papb_fe.core.data.model.ProjectMatch
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Project Header & Badges (17:4212). */
 @Composable
 internal fun ProjectDetailHeader(
     title: String,
@@ -62,7 +61,6 @@ internal fun ProjectDetailHeader(
     }
 }
 
-/** Badge versi detail: selalu hijau + ikon sparkle + SemiBold (berbeda dari listing). */
 @Composable
 private fun DetailMatchBadge(match: ProjectMatch) {
     Row(

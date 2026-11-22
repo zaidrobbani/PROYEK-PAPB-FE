@@ -11,42 +11,20 @@ import androidx.compose.runtime.setValue
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectAttachment
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 
-/** Batas karakter deskripsi, dari penghitung "108/500" pada Figma. */
 internal const val DescriptionMaxLength = 500
 
-/** Batas ukuran lampiran, dari teks "Maks 10MB" pada Figma. */
 internal const val AttachmentMaxBytes = 10L * 1024 * 1024
 
-/** Tipe file dari teks "JPG, PNG, atau PDF" pada Figma. */
 internal val AttachmentMimeTypes = arrayOf("image/jpeg", "image/png", "application/pdf")
 
-/**
- * DATA DUMMY: Figma hanya menampilkan "Desain Grafis & Branding" dan Blueprint tidak memuat
- * daftar kategori. Pilihan lain diturunkan dari teks Figma ("desain, web, atau konten",
- * "desain atau foto"). Ganti dengan daftar resmi dari backend.
- */
-internal val DummyProjectCategories = listOf(
-    "Desain Grafis & Branding",
-    "Fotografi & Video",
-    "Pengembangan Website",
-    "Konten & Media Sosial"
-)
+/** Diganti daftar skill BE (`GET /skills`) setelah dimuat. */
+internal val SuggestedSkills = emptyList<String>()
 
-/** Saran keahlian yang tampil di Figma. */
-internal val SuggestedSkills = listOf(
-    "Desain Kemasan",
-    "Adobe Illustrator",
-    "Branding UMKM",
-    "Typography Kustom"
-)
-
-/** Hasil form yang lolos validasi. Status awal "Terbuka" sesuai aturan status Blueprint. */
 data class CreateProjectDraft(
     val title: String,
     val category: String,
     val description: String,
     val skills: List<String>,
-    /** Rupiah bulat, sesuai aturan nominal Blueprint. */
     val budget: Long,
     val deadlineUtcMillis: Long,
     val attachments: List<ProjectAttachment>,
@@ -65,7 +43,6 @@ internal data class CreateProjectErrors(
         get() = listOf(title, category, description, skills, budget, deadline).any { it != null }
 }
 
-/** Urutan bagian form, dipakai untuk menggulir ke error pertama. */
 internal enum class ProjectFormField { Title, Category, Description, Skills, Budget, Deadline }
 
 @Stable
@@ -75,14 +52,12 @@ internal class CreateProjectFormState {
     var description by mutableStateOf("")
     val skillOptions = mutableStateListOf<String>().apply { addAll(SuggestedSkills) }
     val selectedSkills = mutableStateListOf<String>()
-    /** Hanya angka; pemisah ribuan ditampilkan lewat VisualTransformation. */
     var budgetDigits by mutableStateOf("")
     var deadlineUtcMillis by mutableStateOf<Long?>(null)
     val attachments = mutableStateListOf<ProjectAttachment>()
     var attachmentError by mutableStateOf<String?>(null)
     private var submitted by mutableStateOf(false)
 
-    /** Mengisi form dengan data project untuk mode Edit Project. */
     fun fillFrom(project: UmkmProject, keepDeadline: Boolean = true) {
         title = project.title
         category = project.category
@@ -100,7 +75,6 @@ internal class CreateProjectFormState {
         if (skill in selectedSkills) selectedSkills.remove(skill) else selectedSkills.add(skill)
     }
 
-    /** Skill tambahan langsung terpilih; nama yang sudah ada cukup dipilih ulang. */
     fun addCustomSkill(raw: String) {
         val skill = raw.trim()
         if (skill.isEmpty()) return
@@ -110,7 +84,6 @@ internal class CreateProjectFormState {
         if (name !in selectedSkills) selectedSkills.add(name)
     }
 
-    /** Pesan muncul setelah tombol Publikasikan ditekan, lalu ikut hilang saat diperbaiki. */
     val visibleErrors: CreateProjectErrors
         get() = if (submitted) validate() else CreateProjectErrors()
 
@@ -141,7 +114,6 @@ internal class CreateProjectFormState {
         }
     }
 
-    /** Semua field dari Blueprint TK-F-U-02 wajib, kecuali lampiran ("atau referensi"). */
     private fun validate() = CreateProjectErrors(
         title = "Judul project wajib diisi.".takeIf { title.isBlank() },
         category = "Pilih kategori project.".takeIf { category == null },
@@ -193,10 +165,6 @@ internal class CreateProjectFormState {
     }
 }
 
-/**
- * [initial] terisi pada Edit Project atau Pesan Lagi: form diisi data project tersebut.
- * [keepDeadline] false untuk Pesan Lagi karena batas waktu pesanan lama sudah lewat.
- */
 @Composable
 internal fun rememberCreateProjectFormState(
     initial: UmkmProject? = null,

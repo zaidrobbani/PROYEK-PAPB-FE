@@ -15,7 +15,16 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.InlineErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.feature.umkm.project_list.viewmodel.ProjectListViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,14 +53,9 @@ import com.example.proyek_papb_fe.feature.umkm.project_list.component.ProjectTab
 
 private val PageGutter = 16.903.dp
 
-/** Jarak FAB dari Bottom Nav dan ruang bawah agar kartu terakhir bisa digulir melewati FAB. */
 private val FabBottomGap = 35.893.dp
 private val ListBottomPadding = 29.415.dp + 50.708.dp + 8.451.dp
 
-/**
- * Project Saya (Blueprint TK-F-U-03). Data dari [UmkmProjectStore] (lokal, dummy);
- * hapus hanya untuk project yang belum memiliki kesepakatan (TK-F-U-05).
- */
 @Composable
 fun ProjectListScreen(
     onNotificationsClick: () -> Unit,
@@ -63,22 +67,36 @@ fun ProjectListScreen(
     onFinalFiles: (projectId: String) -> Unit,
     onOrderAgain: (projectId: String) -> Unit,
     onTabSelected: (UmkmTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenAgreement: (projectId: String) -> Unit = {},
+    onPay: (projectId: String) -> Unit = {},
+    viewModel: ProjectListViewModel = viewModel(
+        factory = ProjectListViewModel.factory(
+            AppContainer.workflowRepository,
+            AppContainer.projectRepository,
+            AppContainer.masterDataRepository
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) { viewModel.load() }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.onMessageShown()
+        }
+    }
+
     var selectedTab by rememberSaveable { mutableStateOf(ProjectTab.Semua) }
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val projects = UmkmProjectStore.projects
-    val counts = ProjectTab.entries.associateWith { tab ->
-        if (tab.status == null) projects.size else projects.count { it.status == tab.status }
-    }
-    val visible = projects.filter { selectedTab.status == null || it.status == selectedTab.status }
+    val projects = uiState.projects
+    val counts = ProjectTab.entries.associateWith { tab -> projects.count { tab.matches(it.status) } }
+    val visible = projects.filter { selectedTab.matches(it.status) }
     val reviewCount = projects.count { it.status == ProjectStatus.MenungguReview }
-    // Penawaran perlu keputusan selama belum ada freelancer terpilih.
-    val offerProjects = projects.filter {
-        it.status == ProjectStatus.MenungguKesepakatan && UmkmProjectStore.needsAction(it)
-    }
-    val actionCount = projects.count { UmkmProjectStore.needsAction(it) }
+    val offerProjects = projects.filter { it.status == ProjectStatus.Terbuka && it.id in uiState.actionProjectIds }
+    val actionCount = uiState.actionProjectIds.size
 
     val actions = ProjectCardActions(
         onViewProgress = { onViewProgress(it.id) },
@@ -87,7 +105,9 @@ fun ProjectListScreen(
         onDelete = { pendingDeleteId = it.id },
         onViewApplications = { onViewApplications(it.id) },
         onFinalFiles = { onFinalFiles(it.id) },
-        onOrderAgain = { onOrderAgain(it.id) }
+        onOrderAgain = { onOrderAgain(it.id) },
+        onOpenAgreement = { onOpenAgreement(it.id) },
+        onPay = { onPay(it.id) }
     )
 
     Column(
@@ -124,7 +144,11 @@ fun ProjectListScreen(
                         horizontalPadding = PageGutter
                     )
                 }
-                if (visible.isEmpty()) {
+                if (uiState.isLoading && projects.isEmpty()) {
+                    item(key = "loading") { LoadingContent(Modifier.padding(top = 48.dp)) }
+                } else if (uiState.errorMessage != null && projects.isEmpty()) {
+                    item(key = "error") { InlineErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load) }
+                } else if (visible.isEmpty()) {
                     item(key = "empty") { EmptyProjects(selectedTab) }
                 } else {
                     items(visible, key = { it.id }) { project ->
@@ -153,7 +177,7 @@ fun ProjectListScreen(
         DeleteProjectDialog(
             project = target,
             onConfirm = {
-                UmkmProjectStore.delete(target.id)
+                viewModel.delete(target.id)
                 pendingDeleteId = null
             },
             onDismiss = { pendingDeleteId = null }
@@ -161,7 +185,6 @@ fun ProjectListScreen(
     }
 }
 
-/** Figma tidak punya keadaan kosong; teks sederhana ini tambahan. */
 @Composable
 private fun EmptyProjects(tab: ProjectTab) {
     Text(
@@ -183,7 +206,6 @@ private fun EmptyProjects(tab: ProjectTab) {
     )
 }
 
-/** Konfirmasi sebelum menghapus; Figma tidak mendesain dialog ini. */
 @Composable
 private fun DeleteProjectDialog(
     project: UmkmProject,
@@ -208,7 +230,7 @@ private fun DeleteProjectDialog(
         },
         text = {
             Text(
-                text = "\"${project.title}\" akan dihapus dari daftar. Ini hanya simulasi di perangkat ini.",
+                text = "\"${project.title}\" akan dihapus permanen beserta lampirannya.",
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
                     fontWeight = FontWeight.Normal,
@@ -224,22 +246,4 @@ private fun DeleteProjectDialog(
             TextButton(onClick = onDismiss) { Text("Batal", color = colors.onSurfaceVariant) }
         }
     )
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ProjectListScreenPreview() {
-    PROYEKPAPBFETheme {
-        ProjectListScreen(
-            onNotificationsClick = {},
-            onCreateProject = {},
-            onEditProject = {},
-            onViewProgress = {},
-            onReviewResult = {},
-            onViewApplications = {},
-            onFinalFiles = {},
-            onOrderAgain = {},
-            onTabSelected = {}
-        )
-    }
 }

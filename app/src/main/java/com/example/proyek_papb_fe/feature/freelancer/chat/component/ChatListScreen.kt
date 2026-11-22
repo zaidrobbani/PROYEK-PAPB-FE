@@ -30,30 +30,18 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 import kotlinx.coroutines.launch
 
-/**
- * Jumlah percakapan per pill filter. Filter = [ProjectFilter] yang sama dengan tab Project
- * (Semua · Menunggu Kesepakatan · Negosiasi · Project Berjalan · Selesai · Dibatalkan).
- */
 data class ChatFilterOption(val filter: ProjectFilter, val count: Int)
 
-/** Data tampilan satu baris percakapan (sudah diformat). */
 data class ChatListItem(
-    val conversationId: Int,
+    val conversationId: String,
     val initials: String,
     val umkmName: String,
     val projectTitle: String,
-    /** Pesan terakhir; diawali "Anda: " bila dikirim freelancer. */
     val messagePreview: String,
-    /** "09.48", "Kemarin", atau "5 Okt". */
     val timeLabel: String,
     val unreadCount: Int
 )
 
-/**
- * Figma: Daftar Percakapan (Freelancer) (273:415).
- * Header "Chat" → pencarian → pill filter tetap; hanya daftar yang di-scroll.
- * "Semua" adalah satu daftar utuh (tanpa bagian per status), urut aktivitas terbaru.
- */
 @Composable
 fun ChatListScreen(
     query: String,
@@ -62,7 +50,7 @@ fun ChatListScreen(
     selectedFilter: ProjectFilter,
     onFilterSelect: (ProjectFilter) -> Unit,
     conversations: List<ChatListItem>,
-    onConversationClick: (conversationId: Int) -> Unit,
+    onConversationClick: (conversationId: String) -> Unit,
     modifier: Modifier = Modifier,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {}
@@ -125,7 +113,6 @@ fun ChatListScreen(
     }
 }
 
-/** Catatan kecil di akhir daftar (Figma: Footnote). */
 @Composable
 private fun ChatFootnote() {
     Row(
@@ -152,7 +139,6 @@ private fun ChatFootnote() {
     }
 }
 
-/** Empty state ringan (Figma: Empty State (filter kosong)), tanpa kartu. */
 @Composable
 private fun ChatEmptyState(selectedFilter: ProjectFilter, query: String) {
     Column(
@@ -199,9 +185,9 @@ private fun ChatListScreenPreview() {
         selectedFilter = ProjectFilter.SEMUA,
         onFilterSelect = {},
         conversations = listOf(
-            ChatListItem(1, "KS", "Kedai Kopi Senja", "Desain Rebranding Logo & Kemasan Pouch Kopi 250gr",
+            ChatListItem("1", "KS", "Kedai Kopi Senja", "Desain Rebranding Logo & Kemasan Pouch Kopi 250gr",
                 "Anda: Tentu Bu Rina, nanti saya buatkan 2 opsi ketebalan font", "09.48", 0),
-            ChatListItem(3, "SM", "Toko Kue Sari Manis", "Desain Kemasan Kue Kering Lebaran",
+            ChatListItem("3", "SM", "Toko Kue Sari Manis", "Desain Kemasan Kue Kering Lebaran",
                 "Boleh kirim contoh kemasan yang pernah Mas buat?", "08.50", 2)
         ),
         onConversationClick = {}

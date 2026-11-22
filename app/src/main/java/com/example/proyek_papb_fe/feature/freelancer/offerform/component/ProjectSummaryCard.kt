@@ -24,7 +24,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Section - Mini Ringkasan Proyek Dilamar (17:4409). */
 @Composable
 internal fun ProjectSummaryCard(
     title: String,

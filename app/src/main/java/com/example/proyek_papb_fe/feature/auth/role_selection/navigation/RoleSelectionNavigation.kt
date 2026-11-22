@@ -13,7 +13,6 @@ fun NavController.navigateToRoleSelection() {
     navigate(RoleSelectionRoute)
 }
 
-/** Kembali ke Pilih Peran yang sudah ada di back stack, tanpa menumpuk salinan baru. */
 fun NavController.navigateBackToRoleSelection() {
     navigate(RoleSelectionRoute) {
         popUpTo(RoleSelectionRoute)

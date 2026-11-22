@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.example.proyek_papb_fe.core.ui.components.InitialsAvatar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,14 +95,19 @@ fun ActiveProjectCard(
                 horizontalArrangement = Arrangement.spacedBy(8.451.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(project.freelancerPhoto),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(29.579.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+                val photo = project.freelancerPhoto
+                if (photo != null) {
+                    Image(
+                        painter = painterResource(photo),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(29.579.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    InitialsAvatar(name = project.freelancerName, modifier = Modifier.size(29.579.dp), fontSize = 11.sp)
+                }
                 Text(
                     text = project.freelancerName,
                     color = colors.onSurface,

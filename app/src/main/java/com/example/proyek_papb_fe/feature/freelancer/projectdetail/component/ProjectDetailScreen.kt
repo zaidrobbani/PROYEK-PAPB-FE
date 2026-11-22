@@ -21,10 +21,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 private val ScreenHorizontalPadding = 16.903.dp
 private val SectionSpacing = 12.677.dp
 
-/**
- * Figma: Detail Project Freelancer (17:4195).
- * Konten di-scroll; top bar dan action bar bawah tetap di tempat.
- */
 @Composable
 fun ProjectDetailScreen(
     project: FreelancerProject,
@@ -45,7 +41,6 @@ fun ProjectDetailScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                // Figma: Main pt 67.61 dikurangi app bar 64, lalu tiap section pt 12.677.
                 .padding(
                     start = ScreenHorizontalPadding,
                     end = ScreenHorizontalPadding,

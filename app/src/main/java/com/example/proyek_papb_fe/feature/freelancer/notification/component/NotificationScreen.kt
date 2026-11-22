@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextAlign
 
-/** Satu baris notifikasi (sudah diformat). */
 data class NotificationItemUi(
     val id: String,
     @param:DrawableRes val iconRes: Int,
@@ -45,7 +44,6 @@ data class NotificationItemUi(
     val body: String,
     val time: String,
     val isRead: Boolean,
-    /** true = Permintaan Revisi: ikon & garis warna revisi, chip, dan aksi "Lihat catatan revisi". */
     val isRevision: Boolean
 )
 
@@ -76,10 +74,6 @@ private object NotificationColors {
     val OnRevision = Color(0xFFFFFFFF)
 }
 
-/**
- * Figma: Notifikasi (539:1407) dan Notifikasi · Kosong (539:1539). Pola baris mengikuti
- * Notifikasi UMKM (28:2): belum dibaca = latar #F7EDD3 + titik merah.
- */
 @Composable
 fun NotificationScreen(
     filters: List<NotificationFilterUi>,
@@ -154,7 +148,6 @@ private fun FilterChip(filter: NotificationFilterUi, onClick: () -> Unit) {
     )
 }
 
-/** Figma "Kelola/Notification Item": ikon 38, isi (chip opsional, judul, isi, aksi, waktu), titik belum dibaca. */
 @Composable
 private fun NotificationRow(item: NotificationItemUi, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
@@ -201,7 +194,6 @@ private fun NotificationRow(item: NotificationItemUi, onClick: () -> Unit) {
     }
 }
 
-/** Figma "Notifikasi · Kosong": ikon 84, judul, isi, tombol garis "Cari Project". */
 @Composable
 private fun EmptyState(onFindProjectsClick: () -> Unit) {
     Column(

@@ -23,7 +23,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Key Metrics Bento Row (17:4257) – Anggaran & Tenggat. */
 @Composable
 internal fun KeyMetricsRow(
     budget: String,

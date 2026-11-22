@@ -33,7 +33,6 @@ import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiatio
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiation.component.NegotiationInfoNote
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiation.component.NegotiationParty
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiation.component.SummaryRow
-import com.example.proyek_papb_fe.feature.umkm.data.ContinueProjectResult
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
@@ -42,26 +41,21 @@ import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupi
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
 private val BubbleTime = DateTimeFormatter.ofPattern("HH.mm")
 private val OlderDate = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("id-ID"))
 
-/**
- * Negosiasi UMKM untuk percakapan tahap Negosiasi (Blueprint TK-F-U-15 Lanjut Project,
- * TK-F-U-16 Batalkan Project). Data dari [UmkmNegotiationStore] dan pesan dari
- * [UmkmConversationStore], semuanya DATA DUMMY lokal.
- *
- * Batalkan membuka Modal Batalkan Project di atas screen ini. [onCancelled] dipanggil setelah
- * pembatalan berhasil (null = screen Project Dibatalkan belum dibuat). [onBothAgreed] dipanggil bila kedua
- * pihak sudah setuju (tahap berikutnya: rencana pengerjaan & pembayaran).
- */
 @Composable
 fun NegotiationScreen(
     conversationId: String,
     onBack: () -> Unit,
     onCancelled: ((conversationId: String) -> Unit)?,
-    onBothAgreed: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    onBothAgreed: ((projectId: String) -> Unit)?,
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(conversationId))
 ) {
     val context = LocalContext.current
     fun toast(message: String) = Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -69,18 +63,39 @@ fun NegotiationScreen(
     val conversation = UmkmConversationStore.conversation(conversationId)
     val negotiation = UmkmNegotiationStore.negotiation(conversationId)
     if (conversation == null || negotiation == null) {
-        // Tidak ada di Figma: percakapan tidak sedang dalam negosiasi.
         Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             AuthAppBar(title = "Negosiasi", onBack = onBack)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Data negosiasi tidak ditemukan.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            run {
+                val vmState by viewModel.uiState.collectAsStateWithLifecycle()
+                when {
+                    vmState.isLoading -> com.example.proyek_papb_fe.core.ui.components.LoadingContent()
+                    vmState.errorMessage != null -> com.example.proyek_papb_fe.core.ui.components.ErrorContent(vmState.errorMessage.orEmpty(), onRetry = viewModel::load)
+                    else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Data negosiasi tidak ditemukan.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
             }
         }
         return
     }
 
-    // Membuka negosiasi juga membaca pesan baru di percakapan ini.
-    LaunchedEffect(conversationId) { UmkmConversationStore.markRead(conversationId) }
+    val chatState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(chatState.message) {
+        chatState.message?.let {
+            toast(it)
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(chatState.readyToPayProjectId) {
+        chatState.readyToPayProjectId?.let { projectId ->
+            viewModel.onReadyToPayHandled()
+            onBothAgreed?.invoke(projectId) ?: toast("Kedua pihak setuju. Status: Menunggu Pembayaran.")
+        }
+    }
+    LaunchedEffect(chatState.cancelledConversationId) {
+        chatState.cancelledConversationId?.let { id ->
+            viewModel.onCancelledHandled()
+            onCancelled?.invoke(id) ?: toast("Project dibatalkan.")
+        }
+    }
 
     var showCancel by rememberSaveable { mutableStateOf(false) }
     val cancelled = negotiation.status == ProjectStatus.Dibatalkan
@@ -105,7 +120,6 @@ fun NegotiationScreen(
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    // Figma: pt 84 (di bawah App Bar 64), pb 120 di atas bar aksi yang menempel.
                     contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -147,43 +161,20 @@ fun NegotiationScreen(
                 NegotiationActionBar(
                     onCancel = { showCancel = true },
                     cancelEnabled = !cancelled && !negotiation.isPaid,
-                    onContinue = {
-                        when (UmkmNegotiationStore.continueProject(conversationId)) {
-                            ContinueProjectResult.WaitingFreelancer ->
-                                toast("Persetujuanmu tercatat. Menunggu freelancer menekan Lanjut.")
-                            ContinueProjectResult.BothAgreed ->
-                                onBothAgreed?.invoke() ?: toast("Kedua pihak setuju. Status: Menunggu Pembayaran.")
-                            ContinueProjectResult.IncompleteAgreement ->
-                                toast("Nilai project belum disepakati. Sepakati dulu lewat chat sebelum melanjutkan.")
-                            ContinueProjectResult.NotAllowed -> Unit
-                        }
-                    },
-                    // Setelah UMKM setuju, Lanjut tidak bisa ditekan lagi (persetujuan sudah tercatat).
+                    onContinue = viewModel::continueProject,
                     continueEnabled = !cancelled && !negotiation.umkmAgreed && !negotiation.isPaid,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
         }
-        // Modal di atas seluruh screen Negosiasi (termasuk App Bar), seperti Figma.
         CancelProjectDialog(
             visible = showCancel,
             onDismiss = { showCancel = false },
             onConfirm = { reason ->
                 showCancel = false
-                if (UmkmNegotiationStore.cancelProject(conversationId, reason)) {
-                    onCancelled?.invoke(conversationId) ?: toast("Project dibatalkan (simulasi lokal).")
-                } else {
-                    toast("Project tidak bisa dibatalkan karena pembayaran sudah berhasil.")
-                }
+                viewModel.cancel(reason)
             }
         )
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun NegotiationScreenPreview() {
-    PROYEKPAPBFETheme {
-        NegotiationScreen(conversationId = "dummy-chat-maya", onBack = {}, onCancelled = null, onBothAgreed = null)
-    }
-}

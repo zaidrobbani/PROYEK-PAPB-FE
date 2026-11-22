@@ -23,11 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/**
- * Figma: Chat List Item (272:21). Baris pesan ala WhatsApp, bukan kartu:
- * avatar | nama UMKM + jam / judul project / pesan terakhir + badge belum dibaca.
- * Garis pemisah tipis dimulai setelah avatar.
- */
 @Composable
 internal fun ConversationRow(
     item: ChatListItem,
@@ -140,12 +135,12 @@ internal fun InitialsAvatar(
 private fun ConversationRowPreview() {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         ConversationRow(
-            item = ChatListItem(1, "KS", "Kedai Kopi Senja", "Desain Rebranding Logo & Kemasan Pouch Kopi 250gr",
+            item = ChatListItem("1", "KS", "Kedai Kopi Senja", "Desain Rebranding Logo & Kemasan Pouch Kopi 250gr",
                 "Anda: Tentu Bu Rina, nanti saya buatkan 2 opsi ketebalan font", "09.48", 0),
             onClick = {}
         )
         ConversationRow(
-            item = ChatListItem(3, "SM", "Toko Kue Sari Manis", "Desain Kemasan Kue Kering Lebaran",
+            item = ChatListItem("3", "SM", "Toko Kue Sari Manis", "Desain Kemasan Kue Kering Lebaran",
                 "Boleh kirim contoh kemasan yang pernah Mas buat?", "08.50", 2),
             onClick = {}
         )

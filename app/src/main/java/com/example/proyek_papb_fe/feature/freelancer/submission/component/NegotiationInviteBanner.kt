@@ -24,7 +24,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val BannerButtonShape = RoundedCornerShape(10.dp)
 
-/** Figma: "Notifikasi Masuk" (27:63) dengan tombol "Buka" negosiasi. */
 @Composable
 internal fun NegotiationInviteBanner(
     clientName: String,

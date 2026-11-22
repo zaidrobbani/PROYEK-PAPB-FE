@@ -40,22 +40,16 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val MonthShort = listOf("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des")
 
-/** MonthYear(3, 2022) → "Mar 2022". */
 fun MonthYear.label(): String = "${MonthShort[month - 1]} $year"
 
-/** Satu item pengalaman (sudah diformat). */
 data class ExperienceItemUi(
     val id: String,
     val position: String,
     val organization: String,
-    /** "Mar 2022 – Des 2023 · 1 thn 10 bln". */
     val period: String,
     val description: String
 )
 
-/**
- * Figma: Kelola Pengalaman (538:1235), Kosong (538:1289), dan Hapus Pengalaman (Modal) (538:1424).
- */
 @Composable
 fun ExperienceListScreen(
     totalYearsLabel: String,
@@ -106,7 +100,6 @@ fun ExperienceListScreen(
     }
 }
 
-/** Figma "Kelola/Experience Item": ikon 40, posisi, perusahaan, periode, deskripsi, Edit & Hapus bertumpuk. */
 @Composable
 private fun ExperienceItem(item: ExperienceItemUi, onEdit: () -> Unit, onDelete: () -> Unit) {
     Row(
@@ -131,7 +124,6 @@ private fun ExperienceItem(item: ExperienceItemUi, onEdit: () -> Unit, onDelete:
     }
 }
 
-/** Isian form Tambah/Edit Pengalaman. */
 data class ExperienceForm(
     val position: String = "",
     val organization: String = "",
@@ -152,7 +144,6 @@ data class ExperienceFormErrors(
 
 const val ExperienceDescriptionMax = 300
 
-/** Figma: Tambah Pengalaman (538:1305) dan Edit Pengalaman (538:1363). */
 @Composable
 fun ExperienceFormScreen(
     isEdit: Boolean,
@@ -168,7 +159,7 @@ fun ExperienceFormScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var picking by rememberSaveable { mutableStateOf<String?>(null) } // "start" / "end"
+    var picking by rememberSaveable { mutableStateOf<String?>(null) }
 
     KelolaScaffold(
         title = if (isEdit) "Edit Pengalaman" else "Tambah Pengalaman",
@@ -262,7 +253,6 @@ fun ExperienceFormScreen(
     }
 }
 
-/** Pemilih bulan-tahun (Figma hanya menampilkan field kalender, tanpa desain picker). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MonthYearPickerDialog(title: String, initial: MonthYear, maxMonth: MonthYear, onPick: (MonthYear) -> Unit, onDismiss: () -> Unit) {

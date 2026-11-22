@@ -24,7 +24,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val ButtonHeight = 51.dp
 
-/** Figma: Sticky Bottom Bar (26:86) — "Batalkan" + "Lanjut Project". */
 @Composable
 internal fun NegotiationActionBar(
     onCancelClick: () -> Unit,

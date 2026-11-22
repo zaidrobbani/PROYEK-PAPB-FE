@@ -38,16 +38,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 internal val SubmissionListHorizontalPadding = 16.903.dp
 
-/**
- * Label chip kartu di daftar "Project". Status & filternya memakai [ProjectStatus] bersama
- * (sama dengan tab Chat); [PLAN_SUBMITTED] hanya varian chip dari status Negosiasi.
- * - [UNDER_REVIEW]: Menunggu Kesepakatan (UMKM belum menyetujui penawaran).
- * - [NEGOTIATION]: Negosiasi.
- * - [PLAN_SUBMITTED]: Negosiasi, dan rencana pengerjaan sudah diajukan ke UMKM.
- * - [IN_PROGRESS]: Project Berjalan (rencana pengerjaan disetujui UMKM, sedang dikerjakan).
- * - [COMPLETED]: Selesai.
- * - [CANCELLED]: Dibatalkan.
- */
 enum class ProposalStage(val label: String, val status: ProjectStatus) {
     UNDER_REVIEW(ProjectStatus.MENUNGGU_KESEPAKATAN.label, ProjectStatus.MENUNGGU_KESEPAKATAN),
     NEGOTIATION(ProjectStatus.NEGOSIASI.label, ProjectStatus.NEGOSIASI),
@@ -57,14 +47,11 @@ enum class ProposalStage(val label: String, val status: ProjectStatus) {
     CANCELLED(ProjectStatus.DIBATALKAN.label, ProjectStatus.DIBATALKAN)
 }
 
-/** Data tampilan satu kartu penawaran (sudah diformat). */
 data class ProposalListItem(
-    val projectId: Int,
+    val projectId: String,
     val stage: ProposalStage,
-    /** Tanggal kirim absolut, mis. "24 Okt 2026". */
     val submittedDate: String,
     val projectTitle: String,
-    /** Nama UMKM + kota, mis. "Kedai Kopi Senja · Bandung". */
     val clientLine: String,
     val offerAmount: String,
     val duration: String
@@ -75,28 +62,19 @@ data class ProposalFilterOption(
     val count: Int
 )
 
-/**
- * Tab "Project": project yang diajukan, dinegosiasikan, dikerjakan, atau dibatalkan,
- * satu kartu per project.
- * Top bar dan filter tetap, hanya daftar yang di-scroll.
- */
 @Composable
 fun SubmissionListScreen(
     filterOptions: List<ProposalFilterOption>,
     selectedFilter: ProjectFilter,
     onFilterSelect: (ProjectFilter) -> Unit,
     proposals: List<ProposalListItem>,
-    onProposalClick: (projectId: Int) -> Unit,
+    onProposalClick: (projectId: String) -> Unit,
     onFindProjectsClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {}
 ) {
     val listState = rememberLazyListState()
-    // Kembali ke atas setiap kali filter diganti. Dijalankan setelah daftar baru
-    // dikomposisi; bila dijalankan sebelumnya, LazyColumn menahan posisi pada key kartu
-    // teratas daftar lama (mis. Negosiasi -> Semua tampil mulai dari kartu tengah).
-    // Filter terakhir disimpan agar kembali dari Status tidak memaksa scroll ke atas.
     var lastScrolledFilter by rememberSaveable { mutableStateOf(selectedFilter) }
     LaunchedEffect(selectedFilter) {
         if (lastScrolledFilter != selectedFilter) {
@@ -116,8 +94,6 @@ fun SubmissionListScreen(
             onNotificationClick = onNotificationClick
         )
 
-        // Figma: Main pt 8 + Filter Pills pt 12 / pb 4. 4dp atas & bawah sudah ada di
-        // contentPadding ProposalFilterRow (ruang bayangan), sisanya di sini.
         ProposalFilterRow(
             options = filterOptions,
             selectedFilter = selectedFilter,

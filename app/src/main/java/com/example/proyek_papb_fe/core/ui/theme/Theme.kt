@@ -4,11 +4,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-/**
- * Skema warna dari variabel Figma TEMUKARYA.
- * Container primary/tertiary memakai tonal palette Figma sesuai aturan nada Material 3,
- * karena frame Figma tidak memakainya secara langsung.
- */
 private val TemuKaryaColorScheme = lightColorScheme(
     primary = BrandPrimary,
     onPrimary = FieldBackground,
@@ -47,7 +42,6 @@ private val TemuKaryaColorScheme = lightColorScheme(
     surfaceContainerHighest = FrameSurfaceVariant
 )
 
-/** Aplikasi hanya memakai mode terang sesuai desain Figma, tanpa warna dinamis Android 12+. */
 @Composable
 fun PROYEKPAPBFETheme(content: @Composable () -> Unit) {
     MaterialTheme(
