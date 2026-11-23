@@ -16,7 +16,7 @@ fun NavController.navigateToRegisterUmkm() {
 fun NavGraphBuilder.registerUmkmScreen(
     onChangeRole: () -> Unit,
     onLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: (email: String) -> Unit
 ) {
     composable<RegisterUmkmRoute> {
         RegisterUmkmScreen(

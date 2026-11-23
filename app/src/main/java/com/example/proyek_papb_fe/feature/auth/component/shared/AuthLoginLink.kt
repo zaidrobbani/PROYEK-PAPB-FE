@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Tautan "Sudah punya akun? Masuk", ukuran bawaan mengikuti frame Pilih Peran. */
 @Composable
 fun AuthLoginLink(
     onClick: () -> Unit,
@@ -40,7 +39,6 @@ fun AuthLoginLink(
     )
 }
 
-/** Teks ajakan dengan tautan bergaris bawah, misalnya "Belum punya akun? Daftar". */
 @Composable
 fun AuthPromptLink(
     prompt: String,

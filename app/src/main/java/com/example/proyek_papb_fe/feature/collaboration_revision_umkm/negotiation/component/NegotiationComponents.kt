@@ -39,10 +39,8 @@ import com.example.proyek_papb_fe.core.ui.theme.SageBadge
 import com.example.proyek_papb_fe.core.ui.theme.SandContainer
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Teks chip status Menunggu Kesepakatan di Figma (#544222); belum ada di tema, disimpan lokal. */
 private val OnStatusChip = Color(0xFF544222)
 
-/** Figma memakai line-height 1.4 untuk teks di screen ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(fontWeight = weight, fontSize = size.sp, lineHeight = (size * 1.4f).sp)
@@ -79,7 +77,6 @@ private fun Avatar(initials: String, isUmkm: Boolean, size: Int) {
     }
 }
 
-/** Kartu atas: chip status project & pembayaran, judul, serta UMKM ⇄ freelancer. */
 @Composable
 fun NegotiationHeaderCard(
     statusLabel: String,
@@ -124,7 +121,6 @@ private fun Party(party: NegotiationParty) {
     }
 }
 
-/** Satu baris ringkasan; [emphasis] = nilai tebal (Nilai project). */
 data class SummaryRow(val label: String, val value: String, val emphasis: Boolean = false, val dividerBefore: Boolean = false)
 
 @Composable
@@ -171,7 +167,6 @@ fun NegotiationDateChip(label: String) {
     }
 }
 
-/** Bubble negosiasi. Keluar: cokelat bergaris di kanan. Masuk: putih dengan avatar freelancer. */
 @Composable
 fun NegotiationBubble(text: String, time: String, outgoing: Boolean, freelancerInitials: String) {
     val colors = MaterialTheme.colorScheme
@@ -217,7 +212,6 @@ fun NegotiationInfoNote() {
     }
 }
 
-/** Bar bawah: Batalkan (garis merah) dan Lanjut Project. Tombol nonaktif tampil redup. */
 @Composable
 fun NegotiationActionBar(
     onCancel: () -> Unit,

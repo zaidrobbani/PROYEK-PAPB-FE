@@ -8,11 +8,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-/**
- * Token visual "Profil Saya (Freelancer)" (Figma 27:250). Frame ini memakai ukuran
- * 19/18/15.8/14.8/12.7/11.6 dengan line-height 1.4×, jadi didefinisikan lokal agar
- * tema bersama tidak berubah.
- */
 internal object ProfileTypography {
     private fun style(weight: FontWeight, size: Float) = TextStyle(
         fontFamily = PlusJakartaSans,

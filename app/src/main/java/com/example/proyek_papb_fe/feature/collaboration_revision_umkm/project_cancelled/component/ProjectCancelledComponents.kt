@@ -35,12 +35,10 @@ import com.example.proyek_papb_fe.core.ui.theme.ReviewChip
 import com.example.proyek_papb_fe.core.ui.theme.TextMuted
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Figma memakai line-height 1.4 untuk teks di screen ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(fontWeight = weight, fontSize = size.sp, lineHeight = (size * 1.4f).sp)
 
-/** Ikon silang besar, judul, chip "Dibatalkan", dan keterangan. */
 @Composable
 fun CancelledHero(statusLabel: String, description: String) {
     val colors = MaterialTheme.colorScheme
@@ -82,7 +80,6 @@ fun CancelledHero(statusLabel: String, description: String) {
     }
 }
 
-/** Satu baris rincian; [positive] = nilai hijau (baris Dana di Figma). */
 data class CancelledDetail(val label: String, val value: String, val positive: Boolean = false)
 
 @Composable
@@ -115,7 +112,6 @@ fun CancelledDetailCard(details: List<CancelledDetail>) {
     }
 }
 
-/** Tombol lebar penuh; [filled] = cokelat, selain itu bergaris. */
 @Composable
 fun CancelledActionButton(label: String, filled: Boolean, @DrawableRes icon: Int?, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme

@@ -12,20 +12,13 @@ import com.example.proyek_papb_fe.feature.freelancer.wallet.component.QuickAmoun
 import com.example.proyek_papb_fe.feature.freelancer.wallet.component.WithdrawScreen
 import com.example.proyek_papb_fe.feature.freelancer.wallet.component.WithdrawUiState
 
-/** Batas digit input agar nominal tetap muat di Long (maks. 999 miliar). */
 private const val MaxAmountDigits = 12
 
-/** Figma 27:182: chip nominal cepat sebelum "Semua saldo". */
 private val QuickAmounts = listOf("Rp 500rb" to 500_000L, "Rp 1 jt" to 1_000_000L)
 
-/** Hanya angka, tanpa nol di depan ("0" atau "007" → "" / "7"). */
 private fun sanitizeAmount(input: String): String =
     input.filter(Char::isDigit).trimStart('0').take(MaxAmountDigits)
 
-/**
- * Pesan kesalahan nominal. Nominal kosong baru ditandai setelah tombol "Ajukan Pencairan"
- * ditekan; nominal yang melebihi saldo langsung ditandai saat diketik.
- */
 private fun amountError(amount: Long?, available: Long, submitAttempted: Boolean): String? = when {
     amount == null -> if (submitAttempted) "Masukkan nominal pencairan." else null
     amount <= 0 -> "Nominal pencairan harus lebih dari Rp 0."
@@ -33,12 +26,6 @@ private fun amountError(amount: Long?, available: Long, submitAttempted: Boolean
     else -> null
 }
 
-/**
- * Container Pengajuan Pencairan Dana (Figma 27:161), dibuka dari "Cairkan Dana" di
- * Dompet & Rekening. Saldo dan rekening dibaca dari [WalletStore] (sumber yang sama
- * dengan Dompet & Rekening). Sesuai Figma, nominal awal = semua saldo tersedia dan
- * rekening awal = rekening Utama.
- */
 @Composable
 fun WithdrawContainer(
     onBack: () -> Unit,

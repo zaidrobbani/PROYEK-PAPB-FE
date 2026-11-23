@@ -26,12 +26,12 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: App Bar varian Chat (161:44) — kembali, avatar, nama kontak + UMKM, menu. */
 @Composable
 internal fun ChatRoomTopBar(
     contactName: String,
     contactInitials: String,
     umkmName: String,
+    contactPhotoUrl: String? = null,
     onBack: () -> Unit,
     onMoreClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -53,6 +53,7 @@ internal fun ChatRoomTopBar(
         IconAction(R.drawable.ic_arrow_back, "Kembali", onBack)
         InitialsAvatar(
             initials = contactInitials,
+            photoUrl = contactPhotoUrl,
             size = 38,
             background = TemuKaryaColors.SurfaceSand,
             textColor = TemuKaryaColors.ActionPrimary,

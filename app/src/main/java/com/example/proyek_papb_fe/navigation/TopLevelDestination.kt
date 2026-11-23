@@ -1,4 +1,3 @@
-
 package com.example.proyek_papb_fe.navigation
 
 import androidx.annotation.DrawableRes
@@ -12,7 +11,6 @@ import com.example.proyek_papb_fe.feature.freelancer.searchproject.navigation.Se
 import com.example.proyek_papb_fe.feature.freelancer.submission.navigation.SubmissionRoute
 import com.example.proyek_papb_fe.feature.profile.navigation.ProfileRoute
 
-/** Lima tab bottom navigation sesuai Figma "Bottom Nav" (161:265). */
 enum class TopLevelDestination(
     val label: String,
     @param:DrawableRes val iconRes: Int,
@@ -28,7 +26,6 @@ enum class TopLevelDestination(
         iconRes = R.drawable.ic_nav_travel_explore,
         route = SearchProjectRoute
     ),
-    /** Tab "Project" (dulu "Pengajuan"); route internal tetap SubmissionRoute. */
     SUBMISSION(
         label = "Proyek",
         iconRes = R.drawable.ic_nav_project,

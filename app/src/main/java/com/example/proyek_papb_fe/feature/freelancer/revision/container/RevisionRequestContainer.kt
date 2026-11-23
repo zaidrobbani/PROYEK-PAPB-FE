@@ -1,29 +1,38 @@
 package com.example.proyek_papb_fe.feature.freelancer.revision.container
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.example.proyek_papb_fe.core.data.RevisionRequestStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
 import com.example.proyek_papb_fe.feature.freelancer.revision.component.RevisionRequestScreen
+import com.example.proyek_papb_fe.feature.freelancer.revision.viewmodel.RevisionRequestViewModel
 
-/**
- * Container Permintaan Revisi (Figma 17:5737) untuk [projectId] (mis. 101 = Desain Rebranding
- * Logo & Kemasan Pouch Kopi, Kedai Kopi Senja). Unggah draf dan diskusi berlangsung di ruang
- * chat project yang sama (tempat fitur Unggah Draf sudah ada), jadi ketiga aksi membuka chat
- * itu. Bila project tidak punya permintaan revisi, langsung kembali.
- */
 @Composable
 fun RevisionRequestContainer(
-    projectId: Int,
+    projectId: String,
     onBack: () -> Unit,
-    onOpenProjectChat: (projectId: Int) -> Unit
+    onOpenProjectChat: (projectId: String) -> Unit,
+    viewModel: RevisionRequestViewModel = viewModel(
+        factory = RevisionRequestViewModel.factory(projectId, AppContainer.submissionRepository, AppContainer.workflowRepository)
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    // Permintaan terbaru project ini (contoh awal atau kiriman UMKM dari Review Hasil Project).
-    val request = RevisionRequestStore.forProject(projectId)
+    val request = uiState.request
     if (request == null) {
-        LaunchedEffect(projectId) { onBack() }
+        Column(modifier = Modifier.fillMaxSize()) {
+            DetailTopBar(title = "Permintaan Revisi", onBack = onBack)
+            if (uiState.isLoading) LoadingContent() else ErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load)
+        }
         return
     }
     RevisionRequestScreen(

@@ -29,7 +29,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.AppBarBorder
 import com.example.proyek_papb_fe.core.ui.theme.AppBarIcon
 
-/** Komponen App Bar Figma varian Detail: tombol kembali dan judul halaman. */
 @Composable
 fun AuthAppBar(
     title: String,

@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,12 +26,13 @@ fun AuthPrimaryButton(
     shadowStyle: AuthShadowStyle = AuthShadowStyle.Prominent,
     height: Dp = 50.708.dp,
     leadingIcon: (@Composable () -> Unit)? = null,
-    iconSpacing: Dp = 8.dp
+    iconSpacing: Dp = 8.dp,
+    isLoading: Boolean = false
 ) {
     val shape = RoundedCornerShape(12.dp)
 
     Button(
-        onClick = onClick,
+        onClick = { if (!isLoading) onClick() },
         modifier = modifier
             .fillMaxWidth()
             .height(height)
@@ -37,6 +40,14 @@ fun AuthPrimaryButton(
         shape = shape,
         contentPadding = PaddingValues(0.dp)
     ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = MaterialTheme.colorScheme.onPrimary,
+                strokeWidth = 2.dp
+            )
+            return@Button
+        }
         if (leadingIcon != null) {
             leadingIcon()
             Spacer(Modifier.width(iconSpacing))

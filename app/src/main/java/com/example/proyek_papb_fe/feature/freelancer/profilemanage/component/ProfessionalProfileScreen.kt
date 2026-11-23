@@ -41,11 +41,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.components.rememberCityLocator
+import com.example.proyek_papb_fe.core.ui.components.LocationFillButton
 import com.example.proyek_papb_fe.core.data.model.FreelancerProfile
 import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Isian form Kelola Profil Profesional (nilai mentah yang sedang diedit). */
 data class ProfessionalProfileForm(
     val initials: String,
     val photoUri: String?,
@@ -54,14 +55,12 @@ data class ProfessionalProfileForm(
     val bio: String,
     val primaryField: String,
     val skills: List<String>,
-    /** Tarif dalam digit mentah, mis. "500000"; kosong = belum diisi. */
     val rateDigits: String,
     val city: String,
     val isAvailableForWork: Boolean,
     val acceptsRemoteWork: Boolean
 )
 
-/** Pesan validasi per field; null = valid. */
 data class ProfessionalProfileErrors(
     val fullName: String? = null,
     val headline: String? = null,
@@ -71,7 +70,6 @@ data class ProfessionalProfileErrors(
     val count: Int get() = listOfNotNull(fullName, headline, bio, city).size
 }
 
-/** "500000" → "Rp 500.000 / project" (Figma Field Tarif) tanpa mengubah nilai mentah. */
 private object RatePerProjectTransformation : VisualTransformation {
     private const val Prefix = "Rp "
     private const val Suffix = " / proyek"
@@ -97,10 +95,6 @@ private object RatePerProjectTransformation : VisualTransformation {
     }
 }
 
-/**
- * Figma: Kelola Profil Profesional (534:961), state Validasi (534:1067) dan Tersimpan (534:1169).
- * Stateless: isian, error, dan snackbar dikelola container.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfessionalProfileScreen(
@@ -200,7 +194,12 @@ fun ProfessionalProfileScreen(
             onValueChange = { onFormChange(form.copy(city = it)) },
             placeholder = "Contoh: Yogyakarta",
             error = errors.city,
+            helper = "Ketuk ikon lokasi untuk mengisi otomatis.",
             trailingIconRes = R.drawable.ic_profile_location,
+            trailingContent = {
+                val locator = rememberCityLocator { found -> onFormChange(form.copy(city = found.city)) }
+                LocationFillButton(locator, tint = TemuKaryaColors.ActionPrimary, iconRes = R.drawable.ic_profile_location)
+            },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done)
         )
         KelolaCard {
@@ -223,7 +222,6 @@ fun ProfessionalProfileScreen(
     }
 }
 
-/** Figma "Banner Validasi": error-container r16, ikon error 20. */
 @Composable
 private fun ErrorBanner(count: Int) {
     Row(
@@ -240,7 +238,6 @@ private fun ErrorBanner(count: Int) {
     }
 }
 
-/** Figma "Foto Profil": avatar 72 dengan lencana kamera, keterangan, dan "Ubah foto". */
 @Composable
 private fun PhotoCard(initials: String, photoUri: String?, onPickPhoto: () -> Unit) {
     Row(
@@ -266,7 +263,6 @@ private fun PhotoCard(initials: String, photoUri: String?, onPickPhoto: () -> Un
                     }
                 )
             }
-            // Figma "Badge Ubah Foto": 26 di (48, 48), garis krem 2.
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -295,7 +291,6 @@ private fun PhotoCard(initials: String, photoUri: String?, onPickPhoto: () -> Un
     }
 }
 
-/** Dialog sederhana untuk "+ Tambah keahlian" (Figma tidak mendefinisikan layar khusus). */
 @Composable
 private fun AddSkillDialog(existing: List<String>, onAdd: (String) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }

@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.auth.change_password.container.ChangePasswordScreen
 import kotlinx.serialization.Serializable
 
-/** [email] akun yang sedang masuk; dipakai bersama UMKM dan Freelancer. */
 @Serializable
 data class ChangePasswordRoute(val email: String)
 

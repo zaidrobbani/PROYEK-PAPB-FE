@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Tipografi Pengajuan Pencairan Dana (27:161) & Pencairan sedang diproses (27:218); line-height 1.4. */
 internal object WithdrawTypography {
     private fun style(weight: FontWeight, size: Float) = TextStyle(
         fontFamily = PlusJakartaSans, fontWeight = weight, fontSize = size.sp, lineHeight = (size * 1.4f).sp
@@ -49,7 +48,6 @@ internal object WithdrawColors {
     val StatusIcon = Color(0xFF7F7760)
     val PendingChip = Color(0xFFE9C46A)
     val OnPendingChip = Color(0xFF4B3600)
-    /** Sticky Bottom Bar: rgba(254,247,230,0.97). */
     val BottomBar = Color(0xF7FEF7E6)
     val Error = Color(0xFFBA1A1A)
 }
@@ -57,7 +55,6 @@ internal object WithdrawColors {
 internal val WithdrawCardShape = RoundedCornerShape(16.dp)
 internal val WithdrawButtonShape = RoundedCornerShape(12.dp)
 
-/** Satu baris label–nilai di kartu Rincian (27:199) dan ringkasan pencairan (27:227). */
 @Composable
 internal fun WithdrawDetailRow(
     label: String,

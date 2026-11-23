@@ -25,7 +25,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val ButtonHeight = 51.dp
 
-/** Figma: Sticky Bottom Bar (27:76) — "Cari Project Lain" + "Lihat Detail". */
 @Composable
 internal fun SubmissionStatusActionBar(
     onFindOtherProjectsClick: () -> Unit,

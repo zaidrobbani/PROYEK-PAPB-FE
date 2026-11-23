@@ -43,13 +43,10 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Satu milestone yang ditinjau UMKM (read-only). */
 data class ReviewMilestoneUi(val name: String, val weightPercent: Int)
 
-/** Data tampilan Tinjau Rencana Pengerjaan (sudah diformat). */
 data class PlanReviewUiState(
     val projectTitle: String,
-    /** "Diajukan Andi Ramadhan, deadline 7 Nov 2026 (14 hari)". */
     val submittedBy: String,
     val milestones: List<ReviewMilestoneUi>
 ) {
@@ -81,7 +78,7 @@ private object PlanReviewColors {
     val Border = Color(0xFFE2D5BA)
     val PendingChip = Color(0xFFECE2C8)
     val OnPendingChip = Color(0xFF4C4734)
-    val Info = Color(0x99DBE3C4) // rgba(219,227,196,0.6)
+    val Info = Color(0x99DBE3C4)
     val InfoIcon = Color(0xFF5A6149)
     val OnInfo = Color(0xFF424A33)
     val Track = Color(0xFFEDE0C2)
@@ -89,7 +86,6 @@ private object PlanReviewColors {
     val OnValidChip = Color(0xFF364323)
     val BottomBar = Color(0xF7FEF7E6)
 
-    /** Warna segmen bar bobot berurutan (Figma 270:741–744). */
     val Segments = listOf(Color(0xFF684738), Color(0xFFAAB295), Color(0xFFD08A6B), Color(0xFFE9C46A))
 }
 
@@ -97,11 +93,6 @@ private val CardShape = RoundedCornerShape(16.dp)
 private val FieldShape = RoundedCornerShape(12.dp)
 private val WeightColumn = 92.dp
 
-/**
- * Figma: Tinjau Rencana Pengerjaan (UMKM) (270:663). UMKM memeriksa milestone yang diajukan
- * freelancer (read-only), lalu "Setujui Rencana" (lanjut ke Pembayaran 17:1267) atau
- * "Minta Ubah". Sticky Bottom Bar dua tombol; isi di-scroll (pt 20, px 17, gap 16, pb 120).
- */
 @Composable
 fun PlanReviewScreen(
     state: PlanReviewUiState,
@@ -139,7 +130,6 @@ fun PlanReviewScreen(
     }
 }
 
-/** 270:665: "Langkah sebelum pembayaran", chip status, judul, pengaju & deadline. */
 @Composable
 private fun HeaderCard(state: PlanReviewUiState) {
     Column(
@@ -176,7 +166,6 @@ private fun HeaderCard(state: PlanReviewUiState) {
     }
 }
 
-/** 270:675: catatan hijau tentang dampak persetujuan. */
 @Composable
 private fun InfoCard() {
     Row(
@@ -193,7 +182,6 @@ private fun InfoCard() {
     }
 }
 
-/** 270:681: label "Milestone n" / "Bobot (%)" lalu field nama & bobot (read-only). */
 @Composable
 private fun MilestoneRow(number: Int, milestone: ReviewMilestoneUi) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -221,7 +209,6 @@ private fun MilestoneRow(number: Int, milestone: ReviewMilestoneUi) {
     }
 }
 
-/** 270:732: total bobot, chip valid, bar segmen berwarna, dan legenda. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TotalCard(state: PlanReviewUiState) {
@@ -268,7 +255,6 @@ private fun TotalCard(state: PlanReviewUiState) {
     }
 }
 
-/** 270:760: Sticky Bottom Bar, "Minta Ubah" (garis) dan "Setujui Rencana" (utama). */
 @Composable
 private fun ActionBar(onRequestChanges: () -> Unit, onApprove: () -> Unit, modifier: Modifier = Modifier) {
     Row(

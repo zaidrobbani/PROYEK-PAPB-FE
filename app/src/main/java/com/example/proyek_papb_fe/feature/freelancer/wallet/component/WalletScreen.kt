@@ -37,32 +37,24 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Jenis baris riwayat: menentukan ikon, warna, dan tanda nominal. */
 enum class WalletTransactionKind { INCOME, WITHDRAWAL, HELD }
 
-/** Satu baris Riwayat Transaksi (sudah diformat). */
 data class WalletTransactionUi(
     val id: String,
     val title: String,
-    /** "Pemasukan project, 18 Okt" / "Berhasil, 2 Okt" / "Ditahan sejak 24 Okt". */
     val subtitle: String,
-    /** "+ Rp 950.000" / "− Rp 500.000" / "Rp 1.500.000". */
     val amountLabel: String,
     val kind: WalletTransactionKind
 )
 
-/** Data tampilan Dompet & Rekening (sudah diformat). */
 data class WalletUiState(
     val totalBalance: String,
     val availableBalance: String,
     val heldBalance: String,
-    /** "BCA akhiran 4821"; null = belum ada rekening pencairan. */
     val accountTitle: String?,
-    /** "a.n. Andi Ramadhan". */
     val accountHolder: String?,
     val isPrimaryAccount: Boolean,
     val transactions: List<WalletTransactionUi>,
-    /** true = masih ada transaksi yang belum ditampilkan (link "Semua" aktif). */
     val hasMoreTransactions: Boolean
 )
 
@@ -89,8 +81,8 @@ private object WalletTypography {
 
 private object WalletColors {
     val Muted = Color(0xFF6B5A50)
-    val Tile = Color(0x8CFFFFFF) // rgba(255,255,255,0.55)
-    val Info = Color(0x99DBE3C4) // rgba(219,227,196,0.6)
+    val Tile = Color(0x8CFFFFFF)
+    val Info = Color(0x99DBE3C4)
     val OnInfo = Color(0xFF424A33)
     val Badge = Color(0xFFEDE0C2)
     val CardBorder = Color(0xFFE2D5BA)
@@ -101,10 +93,6 @@ private object WalletColors {
 
 private val CardShape = RoundedCornerShape(16.dp)
 
-/**
- * Figma: Dompet Freelancer (27:80), judul "Dompet & Rekening".
- * App bar Detail tetap di atas; isi di-scroll (pt 20, px 17, pb 32, jarak antar bagian 16).
- */
 @Composable
 fun WalletScreen(
     state: WalletUiState,

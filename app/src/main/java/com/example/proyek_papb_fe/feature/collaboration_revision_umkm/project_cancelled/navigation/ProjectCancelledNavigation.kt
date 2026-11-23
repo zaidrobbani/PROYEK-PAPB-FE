@@ -8,14 +8,9 @@ import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiatio
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.project_cancelled.container.ProjectCancelledScreen
 import kotlinx.serialization.Serializable
 
-/** Membawa id percakapan yang negosiasinya baru dibatalkan. */
 @Serializable
 data class UmkmProjectCancelledRoute(val conversationId: String)
 
-/**
- * Dipanggil setelah pembatalan berhasil. Negosiasi yang sudah dibatalkan dikeluarkan dari back
- * stack, jadi tombol Back kembali ke Daftar Percakapan, bukan ke negosiasi yang tidak aktif lagi.
- */
 fun NavController.navigateToUmkmProjectCancelled(conversationId: String) {
     navigate(UmkmProjectCancelledRoute(conversationId)) {
         popUpTo<UmkmNegotiationRoute> { inclusive = true }

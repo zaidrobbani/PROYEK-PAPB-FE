@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiation.container.NegotiationScreen
 import kotlinx.serialization.Serializable
 
-/** Membawa id percakapan; negosiasi dan pesannya dibaca dari store lokal yang sama. */
 @Serializable
 data class UmkmNegotiationRoute(val conversationId: String)
 
@@ -18,7 +17,7 @@ fun NavController.navigateToUmkmNegotiation(conversationId: String) {
 fun NavGraphBuilder.umkmNegotiationScreen(
     onBack: () -> Unit,
     onCancelled: ((conversationId: String) -> Unit)?,
-    onBothAgreed: (() -> Unit)?
+    onBothAgreed: ((projectId: String) -> Unit)?
 ) {
     composable<UmkmNegotiationRoute> { entry ->
         NegotiationScreen(

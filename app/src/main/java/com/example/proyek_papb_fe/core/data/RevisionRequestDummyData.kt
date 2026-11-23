@@ -5,16 +5,11 @@ import com.example.proyek_papb_fe.core.data.model.RevisionFocusTone
 import com.example.proyek_papb_fe.core.data.model.RevisionPoint
 import com.example.proyek_papb_fe.core.data.model.RevisionRequest
 
-/**
- * Permintaan revisi UMKM per project (sementara, sebelum ada backend), sesuai Figma
- * "Notifikasi Permintaan Revisi (Freelancer)" (17:5737). Dibuka dari notifikasi
- * "Permintaan revisi pekerjaan" dengan projectId yang sama dengan Chat/Project.
- */
 object RevisionRequestDummyData {
 
     private val requests = listOf(
         RevisionRequest(
-            projectId = 101,
+            projectId = "101",
             receivedLabel = "Baru saja, 14.40 WIB",
             clientName = "Rina Pratiwi",
             clientInitials = "RP",
@@ -51,8 +46,7 @@ object RevisionRequestDummyData {
         )
     )
 
-    fun forProject(projectId: Int): RevisionRequest? = requests.firstOrNull { it.projectId == projectId }
+    fun forProject(projectId: String): RevisionRequest? = requests.firstOrNull { it.projectId == projectId }
 
-    /** Data awal untuk [RevisionRequestStore]. */
     fun seed(): List<RevisionRequest> = requests
 }

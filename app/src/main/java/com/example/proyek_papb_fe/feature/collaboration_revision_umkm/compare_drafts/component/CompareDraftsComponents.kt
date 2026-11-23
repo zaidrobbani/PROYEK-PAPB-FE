@@ -46,7 +46,6 @@ import com.example.proyek_papb_fe.core.ui.theme.OnSageBadge
 import com.example.proyek_papb_fe.core.ui.theme.SageBadge
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Warna chip "Menunggu Review" Figma (token status menunggu-review); belum ada di tema. */
 private val ReviewStatusChip = Color(0xFFE9C46A)
 private val OnReviewStatusChip = Color(0xFF4B3600)
 
@@ -57,7 +56,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): Text
 private fun Modifier.softShadow(shape: androidx.compose.ui.graphics.Shape, color: Color) =
     dropShadow(shape, Shadow(radius = 16.903.dp, color = color, spread = (-2.113).dp, offset = DpOffset(0.dp, 4.226.dp)))
 
-/** Kartu konteks: judul project, UMKM, chip status, pengirim, waktu kirim, dan versi. */
 @Composable
 fun CompareContextCard(
     projectTitle: String,
@@ -84,7 +82,6 @@ fun CompareContextCard(
                 Text(projectTitle, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, style = text(FontWeight.SemiBold, 16.903.sp, 23.241.sp))
                 Text(ownerLine, color = colors.onSurfaceVariant, maxLines = 1, style = text(FontWeight.Normal, 12.677.sp, 16.903.sp))
             }
-            // Figma menggambar "Menunggu Review"; status lain memakai chip pasir yang senada.
             Row(
                 modifier = Modifier
                     .background(if (statusIsReview) ReviewStatusChip else colors.surfaceVariant, CircleShape)
@@ -121,7 +118,6 @@ fun CompareContextCard(
     }
 }
 
-/** Data satu kolom perbandingan. [latest] = kolom kanan (perbaikan terbaru). */
 data class DraftColumn(
     val headerLabel: String,
     val headerTrailing: String,
@@ -133,7 +129,6 @@ data class DraftColumn(
     val latest: Boolean
 )
 
-/** Dua kolom berdampingan seperti "View 1: Side by Side (Default)" di Figma. */
 @Composable
 fun SideBySideComparison(previous: DraftColumn, latest: DraftColumn) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.451.dp)) {
@@ -237,7 +232,6 @@ private fun RowScope.DraftPanel(column: DraftColumn) {
     }
 }
 
-/** Baki keputusan: Diskusi (ikon), Minta Revisi, dan Setujui Draf & Selesai (lebar 1 : 1,4). */
 @Composable
 fun CompareDecisionTray(
     onDiscuss: () -> Unit,

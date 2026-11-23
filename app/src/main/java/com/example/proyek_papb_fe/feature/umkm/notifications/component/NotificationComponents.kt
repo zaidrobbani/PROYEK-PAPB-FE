@@ -36,7 +36,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.NotificationCategory
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNotification
 
-/** Figma memakai line-height 1.4 untuk semua teks di screen ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(
@@ -45,7 +44,6 @@ private fun text(weight: FontWeight, size: Float): TextStyle =
         lineHeight = (size * 1.4f).sp
     )
 
-/** Chip "Semua (n)", "Project", "Pembayaran", "Pesan". null = Semua. */
 @Composable
 fun NotificationFilterChips(
     selected: NotificationCategory?,
@@ -81,7 +79,6 @@ private fun FilterChip(label: String, isSelected: Boolean, onClick: () -> Unit) 
     )
 }
 
-/** Judul kelompok waktu, misalnya "Hari ini" atau "Kemarin". */
 @Composable
 fun NotificationGroupLabel(label: String, modifier: Modifier = Modifier) {
     Text(
@@ -92,7 +89,6 @@ fun NotificationGroupLabel(label: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Wadah satu kelompok notifikasi (latar krem, radius 16, padding 6). */
 @Composable
 fun NotificationGroupCard(
     notifications: List<UmkmNotification>,
@@ -117,7 +113,6 @@ fun NotificationGroupCard(
     }
 }
 
-/** Belum dibaca: latar tertiaryContainer + titik merah. Sudah dibaca: tanpa latar dan titik. */
 @Composable
 private fun NotificationRow(notification: UmkmNotification, time: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme

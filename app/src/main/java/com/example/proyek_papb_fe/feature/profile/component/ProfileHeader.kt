@@ -25,10 +25,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/**
- * Figma: kartu identitas "Profil Saya (Freelancer)" (27:262): avatar inisial 64, nama,
- * keahlian utama, kota, lalu chip rating dan ketersediaan.
- */
 @Composable
 internal fun ProfileHeader(
     initials: String,
@@ -111,7 +107,6 @@ internal fun ProfileHeader(
     }
 }
 
-/** Pill chip Figma (px 12, py 4, radius penuh, ikon 15 opsional). */
 @Composable
 internal fun ProfileChip(
     text: String,

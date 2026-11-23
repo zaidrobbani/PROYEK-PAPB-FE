@@ -8,11 +8,6 @@ import com.example.proyek_papb_fe.feature.umkm.create_project.container.CreatePr
 import com.example.proyek_papb_fe.feature.umkm.create_project.container.CreateProjectScreen
 import kotlinx.serialization.Serializable
 
-/**
- * [projectId] terisi = mode Edit Project untuk project tersebut. [copyFromProjectId] terisi =
- * Pesan Lagi: form Buat Project diisi data pesanan sebelumnya, lalu dipublikasikan sebagai
- * project baru.
- */
 @Serializable
 data class CreateProjectRoute(val projectId: String? = null, val copyFromProjectId: String? = null)
 

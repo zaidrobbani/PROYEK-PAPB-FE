@@ -27,10 +27,6 @@ import java.util.Locale
 
 private val AvatarSize = 59.159.dp
 
-/**
- * Figma: UMKM Client Profile Card (17:4227).
- * Pill bertitik olive di bawah lokasi (17:4253) sengaja tidak ditampilkan karena maknanya belum jelas.
- */
 @Composable
 internal fun ClientProfileCard(
     project: FreelancerProject,

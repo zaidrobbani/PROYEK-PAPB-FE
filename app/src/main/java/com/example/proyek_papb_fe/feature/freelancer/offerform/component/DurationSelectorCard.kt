@@ -27,7 +27,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 private val ChipHeight = 38.128.dp
 
-/** Figma: Section - Form Durasi & Tenggat Pengerjaan (17:4481). */
 @Composable
 internal fun DurationSelectorCard(
     selected: DurationOption,
@@ -49,7 +48,6 @@ internal fun DurationSelectorCard(
             color = TemuKaryaColors.TextHeading
         )
 
-        // Grid 2 kolom di Figma: opsi pendek berdampingan, opsi panjang satu baris penuh.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,10 +83,6 @@ internal fun DurationSelectorCard(
     }
 }
 
-/**
- * Chip durasi. Terpilih: latar #684738 + teks putih + centang di kanan.
- * Opsi rekomendasi selalu memakai ikon badge di depan label.
- */
 @Composable
 private fun DurationChip(
     option: DurationOption,
@@ -137,7 +131,6 @@ private fun DurationChip(
     }
 }
 
-/** Figma: baris "Estimasi Penyerahan Draf 1" (17:4500). */
 @Composable
 private fun DraftDueDateRow(date: String) {
     Row(

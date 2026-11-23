@@ -7,10 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.umkm.freelancer_profile.container.FreelancerProfileScreen
 import kotlinx.serialization.Serializable
 
-/**
- * [applicationId] terisi bila dibuka dari Pengajuan Freelancer, sehingga tombol "Pilih & Buat
- * Kesepakatan" memilih pengajuan itu. Dari Beranda/Cari Freelancer bernilai null.
- */
 @Serializable
 data class UmkmFreelancerProfileRoute(val freelancerId: String, val applicationId: String? = null)
 
@@ -20,7 +16,8 @@ fun NavController.navigateToUmkmFreelancerProfile(freelancerId: String, applicat
 
 fun NavGraphBuilder.umkmFreelancerProfileScreen(
     onBack: () -> Unit,
-    onSelected: () -> Unit
+    onSelected: () -> Unit,
+    onOpenApplications: (projectId: String) -> Unit
 ) {
     composable<UmkmFreelancerProfileRoute> { entry ->
         val route = entry.toRoute<UmkmFreelancerProfileRoute>()
@@ -28,7 +25,8 @@ fun NavGraphBuilder.umkmFreelancerProfileScreen(
             freelancerId = route.freelancerId,
             applicationId = route.applicationId,
             onBack = onBack,
-            onSelected = onSelected
+            onSelected = onSelected,
+            onOpenApplications = onOpenApplications
         )
     }
 }

@@ -1,13 +1,14 @@
 package com.example.proyek_papb_fe.feature.umkm.data
 
+import com.example.proyek_papb_fe.core.domain.model.CancelReasonCode
+import com.example.proyek_papb_fe.core.domain.model.PaymentStatusCode
+import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import java.time.Instant
+import java.time.ZoneId
+
 import androidx.compose.runtime.mutableStateListOf
 import java.time.LocalDateTime
 
-/**
- * Kesepakatan yang sedang dinegosiasikan untuk satu percakapan tahap Negosiasi
- * (Blueprint Fungsi 2: detail pekerjaan, nilai, deadline, persetujuan_umkm, persetujuan_freelancer).
- * [agreedValue] null = nilai project belum disepakati.
- */
 data class UmkmNegotiation(
     val conversationId: String,
     val status: ProjectStatus,
@@ -18,13 +19,10 @@ data class UmkmNegotiation(
     val paymentMethod: String,
     val umkmAgreed: Boolean,
     val freelancerAgreed: Boolean,
-    /** Diisi saat project dibatalkan dari Modal Batalkan Project. */
     val cancellationReason: UmkmCancellationReason? = null,
-    /** Waktu pembatalan (jam WIB perangkat). */
     val cancelledAt: LocalDateTime? = null
 )
 
-/** Pilihan "Alasan pembatalan" pada Figma Modal Batalkan Project (UMKM) 270:526. */
 enum class UmkmCancellationReason(val label: String) {
     HargaBelumSesuai("Harga belum sesuai"),
     JadwalTidakCocok("Jadwal pengerjaan tidak cocok"),
@@ -32,24 +30,13 @@ enum class UmkmCancellationReason(val label: String) {
     Lainnya("Alasan lainnya")
 }
 
-/** Hasil menekan "Lanjut Project", untuk umpan balik di layar. */
 enum class ContinueProjectResult {
-    /** Persetujuan UMKM tercatat; status tetap Menunggu Kesepakatan sampai freelancer setuju. */
     WaitingFreelancer,
-    /** Kedua pihak setuju; status menjadi Menunggu Pembayaran. */
     BothAgreed,
-    /** Detail kesepakatan (nilai project) belum lengkap, jadi tidak bisa disetujui. */
     IncompleteAgreement,
-    /** Sudah disetujui sebelumnya atau status tidak mengizinkan. */
     NotAllowed
 }
 
-/**
- * Blueprint Fungsi 2 aturan 2 "Menyetujui kesepakatan": tombol Lanjut mencatat persetujuan
- * pihak yang menekannya. Jika baru satu pihak setuju, status tetap Menunggu Kesepakatan;
- * jika keduanya setuju pada detail yang sama, status menjadi Menunggu Pembayaran.
- * Kesepakatan wajib memuat nilai project, dan Lanjut hanya berlaku sebelum pembayaran.
- */
 fun applyUmkmContinue(current: UmkmNegotiation): Pair<UmkmNegotiation, ContinueProjectResult> {
     if (current.isPaid || current.umkmAgreed || current.status != ProjectStatus.MenungguKesepakatan) {
         return current to ContinueProjectResult.NotAllowed
@@ -63,12 +50,6 @@ fun applyUmkmContinue(current: UmkmNegotiation): Pair<UmkmNegotiation, ContinueP
     return updated to if (both) ContinueProjectResult.BothAgreed else ContinueProjectResult.WaitingFreelancer
 }
 
-/**
- * Blueprint Fungsi 2 (usulan pembatalan): pada tahap Menunggu Kesepakatan atau Menunggu
- * Pembayaran, salah satu pihak terkait dapat membatalkan selama pembayaran belum berhasil;
- * hasilnya Dibatalkan. Pembatalan setelah pembayaran belum termasuk versi awal, jadi ditolak.
- * Mengembalikan null bila pembatalan tidak diizinkan.
- */
 fun applyUmkmCancel(
     current: UmkmNegotiation,
     reason: UmkmCancellationReason,
@@ -80,67 +61,47 @@ fun applyUmkmCancel(
     return current.copy(status = ProjectStatus.Dibatalkan, cancellationReason = reason, cancelledAt = now)
 }
 
-/**
- * PENYIMPANAN LOKAL SEMENTARA untuk negosiasi (DATA DUMMY). Tidak tersimpan di server.
- * Data Maya diambil dari pesannya di Daftar Percakapan; nilai project belum disepakati.
- */
+/** Cache kesepakatan per percakapan, dipetakan dari detail alur BE. */
 object UmkmNegotiationStore {
-    private val items = mutableStateListOf<UmkmNegotiation>().apply { addAll(dummyNegotiations()) }
+    private val items = mutableStateListOf<UmkmNegotiation>()
 
     fun negotiation(conversationId: String): UmkmNegotiation? = items.firstOrNull { it.conversationId == conversationId }
 
-    /** Menekan "Lanjut Project" sebagai UMKM; aturan ada di [applyUmkmContinue]. */
-    fun continueProject(conversationId: String): ContinueProjectResult {
-        val index = items.indexOfFirst { it.conversationId == conversationId }
-        if (index < 0) return ContinueProjectResult.NotAllowed
-        val (updated, result) = applyUmkmContinue(items[index])
-        items[index] = updated
-        return result
-    }
-
-    /**
-     * Dipanggil saat UMKM menyetujui rencana pengerjaan: kesepakatan final terkunci dan status
-     * menjadi Menunggu Pembayaran. Ditolak bila nilai belum disepakati atau sudah dibayar.
-     */
-    fun lockFinalAgreement(conversationId: String): Boolean {
-        val index = items.indexOfFirst { it.conversationId == conversationId }
-        if (index < 0) return false
-        val current = items[index]
-        if (current.isPaid || current.agreedValue == null || current.status != ProjectStatus.MenungguKesepakatan) return false
-        items[index] = current.copy(
-            status = ProjectStatus.MenungguPembayaran,
-            umkmAgreed = true,
-            freelancerAgreed = true
+    fun upsert(conversationId: String, detail: WorkflowDetail) {
+        val agreement = detail.agreement
+        val negotiation = UmkmNegotiation(
+            conversationId = conversationId,
+            status = projectStatusOf(detail.project.status),
+            isPaid = detail.payment?.status == PaymentStatusCode.BERHASIL,
+            agreedValue = agreement?.agreedPrice,
+            duration = agreement?.let { "${it.durationDays} hari kalender" }.orEmpty(),
+            output = agreement?.scopeOfWork.orEmpty(),
+            paymentMethod = agreement?.paymentMethodLabel ?: "QRIS (simulasi)",
+            umkmAgreed = agreement?.umkmApprovedAtMillis != null,
+            freelancerAgreed = agreement?.freelancerApprovedAtMillis != null,
+            cancellationReason = when (detail.cancellation?.reason) {
+                CancelReasonCode.HARGA_TIDAK_SESUAI -> UmkmCancellationReason.HargaBelumSesuai
+                CancelReasonCode.JADWAL_TIDAK_COCOK -> UmkmCancellationReason.JadwalTidakCocok
+                CancelReasonCode.KEBUTUHAN_BERUBAH -> UmkmCancellationReason.KebutuhanBerubah
+                null -> null
+                else -> UmkmCancellationReason.Lainnya
+            },
+            cancelledAt = detail.cancellation?.cancelledAtMillis?.let {
+                Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime()
+            }
         )
-        return true
-    }
-
-    /** SIMULASI pembatalan lokal; tidak dikirim ke server dan freelancer belum menerima notifikasi. */
-    fun cancelProject(conversationId: String, reason: UmkmCancellationReason): Boolean {
         val index = items.indexOfFirst { it.conversationId == conversationId }
-        if (index < 0) return false
-        val updated = applyUmkmCancel(items[index], reason) ?: return false
-        items[index] = updated
-        return true
+        if (index >= 0) items[index] = negotiation else items.add(negotiation)
     }
 
-    /** Mengembalikan data dummy awal (dipakai saat pengujian). */
     fun reset() {
         items.clear()
-        items.addAll(dummyNegotiations())
     }
+}
 
-    private fun dummyNegotiations() = listOf(
-        UmkmNegotiation(
-            conversationId = "dummy-chat-maya",
-            status = ProjectStatus.MenungguKesepakatan,
-            isPaid = false,
-            agreedValue = null,
-            duration = "5 hari kerja",
-            output = "12 foto produk",
-            paymentMethod = "QRIS (simulasi)",
-            umkmAgreed = false,
-            freelancerAgreed = false
-        )
-    )
+fun UmkmCancellationReason.toCode(): String = when (this) {
+    UmkmCancellationReason.HargaBelumSesuai -> CancelReasonCode.HARGA_TIDAK_SESUAI
+    UmkmCancellationReason.JadwalTidakCocok -> CancelReasonCode.JADWAL_TIDAK_COCOK
+    UmkmCancellationReason.KebutuhanBerubah -> CancelReasonCode.KEBUTUHAN_BERUBAH
+    UmkmCancellationReason.Lainnya -> CancelReasonCode.LAINNYA
 }

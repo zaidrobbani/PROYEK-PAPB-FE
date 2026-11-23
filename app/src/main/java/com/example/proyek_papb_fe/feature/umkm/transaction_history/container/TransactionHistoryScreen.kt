@@ -28,7 +28,12 @@ import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthAppBar
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransaction
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransactionStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.feature.umkm.transaction_history.viewmodel.TransactionHistoryViewModel
 import com.example.proyek_papb_fe.feature.umkm.data.formatMonthLong
 import com.example.proyek_papb_fe.feature.umkm.data.formatMonthShort
 import com.example.proyek_papb_fe.feature.umkm.data.transactionMonthKey
@@ -41,10 +46,6 @@ import com.example.proyek_papb_fe.feature.umkm.transaction_history.component.Tra
 
 private val PageGutter = 16.903.dp
 
-/**
- * Riwayat Transaksi UMKM (Blueprint TK-F-U-20/22 dan Fungsi 3). Hanya menampilkan
- * DATA DUMMY lokal; nominal tidak dihitung di aplikasi dan tidak ada transaksi sungguhan.
- */
 @Composable
 fun TransactionHistoryScreen(
     onBack: () -> Unit,
@@ -52,8 +53,20 @@ fun TransactionHistoryScreen(
     onAdvancedFilter: () -> Unit,
     onTransactionClick: (code: String) -> Unit,
     modifier: Modifier = Modifier,
-    transactions: List<UmkmTransaction> = UmkmTransactionStore.transactions
+    viewModel: TransactionHistoryViewModel = viewModel(
+        factory = TransactionHistoryViewModel.factory(AppContainer.paymentRepository)
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    if (uiState.isLoading && uiState.transactions.isEmpty()) {
+        LoadingContent(modifier.background(MaterialTheme.colorScheme.background))
+        return
+    }
+    uiState.errorMessage?.takeIf { uiState.transactions.isEmpty() }?.let { message ->
+        ErrorContent(message, onRetry = viewModel::load, modifier = modifier.background(MaterialTheme.colorScheme.background))
+        return
+    }
+    val transactions = uiState.transactions
     var tab by rememberSaveable { mutableStateOf(TransactionTab.Semua) }
     var query by rememberSaveable { mutableStateOf("") }
     var month by rememberSaveable { mutableStateOf<String?>(null) }
@@ -113,7 +126,6 @@ fun TransactionHistoryScreen(
             }
             if (groups.isEmpty()) {
                 item(key = "empty") {
-                    // Figma tidak punya keadaan kosong; teks sederhana ini tambahan.
                     Text(
                         text = if (tab == TransactionTab.Dibatalkan && query.isBlank()) {
                             "Belum ada transaksi yang dibatalkan."
@@ -153,18 +165,5 @@ fun TransactionHistoryScreen(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun TransactionHistoryScreenPreview() {
-    PROYEKPAPBFETheme {
-        TransactionHistoryScreen(
-            onBack = {},
-            onDownloadStatement = {},
-            onAdvancedFilter = {},
-            onTransactionClick = {}
-        )
     }
 }

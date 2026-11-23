@@ -24,11 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/**
- * Satu kartu = satu penawaran terkirim untuk satu project (bukan dikelompokkan per UMKM).
- * Ringkasan saja; detail tahapan ada di layar Status Pengajuan.
- * Gaya kartu mengikuti kartu ringkasan Status Pengajuan (27:15).
- */
 @Composable
 internal fun ProposalCard(
     item: ProposalListItem,
@@ -72,7 +67,6 @@ internal fun ProposalCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Figma: ikon storefront dalam kotak 14dp (glyph ~11x10 di tengah).
             Box(modifier = Modifier.size(14.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     painter = painterResource(R.drawable.ic_storefront),
@@ -160,7 +154,7 @@ private fun ProposalCardPreview() {
         ProposalStage.entries.forEachIndexed { index, stage ->
             ProposalCard(
                 item = ProposalListItem(
-                    projectId = 101 + index,
+                    projectId = "${101 + index}",
                     stage = stage,
                     submittedDate = "24 Okt 2026",
                     projectTitle = "Desain Rebranding Logo & Kemasan Standing Pouch Kopi 250gr",

@@ -15,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Judul bagian dengan tautan di kanan, misalnya "Project Aktif Saya — Semua Riwayat". */
 @Composable
 fun DashboardSectionHeader(
     title: String,

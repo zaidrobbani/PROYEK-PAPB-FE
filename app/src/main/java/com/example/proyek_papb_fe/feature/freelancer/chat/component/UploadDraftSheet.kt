@@ -60,26 +60,19 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 import kotlinx.coroutines.launch
 
-/** Jenis file untuk ikon & warna kotak ikon di daftar file terlampir. */
 enum class DraftFileKind { PDF, VECTOR, IMAGE, ARCHIVE }
 
-/** Satu file terlampir (sudah diformat). */
 data class DraftFileUi(
     val id: String,
     val name: String,
-    /** "12.4 MB"; null bila ukuran tidak diketahui. */
     val sizeLabel: String?,
-    /** Label format, mis. "PDF", "Adobe Illustrator". */
     val typeLabel: String,
     val kind: DraftFileKind
 )
 
-/** Data tampilan modal Unggah Draf Pekerjaan (sudah diformat). */
 data class UploadDraftUiState(
     val projectTitle: String,
-    /** Nama depan kontak UMKM, untuk label catatan review. */
     val contactFirstName: String,
-    /** Nomor draf: 1 = "Draf v1.0 (Awal)". */
     val version: Int,
     val files: List<DraftFileUi>,
     val note: String
@@ -89,23 +82,22 @@ data class UploadDraftUiState(
 }
 
 private object UploadDraftColors {
-    val Scrim = Color(0x99000000) // rgba(0,0,0,0.6)
+    val Scrim = Color(0x99000000)
     val Handle = Color(0xFFD8C2B8)
-    val CardBorder = Color(0x80E2D5BA) // 0.5
-    val FileBorder = Color(0x99E2D5BA) // 0.6
-    val NoteBorder = Color(0xB3E2D5BA) // 0.7
-    val DropBorder = Color(0x4D684738) // 0.3
-    val VersionPill = Color(0x1A684738) // 0.1
-    val VersionPillBorder = Color(0x334E3123) // 0.2
-    val InfoBackground = Color(0x80DBE3C4) // 0.5
-    val InfoBorder = Color(0x335A6149) // 0.2
+    val CardBorder = Color(0x80E2D5BA)
+    val FileBorder = Color(0x99E2D5BA)
+    val NoteBorder = Color(0xB3E2D5BA)
+    val DropBorder = Color(0x4D684738)
+    val VersionPill = Color(0x1A684738)
+    val VersionPillBorder = Color(0x334E3123)
+    val InfoBackground = Color(0x80DBE3C4)
+    val InfoBorder = Color(0x335A6149)
     val PdfBackground = Color(0xFFFFDAD6)
     val VectorBackground = Color(0xFFDEE6C7)
     val VectorIcon = Color(0xFF424A33)
-    val Shadow = Color(0x0D000000) // rgba(0,0,0,0.05)
+    val Shadow = Color(0x0D000000)
 }
 
-/** Ukuran teks Figma 17:5174 yang belum ada di tema bersama. */
 private object UploadDraftTypography {
     private fun style(weight: FontWeight, size: Float, lineHeight: Float) = TextStyle(
         fontFamily = PlusJakartaSans,
@@ -130,12 +122,6 @@ private val CardShape = RoundedCornerShape(16.dp)
 private val ButtonShape = RoundedCornerShape(12.dp)
 private val SheetPadding = 21.13.dp
 
-/**
- * Figma: Modal Unggah Draf (Freelancer) (17:5174) — bottom sheet di atas Ruang Chat,
- * dibuka dari "+" → "Unggah Draf Pekerjaan" (hanya untuk project berstatus Project Berjalan).
- * Stateless: file, catatan, dan aksi dikelola container. Header & tombol bawah tetap,
- * isi di tengah di-scroll.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadDraftSheet(
@@ -143,7 +129,6 @@ fun UploadDraftSheet(
     onPickFiles: () -> Unit,
     onRemoveFile: (id: String) -> Unit,
     onNoteChange: (String) -> Unit,
-    /** "Batal / Simpan Draf": tutup modal, file & catatan tetap tersimpan. */
     onSaveAndClose: () -> Unit,
     onSend: () -> Unit,
     onDismiss: () -> Unit
@@ -151,7 +136,6 @@ fun UploadDraftSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var isClosing by remember { mutableStateOf(false) }
-    // Tutup dengan animasi dulu, baru jalankan aksi (pola sama dengan sheet Batalkan Project).
     val hideThen: (() -> Unit) -> Unit = { action ->
         if (!isClosing) {
             isClosing = true
@@ -168,7 +152,6 @@ fun UploadDraftSheet(
         tonalElevation = 0.dp,
         scrimColor = UploadDraftColors.Scrim,
         dragHandle = {
-            // Figma: handle 50.7×6.3 di top 21.1, header di top 48.6.
             Box(
                 modifier = Modifier
                     .padding(top = 21.13.dp, bottom = 21.13.dp)
@@ -177,7 +160,6 @@ fun UploadDraftSheet(
             )
         }
     ) {
-        // Figma: tinggi maks. sheet 725 dari layar 915.
         Column(modifier = Modifier.fillMaxWidth().heightIn(max = 725.dp)) {
             SheetHeader(
                 projectTitle = state.projectTitle,
@@ -421,7 +403,6 @@ private fun AttachedFileRow(file: DraftFileUi, onRemove: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(6.338.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Centang = file lolos cek format & ukuran (AI/PSD/PDF/ZIP/PNG, maks. 50 MB).
             Image(painterResource(R.drawable.ic_draft_check), contentDescription = "File valid")
             Box(
                 modifier = Modifier
@@ -624,7 +605,6 @@ private fun FooterButton(
     }
 }
 
-/** drop-shadow(0 1.056 1.056 rgba(0,0,0,0.05)) dari Figma. */
 private fun Modifier.softShadow(shape: androidx.compose.ui.graphics.Shape): Modifier =
     dropShadow(shape = shape, shadow = Shadow(radius = 1.056.dp, color = UploadDraftColors.Shadow, offset = DpOffset(0.dp, 1.056.dp)))
 

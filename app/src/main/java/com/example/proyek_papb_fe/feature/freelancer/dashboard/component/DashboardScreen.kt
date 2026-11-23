@@ -21,9 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 
 data class DashboardProject(
-    val id: Int,
+    val id: String,
     val title: String,
-    /** Ringkasan singkat proyek (kartu Rekomendasi, maks. 2 baris). */
     val description: String = "",
     val category: String,
     val budget: String,
@@ -38,7 +37,6 @@ data class DashboardProject(
 
 private val ScreenHorizontalPadding = 16.903.dp
 
-/** Figma: Beranda Freelancer (17:3704). */
 @Composable
 fun DashboardScreen(
     userName: String,
@@ -46,8 +44,8 @@ fun DashboardScreen(
     activeProject: DashboardProject?,
     recommendations: List<DashboardProject>,
     onWalletClick: () -> Unit,
-    onActiveProjectClick: (Int) -> Unit,
-    onProjectClick: (Int) -> Unit,
+    onActiveProjectClick: (String) -> Unit,
+    onProjectClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {},
@@ -68,7 +66,6 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            // Figma: Main pt 79.774 dikurangi app bar 64; Container pb 25.354.
             contentPadding = PaddingValues(top = 15.774.dp, bottom = 25.354.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
@@ -128,14 +125,10 @@ fun DashboardScreen(
     }
 }
 
-/**
- * Figma: Section - Horizontal Scroll (17:3845). Section melebar sampai tepi layar,
- * header memakai padding 17 + 16.903, kartu mulai dari 17.
- */
 @Composable
 private fun RecommendationSection(
     recommendations: List<DashboardProject>,
-    onProjectClick: (Int) -> Unit,
+    onProjectClick: (String) -> Unit,
     onSeeAllClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -173,7 +166,7 @@ private fun DashboardScreenPreview() {
         userName = "Andi",
         availableBalance = "Rp 2.850.000",
         activeProject = DashboardProject(
-            id = 1,
+            id = "1",
             title = "Desain Rebranding Logo & Kemasan Pouch",
             category = "Desain Grafis",
             budget = "Rp 1.500.000",
@@ -184,7 +177,7 @@ private fun DashboardScreenPreview() {
         ),
         recommendations = listOf(
             DashboardProject(
-                id = 2,
+                id = "2",
                 title = "Rebranding Kemasan Keripik Singkong Renyah",
                 category = "Desain Grafis",
                 budget = "Rp 1.800.000",
@@ -193,7 +186,7 @@ private fun DashboardScreenPreview() {
                 imageRes = R.drawable.img_reco_keripik
             ),
             DashboardProject(
-                id = 3,
+                id = "3",
                 title = "Desain Menu Digital & Banner Promosi Cafe",
                 category = "Desain Grafis",
                 budget = "Rp 1.200.000",

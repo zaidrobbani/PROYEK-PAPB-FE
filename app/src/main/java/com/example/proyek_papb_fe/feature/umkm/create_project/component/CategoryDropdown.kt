@@ -70,7 +70,6 @@ fun CategoryDropdown(
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
-                // Figma tidak punya keadaan kosong; teks pengarah ini tambahan.
                 text = selected ?: "Pilih kategori",
                 color = if (selected != null) colors.onSurface else colors.outline,
                 maxLines = 1,

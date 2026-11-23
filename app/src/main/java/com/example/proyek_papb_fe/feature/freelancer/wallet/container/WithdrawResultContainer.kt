@@ -11,7 +11,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/** "11 Okt 2026, 10.20 WIB". */
 private fun requestedAtLabel(millis: Long): String =
     SimpleDateFormat("d MMM yyyy, HH.mm", Locale.forLanguageTag("id-ID")).apply {
         timeZone = TimeZone.getTimeZone("Asia/Jakarta")
@@ -27,12 +26,6 @@ private fun WithdrawalRequest.toUiState() = WithdrawResultUiState(
     remainingBalance = formatRupiah(availableBalanceAfter)
 )
 
-/**
- * Container "Pencairan sedang diproses" (Figma 27:218) untuk pengajuan [withdrawalId]
- * yang baru dikirim dari Pengajuan Pencairan Dana. Data dari [WalletStore] (lokal);
- * tidak ada transfer bank sungguhan. Bila pengajuan tidak ditemukan (mis. setelah
- * proses aplikasi dimatikan), langsung kembali ke Dompet & Rekening.
- */
 @Composable
 fun WithdrawResultContainer(
     withdrawalId: String,

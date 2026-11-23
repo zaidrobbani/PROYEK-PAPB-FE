@@ -8,12 +8,6 @@ import com.example.proyek_papb_fe.core.data.model.PortfolioCategory
 import com.example.proyek_papb_fe.core.data.model.PortfolioItem
 import com.example.proyek_papb_fe.core.data.model.WorkExperience
 
-/**
- * Data awal profil freelancer (sementara, sebelum ada backend), sesuai Figma
- * "Profil Saya (Freelancer)" (27:250) dan section "6 · Profil (Freelancer) · Kelola".
- * Hanya dipakai untuk mengisi [FreelancerProfileStore]; layar membaca dari store.
- * Saldo diambil dari [WalletStore].
- */
 object FreelancerProfileDummyData {
 
     val current = FreelancerProfile(
@@ -35,7 +29,6 @@ object FreelancerProfileDummyData {
         skills = listOf("Desain Kemasan Pouch", "Logo Branding", "Adobe Illustrator", "Tipografi")
     )
 
-    /** Figma "Kelola Portofolio" (535:1081). */
     val portfolio = listOf(
         PortfolioItem(
             id = "pf-1",
@@ -66,7 +59,6 @@ object FreelancerProfileDummyData {
         )
     )
 
-    /** Figma "Kelola Pengalaman" (538:1235), terbaru dulu. */
     val experiences = listOf(
         WorkExperience(
             id = "ex-1",

@@ -23,10 +23,8 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: Section - Form Input Nilai Penawaran & Kalkulator Fee (17:4436). */
 @Composable
 internal fun OfferAmountCard(
-    /** Nilai penawaran = pagu klien; tidak bisa diubah freelancer di layar ini. */
     amount: Long,
     modifier: Modifier = Modifier
 ) {
@@ -72,10 +70,6 @@ internal fun OfferAmountCard(
     }
 }
 
-/**
- * Figma: Input Field (17:4446), dibuat read-only: nominal tetap = pagu klien.
- * Teks biasa (bukan TextField) sehingga tidak ada keyboard, kursor, maupun seleksi.
- */
 @Composable
 private fun OfferAmountField(amount: Long) {
     Row(
@@ -110,7 +104,6 @@ private fun OfferAmountField(amount: Long) {
     }
 }
 
-/** Figma: Breakdown Card Transparansi Biaya (17:4454). Nilai dihitung dari nominal input. */
 @Composable
 private fun FeeBreakdown(amount: Long) {
     Column(

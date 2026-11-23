@@ -1,67 +1,67 @@
 package com.example.proyek_papb_fe.feature.umkm.data
 
+import com.example.proyek_papb_fe.core.domain.model.UmkmBusinessProfile
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-/** Informasi profil UMKM yang tampil di Profil Saya (Blueprint TK-F-U-01). */
 data class UmkmProfile(
     val ownerName: String,
     val businessName: String,
     val city: String,
-    /** Kategori usaha, misalnya "Kuliner". */
     val businessCategory: String,
     val isVerified: Boolean,
-    /** Foto profil yang dipilih dari perangkat (content URI); null = tampil inisial. */
     val photoUri: String? = null
 ) {
     val firstName: String get() = ownerName.substringBefore(" ")
 
-    /** "RP" untuk "Rina Pratiwi". */
     val initials: String
         get() = ownerName.split(" ").filter { it.isNotBlank() }.take(2)
             .joinToString("") { it.first().uppercase() }
 }
 
 /**
- * DATA DUMMY akun UMKM demo (akun login rina.pratiwi@kulinerbandung.id), dari frame Figma
- * Profil Saya. Bukan data akun sungguhan dan belum terhubung ke server.
+ * Cache tampilan profil UMKM yang sedang login. Diisi ViewModel dari BE
+ * (`GET /profiles/umkm/me` + nama akun), supaya header beberapa layar tidak memanggil ulang API.
+ * Foto hanya lokal: BE belum punya endpoint unggah foto profil.
  */
 object UmkmAccount {
-    /** Email akun login dummy (sama dengan akun di LoginValidation). */
-    const val email = "rina.pratiwi@kulinerbandung.id"
-
-    /** Satu-satunya sumber profil; diperbarui dari Kelola Profil Usaha (simulasi lokal). */
     var profile by mutableStateOf(
         UmkmProfile(
-            ownerName = "Rina Pratiwi",
-            businessName = "Kedai Kopi Senja",
-            city = "Bandung, Jawa Barat",
-            businessCategory = "Kuliner",
-            isVerified = true
+            ownerName = "",
+            businessName = "",
+            city = "",
+            businessCategory = "",
+            isVerified = false
         )
     )
         private set
 
-    /** Kelola Profil Usaha: menyimpan perubahan di memori saja, tidak dikirim ke server. */
-    fun updateProfile(
-        ownerName: String,
-        businessName: String,
-        businessCategory: String,
-        city: String,
-        photoUri: String?
-    ) {
+    /** false bila UMKM belum mengisi profil bisnis (wajib sebelum membuat project). */
+    var hasBusinessProfile by mutableStateOf(false)
+        private set
+
+    fun update(ownerName: String, business: UmkmBusinessProfile?) {
+        hasBusinessProfile = business != null
         profile = profile.copy(
             ownerName = ownerName,
-            businessName = businessName,
-            businessCategory = businessCategory,
-            city = city,
-            photoUri = photoUri
+            businessName = business?.businessName.orEmpty(),
+            businessCategory = business?.businessCategory.orEmpty(),
+            city = business?.city.orEmpty(),
+            isVerified = business != null
         )
+    }
+
+    fun updatePhoto(photoUri: String?) {
+        profile = profile.copy(photoUri = photoUri)
+    }
+
+    fun clear() {
+        hasBusinessProfile = false
+        profile = UmkmProfile(ownerName = "", businessName = "", city = "", businessCategory = "", isVerified = false)
     }
 }
 
-/** "Rp 4,9 jt" / "Rp 900 rb" untuk ringkasan angka di Profil Saya. */
 fun formatRupiahCompact(value: Long): String = when {
     value >= 1_000_000 -> {
         val tenths = Math.round(value / 100_000.0)

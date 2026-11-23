@@ -90,12 +90,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): Text
         lineHeight = lineHeight
     )
 
-/**
- * Overlay "Filter Pencarian Talenta": bottom sheet di atas scrim, dibuat sendiri (bukan
- * ModalBottomSheet bawaan) agar bentuk, scrim, dan footer tetap sesuai Figma.
- * Pilihan disimpan sebagai draf; hanya "Terapkan Filter" yang mengubah filter aktif,
- * sedangkan tutup/scrim/back membuang draf.
- */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TalentFilterOverlay(
@@ -114,7 +108,6 @@ fun TalentFilterOverlay(
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        // Draf dibuat ulang dari filter aktif setiap overlay dibuka.
         var draft by remember { mutableStateOf(applied) }
         val colors = MaterialTheme.colorScheme
 
@@ -150,7 +143,6 @@ fun TalentFilterOverlay(
                     )
                     .clip(sheetShape)
                     .background(colors.surfaceContainerLowest)
-                    // Sentuhan di dalam sheet tidak diteruskan ke scrim.
                     .pointerInput(Unit) { detectTapGestures { } }
             ) {
                 SheetHeader(onClose = onDismiss)
@@ -347,7 +339,6 @@ private fun BudgetSection(start: Int, end: Int, onChange: (Int, Int) -> Unit) {
     }
 }
 
-/** Slider dua jempol dengan titik tetap; jempol terdekat dari sentuhan yang bergerak. */
 @Composable
 private fun StepRangeSlider(
     stepCount: Int,
@@ -522,7 +513,6 @@ private fun FastResponseToggle(checked: Boolean, onCheckedChange: (Boolean) -> U
                 )
             }
         }
-        // Figma hanya menampilkan keadaan aktif; warna nonaktif memakai surfaceVariant.
         Box(
             modifier = Modifier
                 .size(width = 46.482.dp, height = 25.354.dp)

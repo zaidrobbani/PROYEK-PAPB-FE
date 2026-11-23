@@ -1,78 +1,62 @@
 package com.example.proyek_papb_fe.feature.freelancer.searchproject.container
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.proyek_papb_fe.core.data.FreelancerProjectDummyData
-import com.example.proyek_papb_fe.core.data.model.FreelancerProject
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyek_papb_fe.core.data.model.ProjectCategory
-import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.SearchProject
+import com.example.proyek_papb_fe.core.di.AppContainer
 import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.SearchProjectScreen
 import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.buildCategoryOptions
 import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.filterProjects
+import com.example.proyek_papb_fe.feature.freelancer.searchproject.viewmodel.SearchProjectViewModel
 
-/**
- * Container Cari Project: menyimpan state pencarian & kategori serta mengambil
- * data dari [FreelancerProjectDummyData] (dipakai bersama dengan Detail Project).
- * (File ini sebelumnya berisi placeholder; nama file dipertahankan.)
- */
 @Composable
 fun SearchProjectContainer(
-    onProjectClick: (Int) -> Unit = {},
+    onProjectClick: (String) -> Unit = {},
     onFilterClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onNotificationClick: () -> Unit = {},
+    viewModel: SearchProjectViewModel = viewModel(
+        factory = SearchProjectViewModel.factory(
+            AppContainer.projectRepository,
+            AppContainer.masterDataRepository,
+            AppContainer.notificationRepository
+        )
+    )
 ) {
-    var query by rememberSaveable { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var selectedCategory by rememberSaveable { mutableStateOf<ProjectCategory?>(null) }
 
-    val allProjects = remember {
-        FreelancerProjectDummyData.getAll().map { it.toSearchProject() }
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
     }
-    val categories = remember(allProjects) { buildCategoryOptions(allProjects) }
-    val visibleProjects = remember(allProjects, query, selectedCategory) {
-        allProjects.filterProjects(query = query, category = selectedCategory)
+
+    val categories = remember(uiState.projects) { buildCategoryOptions(uiState.projects) }
+    // Kata kunci sudah difilter BE; filter lokal hanya untuk kategori.
+    val visibleProjects = remember(uiState.projects, selectedCategory) {
+        uiState.projects.filterProjects(query = "", category = selectedCategory)
     }
 
     SearchProjectScreen(
         query = query,
-        onQueryChange = { query = it },
+        onQueryChange = viewModel::onQueryChange,
         categories = categories,
         selectedCategory = selectedCategory,
         onCategorySelect = { selectedCategory = it },
         projects = visibleProjects,
         onProjectClick = onProjectClick,
-        // Dummy: filter lanjutan belum dirancang, badge mengikuti Figma.
-        activeFilterCount = 2,
+        activeFilterCount = if (selectedCategory != null) 1 else 0,
         onFilterClick = onFilterClick,
-        hasUnreadNotification = true,
+        hasUnreadNotification = uiState.hasUnreadNotification,
         onNotificationClick = onNotificationClick
     )
-}
-
-private fun FreelancerProject.toSearchProject() = SearchProject(
-    id = id,
-    title = title,
-    category = category,
-    tagLabel = tagLabel,
-    clientName = clientName,
-    clientInitials = clientInitials,
-    clientLocation = clientLocation,
-    budgetLabel = budgetLabel,
-    budget = budget,
-    deadlineLabel = deadlineLabel,
-    deadline = deadline,
-    match = match,
-    avatarTone = avatarTone,
-    isNew = isNew,
-    isClientVerified = isClientVerified
-)
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 843)
-@Composable
-private fun SearchProjectContainerPreview() {
-    SearchProjectContainer()
 }

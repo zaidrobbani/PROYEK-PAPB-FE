@@ -38,10 +38,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 private val ControlHeight = 50.708.dp
 private val ControlShape = RoundedCornerShape(12.dp)
 
-/**
- * Figma: Interactive Sticky Search & Filter Header (2011:258).
- * Diletakkan di luar daftar sehingga tetap diam saat feed di-scroll.
- */
 @Composable
 internal fun SearchFilterHeader(
     query: String,
@@ -57,7 +53,6 @@ internal fun SearchFilterHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(TemuKaryaColors.BgCanvas)
-            // Figma: Main pt 67.61 dikurangi app bar 64, lalu header pt 8.451.
             .padding(top = 3.61.dp + 8.451.dp, bottom = 4.226.dp),
         verticalArrangement = Arrangement.spacedBy(8.451.dp)
     ) {
@@ -116,7 +111,6 @@ private fun SearchField(
                     .padding(horizontal = 12.677.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Aset Figma sudah termasuk margin kanan ikon (24.297 x 15.846).
                 Image(
                     painter = painterResource(R.drawable.ic_search),
                     contentDescription = null
@@ -142,7 +136,6 @@ private fun SearchField(
     )
 }
 
-/** Figma: Button - Buka Filter (2011:267) dengan badge jumlah filter aktif. */
 @Composable
 private fun FilterButton(
     activeFilterCount: Int,

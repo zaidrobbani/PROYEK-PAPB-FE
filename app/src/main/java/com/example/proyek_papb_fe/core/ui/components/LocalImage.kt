@@ -1,7 +1,10 @@
 package com.example.proyek_papb_fe.core.ui.components
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import androidx.core.net.toUri
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -20,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Sisi terpanjang hasil decode; cukup untuk cover kartu/avatar dan hemat memori. */
 private const val MaxDecodeSize = 1280
 
 private fun decodeSampled(context: Context, uri: android.net.Uri): ImageBitmap? = runCatching {
@@ -30,14 +32,23 @@ private fun decodeSampled(context: Context, uri: android.net.Uri): ImageBitmap? 
     var sample = 1
     while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MaxDecodeSize) sample *= 2
     val options = BitmapFactory.Options().apply { inSampleSize = sample }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) }?.asImageBitmap()
+    val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) } ?: return@runCatching null
+    // Foto kamera sering disimpan miring dengan tag EXIF; putar agar tampil tegak.
+    val degrees = runCatching {
+        resolver.openInputStream(uri)?.use {
+            when (ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        }
+    }.getOrNull() ?: 0f
+    val upright = if (degrees == 0f) decoded
+    else Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, Matrix().apply { postRotate(degrees) }, true)
+    upright.asImageBitmap()
 }.getOrNull()
 
-/**
- * Gambar lokal: [uri] (dipilih dari galeri lewat Photo Picker) didahulukan, lalu [fallbackRes].
- * Tanpa library gambar/jaringan: Uri di-decode di background. Bila keduanya tidak ada atau
- * gagal dibaca, [placeholder] yang ditampilkan.
- */
 @Composable
 fun LocalImage(
     uri: String?,

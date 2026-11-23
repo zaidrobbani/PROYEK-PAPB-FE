@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 
 internal val SearchProjectHorizontalPadding = 16.903.dp
 
-/** Figma: Cari Project (2011:255). Header pencarian tetap, hanya feed yang di-scroll. */
 @Composable
 fun SearchProjectScreen(
     query: String,
@@ -33,7 +32,7 @@ fun SearchProjectScreen(
     selectedCategory: ProjectCategory?,
     onCategorySelect: (ProjectCategory?) -> Unit,
     projects: List<SearchProject>,
-    onProjectClick: (Int) -> Unit,
+    onProjectClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     activeFilterCount: Int = 0,
     onFilterClick: () -> Unit = {},

@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Tombol mengambang "Buat Project Baru" dengan bayangan dua lapis seperti Figma. */
 @Composable
 fun CreateProjectFab(
     onClick: () -> Unit,

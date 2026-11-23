@@ -23,7 +23,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.AgreementSummaryCard
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.NegotiationColors
 
-/** Isi "Ringkasan Kesepakatan" (dari status penawaran project) untuk ruang chat tahap negosiasi. */
 data class ChatNegotiationUi(
     val projectValue: String,
     val duration: String,
@@ -31,7 +30,6 @@ data class ChatNegotiationUi(
     val paymentMethod: String
 )
 
-/** Figma 438:772 "Info Pembatalan": Regular 11.5 / 16, tanpa latar & border. */
 private val InfoStyle = TextStyle(
     fontFamily = PlusJakartaSans,
     fontWeight = FontWeight.Normal,
@@ -39,11 +37,6 @@ private val InfoStyle = TextStyle(
     lineHeight = 16.sp
 )
 
-/**
- * Figma: Card / Ringkasan Kesepakatan di "Ruang Chat (Freelancer) · Negosiasi" (438:772).
- * Kartu yang sama persis dengan Negosiasi 26:38 ([AgreementSummaryCard] dipakai ulang),
- * ditambah info pembatalan tanpa biaya sebagai bagian terakhir di dalam kartu.
- */
 @Composable
 internal fun NegotiationSummaryCard(
     negotiation: ChatNegotiationUi,

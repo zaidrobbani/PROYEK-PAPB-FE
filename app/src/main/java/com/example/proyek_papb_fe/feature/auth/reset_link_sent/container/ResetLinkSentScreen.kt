@@ -16,7 +16,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.auth.reset_link_sent.navigation.EmailLinkPurpose
+import com.example.proyek_papb_fe.feature.auth.reset_link_sent.viewmodel.EmailLinkSentViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,17 +50,50 @@ import kotlinx.coroutines.delay
 
 private const val ResendCooldownSeconds = 59
 
-/**
- * Hanya UI lokal. Teks "sudah dikirim" mengikuti Figma, tetapi tidak ada email yang
- * benar-benar dikirim karena backend di luar scope. "Kirim ulang" hanya mengulang hitung mundur.
- */
 @Composable
 fun ResetLinkSentScreen(
     email: String,
+    purpose: EmailLinkPurpose,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: EmailLinkSentViewModel = viewModel(
+        factory = EmailLinkSentViewModel.factory(AppContainer.authRepository)
+    )
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+
+    ResetLinkSentContent(
+        email = email,
+        purpose = purpose,
+        resentCount = uiState.resentCount,
+        onResend = { viewModel.resend(email, purpose) },
+        onBackToLogin = onBackToLogin,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun ResetLinkSentContent(
+    email: String,
+    purpose: EmailLinkPurpose,
+    resentCount: Int,
+    onResend: () -> Unit,
     onBackToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var secondsLeft by rememberSaveable { mutableIntStateOf(ResendCooldownSeconds) }
+
+    LaunchedEffect(resentCount) {
+        if (resentCount > 0) secondsLeft = ResendCooldownSeconds
+    }
 
     LaunchedEffect(secondsLeft) {
         if (secondsLeft > 0) {
@@ -104,7 +144,10 @@ fun ResetLinkSentScreen(
                 )
             )
             Text(
-                text = "Tautan untuk mengatur ulang kata sandi sudah dikirim ke",
+                text = when (purpose) {
+                    EmailLinkPurpose.RESET_PASSWORD -> "Tautan untuk mengatur ulang kata sandi sudah dikirim ke"
+                    EmailLinkPurpose.VERIFY_EMAIL -> "Akun berhasil dibuat. Buka tautan verifikasi yang sudah dikirim ke email berikut, lalu login"
+                },
                 modifier = Modifier.fillMaxWidth(),
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -123,7 +166,7 @@ fun ResetLinkSentScreen(
             )
             ResendCountdownText(
                 secondsLeft = secondsLeft,
-                onResend = { secondsLeft = ResendCooldownSeconds }
+                onResend = onResend
             )
         }
     }
@@ -133,8 +176,11 @@ fun ResetLinkSentScreen(
 @Composable
 private fun ResetLinkSentScreenPreview() {
     PROYEKPAPBFETheme {
-        ResetLinkSentScreen(
+        ResetLinkSentContent(
             email = "rina.pratiwi@kulinerbandung.id",
+            purpose = EmailLinkPurpose.RESET_PASSWORD,
+            resentCount = 0,
+            onResend = {},
             onBackToLogin = {}
         )
     }

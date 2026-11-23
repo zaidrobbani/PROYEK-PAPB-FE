@@ -10,34 +10,29 @@ import com.example.proyek_papb_fe.feature.umkm.review.container.ProjectCompleted
 import com.example.proyek_papb_fe.feature.umkm.review.container.ResultReviewContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Review Hasil Project (17:1468), sisi UMKM, untuk project [projectId]. */
 @Serializable
-data class ResultReviewRoute(val projectId: Int)
+data class ResultReviewRoute(val projectId: String)
 
-/** Figma: Sukses Penyelesaian Proyek (17:6338). */
 @Serializable
-data class ProjectCompletedRoute(val projectId: Int)
+data class ProjectCompletedRoute(val projectId: String)
 
-/** Figma: Beri Ulasan Freelancer (17:6591). */
 @Serializable
-data class FreelancerReviewRoute(val projectId: Int)
+data class FreelancerReviewRoute(val projectId: String)
 
-fun NavController.navigateToResultReview(projectId: Int, builder: NavOptionsBuilder.() -> Unit = {}) =
+fun NavController.navigateToResultReview(projectId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
     navigate(ResultReviewRoute(projectId)) { launchSingleTop = true; builder() }
 
-fun NavController.navigateToProjectCompleted(projectId: Int, builder: NavOptionsBuilder.() -> Unit = {}) =
+fun NavController.navigateToProjectCompleted(projectId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
     navigate(ProjectCompletedRoute(projectId)) { launchSingleTop = true; builder() }
 
-fun NavController.navigateToFreelancerReview(projectId: Int, builder: NavOptionsBuilder.() -> Unit = {}) =
+fun NavController.navigateToFreelancerReview(projectId: String, builder: NavOptionsBuilder.() -> Unit = {}) =
     navigate(FreelancerReviewRoute(projectId)) { launchSingleTop = true; builder() }
 
 fun NavGraphBuilder.resultReviewScreens(
     onBack: () -> Unit,
-    onOpenChat: (projectId: Int) -> Unit,
-    /** Review disetujui: buka Proyek Selesai dan keluarkan Review Hasil dari back stack. */
-    onCompleted: (projectId: Int) -> Unit,
-    onGiveReview: (projectId: Int) -> Unit,
-    /** Ulasan terkirim: kembali ke Proyek Selesai. */
+    onOpenChat: (projectId: String) -> Unit,
+    onCompleted: (projectId: String) -> Unit,
+    onGiveReview: (projectId: String) -> Unit,
     onReviewDone: () -> Unit,
     onBackToHome: () -> Unit
 ) {

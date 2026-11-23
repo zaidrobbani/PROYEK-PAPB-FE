@@ -27,10 +27,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val TrackShape = RoundedCornerShape(6.dp)
 
-/**
- * Figma: "Total Bobot" (88:82) — total + chip status, track tersegmen per milestone,
- * dan legenda. Segmen = lebar × bobot, dikurangi celah 2dp (sesuai 88:91–88:94).
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun WeightSummaryCard(
@@ -130,7 +126,6 @@ private fun TotalStatusChip(validation: WorkPlanValidation, isSubmitted: Boolean
 @Composable
 private fun WeightTrack(milestones: List<MilestoneInput>) {
     val total = milestones.sumOf { it.weightValue }
-    // Jika total > 100%, segmen diskalakan agar tetap muat di track.
     val scale = if (total > 100) 100f / total else 1f
     Canvas(
         modifier = Modifier

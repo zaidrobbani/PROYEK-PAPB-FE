@@ -76,7 +76,6 @@ fun DashboardSearchBar(
                         .padding(horizontal = 14.79.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Aset Figma sudah memuat jarak kanan ikon (lebar 26.41).
                     Image(
                         painter = painterResource(R.drawable.ic_dashboard_search),
                         contentDescription = null

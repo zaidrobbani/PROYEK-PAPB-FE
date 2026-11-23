@@ -26,7 +26,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Figma: App Bar varian Root (judul halaman tab + notifikasi). */
 @Composable
 fun RootTopBar(
     title: String,

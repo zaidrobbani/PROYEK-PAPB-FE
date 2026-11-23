@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Garis pemisah "atau masuk dengan Google" dan tombol Akun Google. */
 @Composable
 fun LoginAlternativeOption(
     onGoogleClick: () -> Unit,
@@ -40,7 +39,6 @@ fun LoginAlternativeOption(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.677.dp)
     ) {
-        // Tinggi wadah hanya setebal garis; teks menumpang di tengah garis seperti di Figma.
         Box(
             modifier = Modifier
                 .fillMaxWidth()

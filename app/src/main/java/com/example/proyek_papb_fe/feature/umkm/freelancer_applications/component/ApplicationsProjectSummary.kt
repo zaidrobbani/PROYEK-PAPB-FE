@@ -28,7 +28,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupiah
 
-/** Kartu ringkasan project yang sedang dilihat pengajuannya. */
 @Composable
 fun ApplicationsProjectSummary(
     project: UmkmProject,

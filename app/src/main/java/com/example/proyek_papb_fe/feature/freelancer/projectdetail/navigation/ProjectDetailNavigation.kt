@@ -8,9 +8,9 @@ import com.example.proyek_papb_fe.feature.freelancer.projectdetail.container.Pro
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ProjectDetailRoute(val projectId: Int)
+data class ProjectDetailRoute(val projectId: String)
 
-fun NavController.navigateToProjectDetail(projectId: Int) {
+fun NavController.navigateToProjectDetail(projectId: String) {
     navigate(ProjectDetailRoute(projectId)) {
         launchSingleTop = true
     }
@@ -18,17 +18,18 @@ fun NavController.navigateToProjectDetail(projectId: Int) {
 
 fun NavGraphBuilder.projectDetailScreen(
     onBack: () -> Unit,
-    /** Tombol Chat: buka ruang chat dengan UMKM untuk project ini. */
-    onChatClick: (projectId: Int) -> Unit = {},
-    onSubmitOfferClick: (projectId: Int) -> Unit = {}
+    onChatClick: (conversationId: String) -> Unit = {},
+    onSubmitOfferClick: (projectId: String) -> Unit = {},
+    onViewMyOffer: (projectId: String) -> Unit = {}
 ) {
     composable<ProjectDetailRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<ProjectDetailRoute>()
         ProjectDetailContainer(
             projectId = route.projectId,
             onBack = onBack,
-            onChatClick = { onChatClick(route.projectId) },
-            onSubmitOfferClick = { onSubmitOfferClick(route.projectId) }
+            onChatClick = onChatClick,
+            onSubmitOfferClick = { onSubmitOfferClick(route.projectId) },
+            onViewMyOffer = { onViewMyOffer(route.projectId) }
         )
     }
 }

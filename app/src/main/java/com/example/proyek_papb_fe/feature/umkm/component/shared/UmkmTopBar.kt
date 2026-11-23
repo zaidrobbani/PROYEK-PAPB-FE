@@ -33,11 +33,6 @@ import com.example.proyek_papb_fe.core.ui.theme.AppBarIcon
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNotificationStore
 
-/**
- * Komponen App Bar Figma. Tanpa [title]: varian Brand (logo + TEMUKARYA) untuk Beranda.
- * Dengan [title]: varian Root (judul halaman tab). Keduanya punya lonceng notifikasi;
- * titik merah mengikuti jumlah belum dibaca di [UmkmNotificationStore].
- */
 @Composable
 fun UmkmTopBar(
     onNotificationsClick: () -> Unit,

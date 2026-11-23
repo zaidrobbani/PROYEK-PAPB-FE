@@ -33,12 +33,15 @@ internal data class RegisterFormErrors(
         get() = hasFieldError || terms != null
 }
 
-/** Blueprint tidak menetapkan aturan kata sandi, jadi hanya wajib diisi dan harus sama. */
 internal fun validateRegisterForm(
     input: RegisterFormInput,
     emailRequiredMessage: String
 ) = RegisterFormErrors(
-    fullName = "Nama lengkap wajib diisi.".takeIf { input.fullName.isBlank() },
+    fullName = when {
+        input.fullName.isBlank() -> "Nama lengkap wajib diisi."
+        input.fullName.trim().length > 100 -> "Maksimal 100 karakter."
+        else -> null
+    },
     email = when {
         input.email.isBlank() -> emailRequiredMessage
         !Patterns.EMAIL_ADDRESS.matcher(input.email.trim()).matches() -> "Format email tidak valid."
@@ -49,7 +52,12 @@ internal fun validateRegisterForm(
         !isValidWhatsapp(input.whatsapp) -> "Nomor WhatsApp tidak valid. Contoh: 0812-3456-7890."
         else -> null
     },
-    password = "Kata sandi wajib diisi.".takeIf { input.password.isEmpty() },
+    password = when {
+        input.password.isEmpty() -> "Kata sandi wajib diisi."
+        input.password.length < 8 -> "Minimal 8 karakter."
+        input.password.length > 128 -> "Maksimal 128 karakter."
+        else -> null
+    },
     confirmPassword = when {
         input.confirmPassword.isEmpty() -> "Konfirmasi kata sandi wajib diisi."
         input.confirmPassword != input.password -> "Konfirmasi kata sandi tidak sama."
@@ -58,14 +66,12 @@ internal fun validateRegisterForm(
     terms = "Setujui Syarat & Ketentuan terlebih dahulu.".takeIf { !input.termsAccepted }
 )
 
-/** Pemeriksaan sederhana nomor seluler Indonesia, dengan atau tanpa angka 0 di depan. */
 private fun isValidWhatsapp(number: String): Boolean {
     val digits = number.filterNot { it == '-' || it == ' ' }
     val national = digits.removePrefix("0")
     return digits.all { it in '0'..'9' } && national.startsWith('8') && national.length in 9..12
 }
 
-/** State lokal form Registrasi. Kata sandi sengaja tidak masuk saved instance state. */
 @Stable
 internal class RegisterFormState(
     fullName: String = "",
@@ -87,7 +93,15 @@ internal class RegisterFormState(
     val passwordsMatch: Boolean
         get() = confirmPassword.isNotEmpty() && confirmPassword == password
 
-    /** Pesan muncul setelah tombol ditekan, lalu ikut hilang saat isian diperbaiki. */
+    fun toInput() = RegisterFormInput(
+        fullName = fullName,
+        email = email,
+        whatsapp = whatsapp,
+        password = password,
+        confirmPassword = confirmPassword,
+        termsAccepted = termsAccepted
+    )
+
     fun visibleErrors(emailRequiredMessage: String): RegisterFormErrors =
         if (submitted) validate(emailRequiredMessage) else RegisterFormErrors()
 
@@ -97,14 +111,7 @@ internal class RegisterFormState(
     }
 
     private fun validate(emailRequiredMessage: String) = validateRegisterForm(
-        input = RegisterFormInput(
-            fullName = fullName,
-            email = email,
-            whatsapp = whatsapp,
-            password = password,
-            confirmPassword = confirmPassword,
-            termsAccepted = termsAccepted
-        ),
+        input = toInput(),
         emailRequiredMessage = emailRequiredMessage
     )
 

@@ -27,7 +27,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 internal val DetailCardShape = RoundedCornerShape(16.dp)
 
-/** Bayangan tipis Figma detail: drop-shadow 0 1.056 1.056 rgba(0,0,0,0.05). */
 internal fun Modifier.detailSubtleShadow(shape: Shape): Modifier = dropShadow(
     shape = shape,
     shadow = Shadow(
@@ -37,10 +36,6 @@ internal fun Modifier.detailSubtleShadow(shape: Shape): Modifier = dropShadow(
     )
 )
 
-/**
- * Kartu section berjudul + ikon: "Scope & Description Section" (17:4295)
- * dan "Required Skills Tags" (17:4356).
- */
 @Composable
 internal fun DetailSectionCard(
     @DrawableRes iconRes: Int,

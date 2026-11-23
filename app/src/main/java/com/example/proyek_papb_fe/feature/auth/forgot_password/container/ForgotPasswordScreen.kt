@@ -14,6 +14,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.feature.auth.forgot_password.viewmodel.ForgotPasswordViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,37 +37,68 @@ import com.example.proyek_papb_fe.feature.auth.forgot_password.component.ForgotP
 import com.example.proyek_papb_fe.feature.auth.forgot_password.component.ForgotPasswordHeader
 import com.example.proyek_papb_fe.feature.auth.forgot_password.component.ForgotPasswordInfoCard
 
-/** Blueprint tidak mengatur Lupa Password, jadi hanya validasi wajib diisi dan format email. */
 internal fun validateForgotPasswordEmail(email: String): String? = when {
     email.isBlank() -> "Alamat email wajib diisi."
     !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> "Format email tidak valid."
     else -> null
 }
 
-/**
- * Hanya UI lokal. Tidak ada email yang benar-benar dikirim karena backend di luar scope;
- * [onResetLinkSent] menerima email yang lolos validasi untuk screen berikutnya.
- */
 @Composable
 fun ForgotPasswordScreen(
     onBack: () -> Unit,
     onBackToLogin: () -> Unit,
     onResetLinkSent: (email: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ForgotPasswordViewModel = viewModel(
+        factory = ForgotPasswordViewModel.factory(AppContainer.authRepository)
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var email by rememberSaveable { mutableStateOf("") }
     var submitted by rememberSaveable { mutableStateOf(false) }
 
-    // Pesan muncul setelah tombol ditekan, lalu ikut hilang saat isian diperbaiki.
-    val error = if (submitted) validateForgotPasswordEmail(email) else null
+    val error = (if (submitted) validateForgotPasswordEmail(email) else null) ?: uiState.errorMessage
+
+    LaunchedEffect(uiState.sentToEmail) {
+        uiState.sentToEmail?.let {
+            viewModel.onNavigated()
+            onResetLinkSent(it)
+        }
+    }
 
     val onSubmit: () -> Unit = {
         submitted = true
         if (validateForgotPasswordEmail(email) == null) {
-            onResetLinkSent(email.trim())
+            viewModel.sendResetLink(email)
         }
     }
 
+    ForgotPasswordContent(
+        email = email,
+        onEmailChange = {
+            email = it
+            viewModel.onInputChanged()
+        },
+        error = error,
+        isLoading = uiState.isLoading,
+        onSubmit = onSubmit,
+        onBack = onBack,
+        onBackToLogin = onBackToLogin,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun ForgotPasswordContent(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    error: String?,
+    isLoading: Boolean,
+    onSubmit: () -> Unit,
+    onBack: () -> Unit,
+    onBackToLogin: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -81,7 +117,7 @@ fun ForgotPasswordScreen(
             ForgotPasswordHeader()
             ForgotPasswordEmailField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = onEmailChange,
                 error = error,
                 onSubmit = onSubmit
             )
@@ -89,6 +125,7 @@ fun ForgotPasswordScreen(
             AuthPrimaryButton(
                 text = "Kirim Tautan Reset",
                 onClick = onSubmit,
+                isLoading = isLoading,
                 shadowStyle = AuthShadowStyle.None,
                 height = 51.dp,
                 leadingIcon = {
@@ -108,10 +145,14 @@ fun ForgotPasswordScreen(
 @Composable
 private fun ForgotPasswordScreenPreview() {
     PROYEKPAPBFETheme {
-        ForgotPasswordScreen(
+        ForgotPasswordContent(
+            email = "",
+            onEmailChange = {},
+            error = null,
+            isLoading = false,
+            onSubmit = {},
             onBack = {},
-            onBackToLogin = {},
-            onResetLinkSent = {}
+            onBackToLogin = {}
         )
     }
 }

@@ -58,11 +58,10 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-// Warna chip Figma frame ini yang belum ada di tema; disimpan lokal agar tema bersama tidak berubah.
 private val WorkingChip = Color(0xFFAAB295)
 private val OnWorkingChip = Color(0xFF2A351E)
 private val RiskText = Color(0xFF93000A)
-private val TargetFill = Color(0x1FBA1A1A) // rgba(186,26,26,0.12)
+private val TargetFill = Color(0x1FBA1A1A)
 
 private val IndonesianLocale: Locale = Locale.forLanguageTag("id-ID")
 private val ShortDate = DateTimeFormatter.ofPattern("d MMM", IndonesianLocale)
@@ -70,7 +69,6 @@ private val DateTime = DateTimeFormatter.ofPattern("d MMM, HH.mm", IndonesianLoc
 
 fun formatMonitoringDate(date: LocalDate): String = date.format(ShortDate)
 
-/** Figma memakai line-height 1.4 untuk teks di screen ini. */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(
@@ -95,7 +93,6 @@ private fun StatusChip(@DrawableRes icon: Int?, label: String, background: Color
     }
 }
 
-/** Kartu judul: chip status project + chip risiko, judul, dan freelancer. */
 @Composable
 fun MonitoringHeaderCard(
     title: String,
@@ -133,7 +130,6 @@ fun MonitoringHeaderCard(
 
 @Composable
 private fun RiskChip(risk: DelayRisk) {
-    // Figma hanya menggambar "Berisiko Terlambat"; kategori lain memakai warna tema yang senada.
     val (background, content) = when (risk) {
         DelayRisk.SesuaiTarget -> SageBadge to MaterialTheme.colorScheme.onSecondaryContainer
         DelayRisk.PerluPerhatian -> SandContainer to MaterialTheme.colorScheme.onTertiaryContainer
@@ -147,7 +143,6 @@ private fun RiskChip(risk: DelayRisk) {
     )
 }
 
-/** Kartu progres: aktual vs target, bar dengan penanda target, dan 3 ringkasan. */
 @Composable
 fun MonitoringProgressCard(result: ProjectMonitoringResult, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -218,11 +213,9 @@ private fun ProgressBarWithTarget(actual: Int, target: Int) {
             Box(Modifier.fillMaxWidth().fillMaxHeight().background(colors.surfaceVariant, RoundedCornerShape(7.dp)))
             Box(Modifier.width(width * (target / 100f)).fillMaxHeight().background(TargetFill, RoundedCornerShape(7.dp)))
             Box(Modifier.width(width * (actual / 100f)).fillMaxHeight().background(colors.primary, RoundedCornerShape(7.dp)))
-            // Penanda target: garis 2 x 22, menonjol 4dp di atas dan bawah track.
             Box(
                 Modifier
                     .offset(x = (width * (target / 100f) - 1.dp).coerceIn(0.dp, width - 2.dp))
-                    // requiredSize: tetap 22dp walau track hanya 14dp, terpusat secara vertikal.
                     .requiredSize(width = 2.dp, height = 22.dp)
                     .background(colors.primary)
             )
@@ -248,7 +241,6 @@ private fun ProgressBarWithTarget(actual: Int, target: Int) {
     }
 }
 
-/** Peringatan risiko; teks mengikuti contoh Figma dan dibangun dari hasil perhitungan. */
 @Composable
 fun MonitoringRiskAlert(result: ProjectMonitoringResult, nextMilestone: ProjectMilestone?, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -278,7 +270,6 @@ fun MonitoringRiskAlert(result: ProjectMonitoringResult, nextMilestone: ProjectM
     }
 }
 
-/** Linimasa Mulai / Hari ini / Deadline. */
 @Composable
 fun MonitoringTimeline(result: ProjectMonitoringResult, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -321,7 +312,6 @@ fun MilestoneSectionHeader(agreedDate: LocalDate?, onOpenPlan: (() -> Unit)?, mo
     ) {
         Text("Milestone pengerjaan", color = colors.onTertiaryContainer, style = text(FontWeight.Bold, 15.8f))
         if (agreedDate != null) {
-            // Tambahan: label kesepakatan bisa diketuk untuk melihat rencana pengerjaan yang disetujui.
             Row(
                 modifier = if (onOpenPlan != null) {
                     Modifier.clip(RoundedCornerShape(8.dp)).clickable(role = Role.Button, onClickLabel = "Lihat rencana pengerjaan", onClick = onOpenPlan)
@@ -341,10 +331,6 @@ fun MilestoneSectionHeader(agreedDate: LocalDate?, onOpenPlan: (() -> Unit)?, mo
     }
 }
 
-/**
- * Daftar milestone, hanya baca. Status Blueprint cuma BELUM_SELESAI/SELESAI; milestone
- * belum selesai yang pertama ditandai "Sedang dikerjakan" sebagai tahapan berjalan.
- */
 @Composable
 fun MilestoneList(milestones: List<ProjectMilestone>, inProgress: Boolean, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -433,7 +419,6 @@ fun MonitoringUpdatedAt(label: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Bar bawah: tombol garis "Chat Freelancer". */
 @Composable
 fun MonitoringBottomBar(onChat: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme

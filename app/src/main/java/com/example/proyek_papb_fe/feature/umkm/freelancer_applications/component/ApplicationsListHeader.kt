@@ -34,10 +34,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.AuthShadowStyle
 import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/**
- * Figma hanya menampilkan "Paling Relevan". Dua pilihan lain mengurutkan data yang sudah
- * tampil di kartu (tawaran harga dan durasi), tanpa aturan bisnis baru.
- */
 enum class ApplicationSort(val label: String) {
     PalingRelevan("Paling Relevan"),
     HargaTerendah("Harga Terendah"),

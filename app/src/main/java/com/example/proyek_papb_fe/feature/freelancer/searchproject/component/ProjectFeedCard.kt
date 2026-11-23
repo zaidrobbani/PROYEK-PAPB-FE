@@ -35,7 +35,6 @@ import com.example.proyek_papb_fe.core.data.model.ProjectMatch
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/** Bayangan Figma default: 0 4.226 16.903 -2.113 dengan warna [color]. */
 internal fun Modifier.searchProjectShadow(
     shape: Shape,
     color: Color,
@@ -52,11 +51,6 @@ internal fun Modifier.searchProjectShadow(
     )
 )
 
-/**
- * Figma: Article - Card (2011:288 / 2011:323 / 2011:358 / 2011:393).
- * Kartu sorotan (punya [SearchProject.match]) memakai latar #FBF3E0 + bayangan;
- * kartu biasa transparan dengan tag kategori.
- */
 @Composable
 internal fun ProjectFeedCard(
     project: SearchProject,
@@ -183,7 +177,6 @@ private fun ClientRow(project: SearchProject) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false)
             )
-            // Figma: elemen teks kosong di antara nama & lokasi menambah jarak 2 x 8.451.
             Row(
                 modifier = Modifier.padding(start = 16.903.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.102.dp),
@@ -233,7 +226,6 @@ private fun ClientAvatar(initials: String, tone: AvatarTone) {
     }
 }
 
-/** Figma: Key Metrics Box (2011:311). */
 @Composable
 private fun KeyMetricsBox(project: SearchProject) {
     Row(

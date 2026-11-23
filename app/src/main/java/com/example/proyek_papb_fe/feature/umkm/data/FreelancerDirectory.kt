@@ -9,10 +9,12 @@ data class DirectoryFreelancer(
     val name: String,
     val role: String,
     val category: String,
-    @param:DrawableRes val photo: Int,
+    @param:DrawableRes val photo: Int? = null,
+    val photoUrl: String? = null,
     val city: String,
     /** Terakhir aktif, dalam menit ("Aktif 10 mnt lalu"). */
-    val lastActiveMinutes: Int,
+    /** BE belum mencatat waktu aktif terakhir. */
+    val lastActiveMinutes: Int = 0,
     val rating: Double,
     val reviewCount: Int,
     /** Catatan di bawah rating, misalnya "96% puas". */
@@ -32,7 +34,6 @@ data class DirectoryFreelancer(
 )
 
 /** Kategori di chip Figma. "Semua Kategori" = tanpa filter kategori. */
-val FreelancerCategories = listOf("Desain Grafis")
 
 /** Filter cepat yang tampil sebagai chip di Figma. */
 enum class QuickFilter(val label: String) {
@@ -80,47 +81,7 @@ fun searchFreelancers(
  * DATA DUMMY dari frame Figma Cari Freelancer. Bukan data dari server;
  * ganti dengan hasil API saat integrasi backend.
  */
-object FreelancerDirectory {
-    val freelancers: List<DirectoryFreelancer> = listOf(
-        DirectoryFreelancer(
-            id = "dummy-freelancer-andi",
-            name = "Andi Ramadhan",
-            role = "Packaging & Brand Identity Designer",
-            category = "Desain Grafis",
-            photo = R.drawable.img_find_andi,
-            city = "Yogyakarta",
-            lastActiveMinutes = 10,
-            rating = 4.9,
-            reviewCount = 48,
-            ratingNote = "96% puas",
-            highlightTitle = "3+ Tahun",
-            highlightSubtitle = "Spesialis Kuliner",
-            highlightIsExperience = true,
-            experienceYears = 3,
-            skills = listOf("Kemasan Makanan", "Vector Logo", "Cetak Offset"),
-            moreSkillCount = 2,
-            startingPrice = 500_000
-        ),
-        DirectoryFreelancer(
-            id = "dummy-freelancer-siti",
-            name = "Siti Nurhaliza",
-            role = "Social Media & Feed Creator",
-            category = "Konten & Media Sosial",
-            photo = R.drawable.img_find_siti,
-            city = "Bandung",
-            lastActiveMinutes = 30,
-            rating = 4.8,
-            reviewCount = 35,
-            ratingNote = "98% Tepat Waktu",
-            highlightTitle = "Top Creator",
-            highlightSubtitle = "Konten Makanan & Kopi",
-            highlightIsExperience = false,
-            experienceYears = null,
-            skills = listOf("Instagram Feed", "Canva Pro", "Copywriting"),
-            startingPrice = 450_000
-        )
-    )
-}
+
 
 /** Pilihan "Rating Minimal" pada overlay Filter Talenta. */
 enum class RatingOption(val pill: String, val min: Double) {

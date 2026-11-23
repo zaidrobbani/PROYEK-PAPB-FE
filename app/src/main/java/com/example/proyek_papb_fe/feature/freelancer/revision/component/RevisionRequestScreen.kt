@@ -52,7 +52,6 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Tipografi Figma 17:5737 (ukuran & line-height px persis). */
 private object RevisionTypography {
     private fun style(weight: FontWeight, size: Float, line: Float) =
         TextStyle(fontFamily = PlusJakartaSans, fontWeight = weight, fontSize = size.sp, lineHeight = line.sp)
@@ -77,7 +76,7 @@ private object RevisionColors {
     val OnVerifiedChip = Color(0xFF5E664D)
     val TypographyChip = Color(0xFFEADBC8)
     val OnTypographyChip = Color(0xFF5F3F31)
-    val Shadow = Color(0x0D000000) // rgba(0,0,0,0.05)
+    val Shadow = Color(0x0D000000)
 }
 
 private val P17 = 16.903.dp
@@ -85,15 +84,9 @@ private val P8 = 8.451.dp
 private val Gap12 = 12.677.dp
 private val CardShape = RoundedCornerShape(16.dp)
 
-/** drop-shadow 0 1.056 1.056 rgba(0,0,0,0.05) (Figma). */
 private fun Modifier.subtleShadow(shape: Shape): Modifier =
     dropShadow(shape = shape, shadow = Shadow(radius = 1.056.dp, color = RevisionColors.Shadow, offset = DpOffset(0.dp, 1.056.dp)))
 
-/**
- * Figma: Notifikasi Permintaan Revisi (Freelancer) (17:5737), judul "Permintaan Revisi".
- * Dibuka dari notifikasi "Permintaan revisi pekerjaan". Satu kolom scroll seperti Figma
- * (Main pt 67.61 − app bar 64), area aksi di akhir konten.
- */
 @Composable
 fun RevisionRequestScreen(
     request: RevisionRequest,
@@ -122,7 +115,6 @@ fun RevisionRequestScreen(
     }
 }
 
-/** 17:5740: chip "Permintaan Revisi Diterima", waktu, klien & project. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ContextCard(request: RevisionRequest) {
@@ -193,7 +185,6 @@ private fun ContextCard(request: RevisionRequest) {
     }
 }
 
-/** 17:5766: bar progres, tenggat kirim draf revisi, dan fokus perbaikan. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DeadlineCard(request: RevisionRequest) {
@@ -243,7 +234,6 @@ private fun DeadlineCard(request: RevisionRequest) {
     }
 }
 
-/** 17:5799: "Catatan Butir Permintaan" dan kartu tiap butir. */
 @Composable
 private fun RevisionPoints(points: List<RevisionPoint>) {
     Column(modifier = Modifier.padding(horizontal = P17, vertical = P8), verticalArrangement = Arrangement.spacedBy(Gap12)) {
@@ -300,7 +290,6 @@ private fun PointCard(number: Int, point: RevisionPoint) {
     }
 }
 
-/** 17:5840: draf acuan yang dikomentari klien. */
 @Composable
 private fun ReferenceDraft(fileName: String, meta: String, onOpen: () -> Unit) {
     Row(
@@ -334,7 +323,6 @@ private fun ReferenceDraft(fileName: String, meta: String, onOpen: () -> Unit) {
     }
 }
 
-/** 17:5868: tombol utama, sekunder, dan tautan tersier. */
 @Composable
 private fun Actions(request: RevisionRequest, onUpload: () -> Unit, onChat: () -> Unit, onClarify: () -> Unit) {
     Column(modifier = Modifier.padding(start = P17, end = P17, top = P17), verticalArrangement = Arrangement.spacedBy(10.564.dp)) {
@@ -403,7 +391,7 @@ private fun ActionButton(
 @Composable
 private fun RevisionRequestScreenPreview() {
     RevisionRequestScreen(
-        request = RevisionRequestDummyData.forProject(101)!!,
+        request = RevisionRequestDummyData.forProject("101")!!,
         onBack = {}, onUploadRevisedDraft = {}, onOpenChat = {}, onAskClarification = {}, onOpenReferenceFile = {}
     )
 }

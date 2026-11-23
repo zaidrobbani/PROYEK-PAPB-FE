@@ -24,12 +24,14 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
 private val BannerButtonShape = RoundedCornerShape(10.dp)
 
-/** Figma: "Notifikasi Masuk" (27:63) dengan tombol "Buka" negosiasi. */
 @Composable
 internal fun NegotiationInviteBanner(
     clientName: String,
     onOpenClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "Pengajuanmu disetujui!",
+    subtitle: String = "$clientName mengajak negosiasi",
+    buttonLabel: String = "Buka"
 ) {
     Row(
         modifier = modifier
@@ -59,12 +61,12 @@ internal fun NegotiationInviteBanner(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = "Pengajuanmu disetujui!",
+                text = title,
                 style = SubmissionStatusTypography.BannerTitle,
                 color = TemuKaryaColors.OnAction
             )
             Text(
-                text = "$clientName mengajak negosiasi",
+                text = subtitle,
                 style = SubmissionStatusTypography.Caption,
                 color = TemuKaryaColors.SurfaceSand,
                 maxLines = 1,
@@ -72,13 +74,13 @@ internal fun NegotiationInviteBanner(
             )
         }
         Text(
-            text = "Buka",
+            text = buttonLabel,
             style = SubmissionStatusTypography.BannerButton,
             color = TemuKaryaColors.ActionPrimary,
             modifier = Modifier
                 .clip(BannerButtonShape)
                 .background(TemuKaryaColors.SurfaceWhite)
-                .clickable(onClickLabel = "Buka negosiasi", onClick = onOpenClick)
+                .clickable(onClickLabel = title, onClick = onOpenClick)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }

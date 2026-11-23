@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +35,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
 import kotlinx.coroutines.launch
 
-/** Tata letak form Registrasi yang sama pada frame UMKM dan Freelancer. */
 @Composable
 internal fun RegisterForm(
     state: RegisterFormState,
@@ -44,19 +44,34 @@ internal fun RegisterForm(
     emailRequiredMessage: String,
     onChangeRole: () -> Unit,
     onLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit,
-    modifier: Modifier = Modifier
+    onSubmit: (RegisterFormInput) -> Unit,
+    modifier: Modifier = Modifier,
+    serverErrors: Map<String, String> = emptyMap(),
+    isLoading: Boolean = false,
+    onInputChanged: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
-    val errors = state.visibleErrors(emailRequiredMessage)
+    val localErrors = state.visibleErrors(emailRequiredMessage)
+    val errors = RegisterFormErrors(
+        fullName = localErrors.fullName ?: serverErrors["fullName"],
+        email = localErrors.email ?: serverErrors["email"],
+        whatsapp = localErrors.whatsapp ?: serverErrors["whatsapp"],
+        password = localErrors.password ?: serverErrors["password"],
+        confirmPassword = localErrors.confirmPassword ?: serverErrors["confirmPassword"],
+        terms = localErrors.terms ?: serverErrors["terms"]
+    )
     val passwordTransformation =
         if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation()
 
-    val onSubmit: () -> Unit = {
+    LaunchedEffect(serverErrors) {
+        if (serverErrors.keys.any { it != "terms" }) scrollState.animateScrollTo(0)
+    }
+
+    val submit: () -> Unit = {
         val result = state.submit(emailRequiredMessage)
         when {
-            !result.hasError -> onRegisterSuccess()
+            !result.hasError -> onSubmit(state.toInput())
             result.hasFieldError -> scope.launch { scrollState.animateScrollTo(0) }
         }
     }
@@ -83,7 +98,10 @@ internal fun RegisterForm(
             RegisterTextField(
                 label = "Nama Lengkap",
                 value = state.fullName,
-                onValueChange = { state.fullName = it },
+                onValueChange = {
+                    state.fullName = it
+                    onInputChanged()
+                },
                 error = errors.fullName,
                 labelTrailing = { RegisterFieldHint(text = "Sesuai KTP") },
                 leadingContent = { PersonIcon() },
@@ -95,7 +113,10 @@ internal fun RegisterForm(
             RegisterTextField(
                 label = emailLabel,
                 value = state.email,
-                onValueChange = { state.email = it },
+                onValueChange = {
+                    state.email = it
+                    onInputChanged()
+                },
                 error = errors.email,
                 leadingContent = { MailIcon() },
                 keyboardOptions = KeyboardOptions(
@@ -106,7 +127,10 @@ internal fun RegisterForm(
             RegisterTextField(
                 label = "Nomor WhatsApp",
                 value = state.whatsapp,
-                onValueChange = { state.whatsapp = it },
+                onValueChange = {
+                    state.whatsapp = it
+                    onInputChanged()
+                },
                 error = errors.whatsapp,
                 labelTrailing = {
                     RegisterFieldHint(
@@ -124,7 +148,10 @@ internal fun RegisterForm(
             RegisterTextField(
                 label = "Kata Sandi",
                 value = state.password,
-                onValueChange = { state.password = it },
+                onValueChange = {
+                    state.password = it
+                    onInputChanged()
+                },
                 error = errors.password,
                 leadingContent = { PasswordIcon() },
                 trailingContent = {
@@ -140,7 +167,10 @@ internal fun RegisterForm(
             RegisterTextField(
                 label = "Konfirmasi Kata Sandi",
                 value = state.confirmPassword,
-                onValueChange = { state.confirmPassword = it },
+                onValueChange = {
+                    state.confirmPassword = it
+                    onInputChanged()
+                },
                 error = errors.confirmPassword,
                 leadingContent = { KeyIcon() },
                 trailingContent = {
@@ -155,12 +185,16 @@ internal fun RegisterForm(
             Spacer(Modifier.height(102.579.dp))
             RegisterTermsCheckbox(
                 checked = state.termsAccepted,
-                onCheckedChange = { state.termsAccepted = it },
+                onCheckedChange = {
+                    state.termsAccepted = it
+                    onInputChanged()
+                },
                 error = errors.terms
             )
             AuthPrimaryButton(
                 text = "Daftar Sekarang",
-                onClick = onSubmit,
+                onClick = submit,
+                isLoading = isLoading,
                 modifier = Modifier.padding(top = 4.226.dp)
             )
         }

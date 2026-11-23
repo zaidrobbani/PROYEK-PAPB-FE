@@ -1,15 +1,11 @@
 package com.example.proyek_papb_fe.core.navigation
 
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.example.proyek_papb_fe.feature.freelancer.dashboard.navigation.DashboardRoute
 
-/**
- * Pindah antar tab bottom bar tanpa menumpuk back stack,
- * dan state tiap tab (misal posisi scroll) tetap tersimpan.
- */
 fun NavController.navigateToTopLevel(route: Any) {
     navigate(route) {
-        popUpTo(graph.findStartDestination().id) {
+        popUpTo<DashboardRoute> {
             saveState = true
         }
         launchSingleTop = true

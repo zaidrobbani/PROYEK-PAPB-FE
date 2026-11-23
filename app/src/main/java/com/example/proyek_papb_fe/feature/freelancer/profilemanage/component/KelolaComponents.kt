@@ -64,11 +64,6 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import kotlinx.coroutines.launch
 
-/**
- * Kerangka layar Kelola: App Bar Detail di atas, isi di-scroll (pt 20, px 17, gap 16),
- * [bottomBar] (Sticky Action Bar) dan [overlay] (mis. snackbar) menumpang di bawah dan
- * ikut naik bersama keyboard.
- */
 @Composable
 internal fun KelolaScaffold(
     title: String,
@@ -102,7 +97,6 @@ internal fun KelolaScaffold(
     }
 }
 
-/** Figma "Kelola/Sticky Action Bar": latar krem 97%, garis atas, tombol utama 51 dengan ikon 19. */
 @Composable
 internal fun KelolaStickyActionBar(label: String, @DrawableRes iconRes: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -116,7 +110,6 @@ internal fun KelolaStickyActionBar(label: String, @DrawableRes iconRes: Int, onC
     }
 }
 
-/** Tombol utama 51 (r12, #684738), ikon opsional 19. */
 @Composable
 internal fun KelolaPrimaryButton(label: String, @DrawableRes iconRes: Int?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
@@ -135,7 +128,6 @@ internal fun KelolaPrimaryButton(label: String, @DrawableRes iconRes: Int?, onCl
     }
 }
 
-/** Tombol garis 51 (stroke 1.5): [color] = primer (Batal, Cari Project) atau merah (Hapus …). */
 @Composable
 internal fun KelolaOutlinedButton(
     label: String,
@@ -160,7 +152,6 @@ internal fun KelolaOutlinedButton(
     }
 }
 
-/** Judul bagian form ("Informasi Dasar") + keterangan opsional. */
 @Composable
 internal fun KelolaSectionTitle(title: String, modifier: Modifier = Modifier, subtitle: String? = null) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -169,13 +160,11 @@ internal fun KelolaSectionTitle(title: String, modifier: Modifier = Modifier, su
     }
 }
 
-/** Label field (SemiBold 12.7, #50443F). */
 @Composable
 internal fun KelolaFieldLabel(text: String, modifier: Modifier = Modifier) {
     Text(text, style = KelolaTypography.Label, color = TemuKaryaColors.TextBody, modifier = modifier)
 }
 
-/** Teks bantuan di bawah field; merah dengan ikon error bila [isError]. */
 @Composable
 internal fun KelolaHelper(text: String, isError: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -188,13 +177,13 @@ internal fun KelolaHelper(text: String, isError: Boolean, modifier: Modifier = M
     }
 }
 
-/** Kotak input Figma "Kelola/Form Field": putih r12, min 52, px 17; garis 1 (Default), 1.5 primer (Focus), 1.5 merah (Error). */
 @Composable
 private fun FieldBox(
     focused: Boolean,
     isError: Boolean,
     modifier: Modifier = Modifier,
     @DrawableRes trailingIconRes: Int? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val (width, color) = when {
@@ -213,14 +202,11 @@ private fun FieldBox(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(modifier = Modifier.weight(1f), content = content)
-        trailingIconRes?.let { Icon(painterResource(it), null, tint = KelolaColors.Muted, modifier = Modifier.size(20.dp)) }
+        if (trailingContent != null) trailingContent()
+        else trailingIconRes?.let { Icon(painterResource(it), null, tint = KelolaColors.Muted, modifier = Modifier.size(20.dp)) }
     }
 }
 
-/**
- * Field teks bisa diedit: label, input, dan teks bantuan/error. [helper] tampil abu-abu,
- * [error] (bila tidak null) menggantikannya dengan gaya Error.
- */
 @Composable
 internal fun KelolaTextField(
     label: String,
@@ -233,7 +219,8 @@ internal fun KelolaTextField(
     singleLine: Boolean = true,
     @DrawableRes trailingIconRes: Int? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -249,7 +236,7 @@ internal fun KelolaTextField(
             visualTransformation = visualTransformation,
             interactionSource = interaction,
             decorationBox = { inner ->
-                FieldBox(focused = focused, isError = error != null, trailingIconRes = trailingIconRes) {
+                FieldBox(focused = focused, isError = error != null, trailingIconRes = trailingIconRes, trailingContent = trailingContent) {
                     if (value.isEmpty()) Text(placeholder, style = KelolaTypography.FieldValue, color = KelolaColors.Muted)
                     inner()
                 }
@@ -260,7 +247,6 @@ internal fun KelolaTextField(
     }
 }
 
-/** Field pilihan (dropdown/kalender): tampil seperti field, tap memanggil [onClick]. */
 @Composable
 internal fun KelolaSelectField(
     label: String,
@@ -298,7 +284,6 @@ internal fun KelolaSelectField(
     }
 }
 
-/** Dropdown pilihan untuk [KelolaSelectField] (Kategori, Bidang keahlian, Jenis pekerjaan). */
 @Composable
 internal fun <T> KelolaDropdownField(
     label: String,
@@ -338,7 +323,6 @@ internal fun <T> KelolaDropdownField(
     )
 }
 
-/** Tombol ikon bulat 36 (#EDE0C2) untuk Edit/Hapus di kartu. */
 @Composable
 internal fun KelolaIconButton(@DrawableRes iconRes: Int, tint: Color, contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -353,7 +337,6 @@ internal fun KelolaIconButton(@DrawableRes iconRes: Int, tint: Color, contentDes
     }
 }
 
-/** Lencana ikon bulat (latar #EDE0C2) untuk item list. */
 @Composable
 internal fun KelolaIconBadge(@DrawableRes iconRes: Int, size: Dp, iconSize: Dp, modifier: Modifier = Modifier, background: Color = KelolaColors.Chip, tint: Color = TemuKaryaColors.ActionPrimary) {
     Box(modifier = modifier.size(size).background(background, CircleShape), contentAlignment = Alignment.Center) {
@@ -361,7 +344,6 @@ internal fun KelolaIconBadge(@DrawableRes iconRes: Int, size: Dp, iconSize: Dp, 
     }
 }
 
-/** Chip filter (px 12, py 4): aktif = coklat/putih, lainnya #EDE0C2. */
 @Composable
 internal fun KelolaFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Text(
@@ -377,7 +359,6 @@ internal fun KelolaFilterChip(label: String, selected: Boolean, onClick: () -> U
     )
 }
 
-/** Chip pilihan (px 12, py 6): terpilih = coklat dengan ikon centang. */
 @Composable
 internal fun KelolaPickChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
@@ -394,7 +375,6 @@ internal fun KelolaPickChip(label: String, selected: Boolean, onClick: () -> Uni
     }
 }
 
-/** Chip keahlian hijau yang bisa dihapus (ikon close 14). */
 @Composable
 internal fun KelolaSkillChip(label: String, onRemove: () -> Unit) {
     Row(
@@ -414,7 +394,6 @@ internal fun KelolaSkillChip(label: String, onRemove: () -> Unit) {
     }
 }
 
-/** Chip garis putus-putus "+ Tambah keahlian". */
 @Composable
 internal fun KelolaAddChip(label: String, onClick: () -> Unit, enabled: Boolean = true) {
     Row(
@@ -432,7 +411,6 @@ internal fun KelolaAddChip(label: String, onClick: () -> Unit, enabled: Boolean 
     }
 }
 
-/** Garis putus-putus (dash 4/3 untuk chip, 6/4 untuk dropzone) mengikuti radius [corner]. */
 internal fun Modifier.dashedBorder(color: Color, corner: Dp, width: Dp = 1.dp, dash: Float = 4f, gap: Float = 3f): Modifier = drawBehind {
     val stroke = width.toPx()
     val radius = minOf(corner.toPx(), size.minDimension / 2)
@@ -445,7 +423,6 @@ internal fun Modifier.dashedBorder(color: Color, corner: Dp, width: Dp = 1.dp, d
     )
 }
 
-/** Baris toggle (judul + keterangan + switch) di kartu Ketersediaan. */
 @Composable
 internal fun KelolaToggleRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
@@ -472,7 +449,6 @@ internal fun KelolaToggleRow(title: String, subtitle: String, checked: Boolean, 
     }
 }
 
-/** Checkbox 20 (r4) + label, mis. "Saya masih bekerja di sini". */
 @Composable
 internal fun KelolaCheckboxRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
@@ -493,7 +469,6 @@ internal fun KelolaCheckboxRow(label: String, checked: Boolean, onCheckedChange:
     }
 }
 
-/** Kartu krem bergaris (#FBF3E0, garis #E2D5BA, r16, p17). */
 @Composable
 internal fun KelolaCard(modifier: Modifier = Modifier, spacing: Dp = 14.dp, content: @Composable ColumnScope.() -> Unit) {
     Column(
@@ -507,7 +482,6 @@ internal fun KelolaCard(modifier: Modifier = Modifier, spacing: Dp = 14.dp, cont
     )
 }
 
-/** Empty state: lingkaran ikon 84, judul, isi, dan tombol aksi. */
 @Composable
 internal fun KelolaEmptyState(
     @DrawableRes iconRes: Int,
@@ -533,7 +507,6 @@ internal fun KelolaEmptyState(
     }
 }
 
-/** Snackbar Figma "Snackbar Tersimpan": inverse surface r12, ikon centang, pesan, aksi. */
 @Composable
 internal fun KelolaSnackbar(message: String, actionLabel: String?, onAction: () -> Unit, modifier: Modifier = Modifier) {
     Row(
@@ -557,11 +530,6 @@ internal fun KelolaSnackbar(message: String, actionLabel: String?, onAction: () 
     }
 }
 
-/**
- * Figma "Bottom Sheet Hapus" (Hapus Portofolio/Pengalaman): handle, ikon delete di lingkaran
- * error-container 44, judul + subjudul, isi, tombol merah, dan "Batal". Mengikuti pola
- * ModalBottomSheet di Negosiasi (26:87): sheet ditutup dengan animasi dulu, baru callback.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun KelolaDeleteSheet(
@@ -619,6 +587,5 @@ internal fun KelolaDeleteSheet(
     }
 }
 
-/** Spacer lebar tetap (dipakai baris dua kolom). */
 @Composable
 internal fun HSpace(width: Dp) = Box(Modifier.width(width))

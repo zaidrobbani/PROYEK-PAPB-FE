@@ -38,25 +38,18 @@ import com.example.proyek_papb_fe.core.data.model.PortfolioCategory
 import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Satu kartu karya (sudah diformat). */
 data class PortfolioCardUi(
     val id: String,
     val title: String,
     val categoryLabel: String,
     val description: String,
-    /** Kosong = tidak ada tautan. */
     val link: String,
     @param:DrawableRes val coverRes: Int?,
     val coverUri: String?
 )
 
-/** Satu chip filter Kelola Portofolio. */
 data class PortfolioFilterUi(val label: String, val isSelected: Boolean)
 
-/**
- * Figma: Kelola Portofolio (535:1081), Kosong (535:1147), dan Hapus Portofolio (Modal) (535:1285).
- * [pendingDelete] tidak null = sheet konfirmasi hapus terbuka.
- */
 @Composable
 fun PortfolioListScreen(
     totalCount: Int,
@@ -122,7 +115,6 @@ fun PortfolioListScreen(
     }
 }
 
-/** Figma "Kelola/Portfolio Card": cover 150, chip kategori, judul, deskripsi, tautan, Edit & Hapus. */
 @Composable
 private fun PortfolioCard(item: PortfolioCardUi, onEdit: () -> Unit, onDelete: () -> Unit) {
     Column(
@@ -150,7 +142,7 @@ private fun PortfolioCard(item: PortfolioCardUi, onEdit: () -> Unit, onDelete: (
                 if (item.link.isNotBlank()) {
                     Icon(painterResource(R.drawable.ic_profile_link), null, tint = KelolaColors.Muted, modifier = Modifier.size(15.dp))
                     Text(
-                        item.link,
+                        item.link.substringAfter("://").removeSuffix("/"),
                         style = KelolaTypography.Caption,
                         color = KelolaColors.Muted,
                         maxLines = 1,
@@ -182,7 +174,6 @@ private fun Cover(uri: String?, @DrawableRes res: Int?, modifier: Modifier) {
     )
 }
 
-/** Isian form Tambah/Edit Portofolio. */
 data class PortfolioForm(
     val title: String = "",
     val category: PortfolioCategory? = null,
@@ -199,10 +190,6 @@ data class PortfolioFormErrors(val title: String? = null, val category: String? 
 
 const val PortfolioDescriptionMax = 300
 
-/**
- * Figma: Tambah Portofolio (535:1163) dan Edit Portofolio (535:1222). [isEdit] menampilkan
- * tombol "Hapus Portofolio"; [showDeleteSheet] membuka konfirmasi hapus.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PortfolioFormScreen(

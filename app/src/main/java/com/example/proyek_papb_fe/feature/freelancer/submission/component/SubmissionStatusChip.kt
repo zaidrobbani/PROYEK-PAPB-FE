@@ -18,10 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/**
- * Chip status pengajuan (pill, ikon opsional 15dp + teks), dipakai bersama oleh kartu
- * ringkasan Status Pengajuan (27:15) dan kartu di daftar "Project".
- */
 @Composable
 internal fun SubmissionStatusChip(
     text: String,
@@ -54,7 +50,6 @@ internal fun SubmissionStatusChip(
     }
 }
 
-/** Figma: Chip Menunggu Kesepakatan (27:17). Teks bisa diganti, mis. "Ditinjau UMKM". */
 @Composable
 internal fun PendingStatusChip(
     modifier: Modifier = Modifier,
@@ -69,7 +64,6 @@ internal fun PendingStatusChip(
     )
 }
 
-/** Figma: Chip Dibatalkan (270:638). */
 @Composable
 internal fun CancelledStatusChip(modifier: Modifier = Modifier) {
     SubmissionStatusChip(
@@ -80,11 +74,6 @@ internal fun CancelledStatusChip(modifier: Modifier = Modifier) {
     )
 }
 
-/**
- * Figma: Proposal Card "Status=Selesai". Tahap akhir sukses: pill olive solid + teks putih
- * dengan ikon centang ganda, sejajar dengan chip Dibatalkan (tahap akhir, solid) dan jelas
- * berbeda dari chip "Project Berjalan" (hijau muda, project masih dikerjakan).
- */
 @Composable
 internal fun CompletedStatusChip(modifier: Modifier = Modifier) {
     SubmissionStatusChip(
@@ -96,7 +85,6 @@ internal fun CompletedStatusChip(modifier: Modifier = Modifier) {
     )
 }
 
-/** Penawaran sudah disetujui UMKM (negosiasi / rencana diajukan / disetujui): chip hijau brand. */
 @Composable
 internal fun ApprovedStatusChip(
     text: String,

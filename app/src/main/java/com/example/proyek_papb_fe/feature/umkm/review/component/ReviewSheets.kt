@@ -62,17 +62,12 @@ import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentTypograp
 import com.example.proyek_papb_fe.feature.umkm.payment.component.paymentCardShadow
 import kotlinx.coroutines.launch
 
-/** Satu poin uraian revisi yang sedang disusun UMKM. */
 data class RevisionPointInput(val title: String = "", val instruction: String = "", val area: String = "")
 
-/** Isi form "Ajukan Catatan & Revisi" (Figma 17:5518). */
 data class RevisionFormUi(
-    /** "Draf v1.0". */
     val draftLabel: String,
     val projectTitle: String,
-    /** "Draf v1.0, Kiriman Andi Ramadhan". */
     val reviewedDraft: String,
-    /** "Diterima 24 Okt 2026, 14.15 WIB". */
     val receivedAt: String,
     val aspects: List<String>,
     val selectedAspects: Set<String>,
@@ -111,7 +106,6 @@ private fun ReviewSheet(
     }
 }
 
-/** Kolom teks polos (BasicTextField) dengan placeholder. */
 @Composable
 private fun PlainField(value: String, onValueChange: (String) -> Unit, placeholder: String, style: TextStyle, color: Color, modifier: Modifier = Modifier, singleLine: Boolean = false) {
     BasicTextField(
@@ -131,11 +125,6 @@ private fun PlainField(value: String, onValueChange: (String) -> Unit, placehold
     )
 }
 
-/**
- * Figma: Modal Ajukan Revisi (UMKM) (17:5518): draf yang ditinjau, kategori aspek, poin
- * uraian revisi, "Simpan Draf" / "Kirim Permintaan Revisi". Figma hanya menggambar satu poin;
- * "Tambah Poin" ditambahkan agar UMKM bisa menulis lebih dari satu poin.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RevisionRequestSheet(
@@ -150,7 +139,6 @@ fun RevisionRequestSheet(
 ) {
     ReviewSheet(onDismiss = onDismiss, gripColor = ReviewColors.Grip) { hideThen ->
         Column(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
-            // Header + tombol tutup (17:5533, 17:5555).
             Row(modifier = Modifier.fillMaxWidth().padding(start = P17, end = P17, bottom = P13), verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.226.dp)) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.226.dp), verticalArrangement = Arrangement.spacedBy(4.226.dp), itemVerticalAlignment = Alignment.CenterVertically) {
@@ -170,7 +158,6 @@ fun RevisionRequestSheet(
                 modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = P17, end = 12.677.dp, bottom = P17),
                 verticalArrangement = Arrangement.spacedBy(P17)
             ) {
-                // 1. Draf yang Ditinjau (17:5559).
                 Column(
                     modifier = Modifier.fillMaxWidth().background(TemuKaryaColors.SurfaceCard, PaymentCardShape).padding(P13),
                     verticalArrangement = Arrangement.spacedBy(P8)
@@ -195,7 +182,6 @@ fun RevisionRequestSheet(
                         Text("Revisi berbutir memperjelas ekspektasi desain tanpa salah tafsir antar pihak.", style = ReviewTypography.SmallBody, color = TemuKaryaColors.TextBody)
                     }
                 }
-                // 2. Kategori Aspek Perbaikan (17:5583).
                 Column(verticalArrangement = Arrangement.spacedBy(P8)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text("Kategori Aspek Perbaikan", style = PaymentTypography.Button, color = TemuKaryaColors.TextPrimary)
@@ -221,7 +207,6 @@ fun RevisionRequestSheet(
                         }
                     }
                 }
-                // 3. Poin Uraian Revisi (17:5610).
                 Column(verticalArrangement = Arrangement.spacedBy(P13)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text("Poin Uraian Revisi", style = PaymentTypography.Button, color = TemuKaryaColors.TextPrimary)
@@ -240,7 +225,6 @@ fun RevisionRequestSheet(
                     }
                 }
             }
-            // 6. Sticky Bottom Action Bar (17:5694).
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -274,7 +258,6 @@ fun RevisionRequestSheet(
     }
 }
 
-/** 17:5616: kartu poin (nomor, judul, uraian di kotak putih, area). */
 @Composable
 private fun PointCard(index: Int, point: RevisionPointInput, canRemove: Boolean, onChange: (RevisionPointInput) -> Unit, onRemove: () -> Unit) {
     Column(
@@ -304,7 +287,6 @@ private fun PointCard(index: Int, point: RevisionPointInput, canRemove: Boolean,
     }
 }
 
-/** Isi sheet "Setujui Draf & Selesaikan Proyek" (Figma 17:6140). */
 data class ApproveUi(
     val draftLabel: String,
     val projectTitle: String,
@@ -321,11 +303,6 @@ data class ApproveUi(
     val reviewText: String
 )
 
-/**
- * Figma: Konfirmasi Pelepasan Escrow & Selesai Proyek (17:6140) sebagai bottom sheet di atas
- * Review Hasil. Tombol utama aktif setelah kotak "Saya sudah memeriksa…" dicentang (mencegah
- * persetujuan tidak sengaja). Ulasan bintang opsional.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ApproveCompletionSheet(
@@ -338,7 +315,6 @@ fun ApproveCompletionSheet(
 ) {
     ReviewSheet(onDismiss = onDismiss, gripColor = ReviewColors.GripApprove) { hideThen ->
         Column(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
-            // 17:6319: header modal.
             Column(modifier = Modifier.fillMaxWidth().padding(start = P17, end = P17, bottom = P8)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(P8), verticalAlignment = Alignment.Top) {
                     Column(modifier = Modifier.weight(1f).padding(top = 2.113.dp), verticalArrangement = Arrangement.spacedBy(3.169.dp)) {
@@ -365,7 +341,6 @@ fun ApproveCompletionSheet(
                 modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = P17, end = P17, top = P8, bottom = P17),
                 verticalArrangement = Arrangement.spacedBy(P13)
             ) {
-                // 1. Ringkasan proyek & serah terima (17:6185).
                 Column(
                     modifier = Modifier.fillMaxWidth().paymentCardShadow(PaymentCardShape).background(TemuKaryaColors.SurfaceCard, PaymentCardShape).padding(P13),
                     verticalArrangement = Arrangement.spacedBy(P8)
@@ -433,7 +408,6 @@ fun ApproveCompletionSheet(
                         }
                     }
                 }
-                // 2. Rincian pelepasan dana escrow (17:6236).
                 Column(
                     modifier = Modifier.fillMaxWidth().paymentCardShadow(PaymentCardShape).background(TemuKaryaColors.SurfaceContainer, PaymentCardShape).padding(P13),
                     verticalArrangement = Arrangement.spacedBy(P8)
@@ -457,7 +431,6 @@ fun ApproveCompletionSheet(
                         Text("Diteruskan ke dompet ${ui.freelancerName}. ${ui.feeLabel.substringBefore(" (")} dipotong dari nilai proyek.", style = PaymentTypography.Body, color = TemuKaryaColors.TextBody)
                     }
                 }
-                // 3. Persetujuan (checkbox) (17:6267).
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -486,7 +459,6 @@ fun ApproveCompletionSheet(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // 4. Apresiasi & ulasan (opsional) (17:6278).
                 Column(
                     modifier = Modifier.fillMaxWidth().paymentCardShadow(PaymentCardShape).background(TemuKaryaColors.SurfaceCard, PaymentCardShape).padding(start = P13, end = P13, top = P13, bottom = 19.015.dp),
                     verticalArrangement = Arrangement.spacedBy(P8)
@@ -514,7 +486,6 @@ fun ApproveCompletionSheet(
                     }
                 }
             }
-            // 157:21: footer aksi.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

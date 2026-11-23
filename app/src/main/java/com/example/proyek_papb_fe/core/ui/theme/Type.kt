@@ -2,27 +2,11 @@ package com.example.proyek_papb_fe.core.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.proyek_papb_fe.R
-
-/** Font Figma TEMUKARYA. Lisensi: assets/licenses/plus_jakarta_sans_OFL.txt. */
-val PlusJakartaSans = FontFamily(
-    Font(R.font.plus_jakarta_sans_regular, FontWeight.Normal),
-    Font(R.font.plus_jakarta_sans_medium, FontWeight.Medium),
-    Font(R.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
-    Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold)
-)
 
 private val Base = Typography()
 
-/**
- * bodyMedium dan label* mengikuti token teks Figma (body/md, label/lg, label/md, label/sm).
- * Gaya lain tidak punya token di Figma, jadi memakai ukuran bawaan Material 3
- * dengan font Plus Jakarta Sans.
- */
 val Typography = Typography(
     displayLarge = Base.displayLarge.copy(fontFamily = PlusJakartaSans),
     displayMedium = Base.displayMedium.copy(fontFamily = PlusJakartaSans),

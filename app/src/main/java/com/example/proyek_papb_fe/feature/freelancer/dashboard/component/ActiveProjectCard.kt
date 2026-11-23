@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 
-/** Bayangan kartu Figma: 0 4.226 16.903 -2.113 rgba(104,71,56,0.08). */
 internal fun Modifier.dashboardCardShadow(shape: Shape): Modifier = dropShadow(
     shape = shape,
     shadow = Shadow(
@@ -38,7 +37,6 @@ internal fun Modifier.dashboardCardShadow(shape: Shape): Modifier = dropShadow(
     )
 )
 
-/** Figma: Article - Active Project Card (17:3774). */
 @Composable
 internal fun ActiveProjectCard(
     project: DashboardProject,

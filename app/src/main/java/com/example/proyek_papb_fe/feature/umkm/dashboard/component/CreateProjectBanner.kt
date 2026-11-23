@@ -39,8 +39,6 @@ fun CreateProjectBanner(
     val typography = MaterialTheme.typography
     val shape = RoundedCornerShape(16.dp)
 
-    // Di Figma kolom teks selebar 230 dan tombol menempel setelahnya (sedikit melewati padding
-    // pada lebar 412). Tombol dirapatkan ke kanan bila layar lebih lebar.
     Layout(
         modifier = modifier
             .fillMaxWidth()

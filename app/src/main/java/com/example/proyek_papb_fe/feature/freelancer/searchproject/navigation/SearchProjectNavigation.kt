@@ -10,12 +10,11 @@ import kotlinx.serialization.Serializable
 data object SearchProjectRoute
 
 fun NavGraphBuilder.searchProjectScreen(
-    onProjectClick: (Int) -> Unit = {},
+    onProjectClick: (String) -> Unit = {},
     onFilterClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
     composable<SearchProjectRoute> { backStackEntry ->
-        // Jaga posisi scroll saat membuka Detail Project dari posisi paling bawah daftar.
         KeepSizeWhileLeaving(entry = backStackEntry) {
             SearchProjectContainer(
                 onProjectClick = onProjectClick,

@@ -44,24 +44,16 @@ import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentInnerSha
 import com.example.proyek_papb_fe.feature.umkm.payment.component.PaymentTypography
 import com.example.proyek_papb_fe.feature.umkm.payment.component.paymentCardShadow
 
-/** Data Proyek Selesai (Figma 17:6338), sudah diformat. */
 data class ProjectCompletedUiState(
     val freelancerName: String,
     val freelancerPhotoUri: String?,
     val files: List<ReviewFileUi>,
-    /** "27.7 MB"; null = ukuran total tidak diketahui. */
     val totalSize: String?,
     val freelancerNet: String,
     val transactionId: String,
-    /** Rating ulasan yang sudah dikirim; 0 = belum diulas. */
     val rating: Int
 )
 
-/**
- * Figma: Sukses Penyelesaian Proyek (17:6338), judul "Proyek Selesai". Berkas master,
- * ringkasan dana diteruskan, ajakan memberi ulasan, "Beri ulasan" (17:6591) dan
- * "Kembali ke Beranda".
- */
 @Composable
 fun ProjectCompletedScreen(
     state: ProjectCompletedUiState,
@@ -88,7 +80,6 @@ fun ProjectCompletedScreen(
     }
 }
 
-/** 17:6341: pita perayaan. */
 @Composable
 private fun Celebration(freelancerName: String) {
     Column(
@@ -125,7 +116,6 @@ private fun Celebration(freelancerName: String) {
     }
 }
 
-/** 17:6468: Berkas Master Siap Pakai. */
 @Composable
 private fun DeliverablesCard(state: ProjectCompletedUiState, onDownloadFile: (ReviewFileUi) -> Unit, onDownloadAll: () -> Unit) {
     Column(
@@ -189,7 +179,6 @@ private fun DeliverablesCard(state: ProjectCompletedUiState, onDownloadFile: (Re
     }
 }
 
-/** 17:6510: Dana diteruskan. */
 @Composable
 private fun SettlementCard(state: ProjectCompletedUiState) {
     Column(
@@ -230,7 +219,6 @@ private fun SettlementCard(state: ProjectCompletedUiState) {
     }
 }
 
-/** 17:6535: ajakan memberi ulasan (bintang membuka layar Beri Ulasan). */
 @Composable
 private fun RatingCallout(state: ProjectCompletedUiState, onGiveReview: () -> Unit) {
     Column(
@@ -282,7 +270,6 @@ private fun RatingCallout(state: ProjectCompletedUiState, onGiveReview: () -> Un
     }
 }
 
-/** 17:6561: Sticky Bottom Action Bar. */
 @Composable
 private fun CompletedActionBar(reviewed: Boolean, onGiveReview: () -> Unit, onBackToHome: () -> Unit, modifier: Modifier = Modifier) {
     Column(

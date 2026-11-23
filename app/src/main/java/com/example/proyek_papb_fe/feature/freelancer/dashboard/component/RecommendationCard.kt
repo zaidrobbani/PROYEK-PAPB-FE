@@ -27,11 +27,6 @@ import androidx.compose.ui.unit.sp
 
 internal val RecommendationCardWidth = 295.795.dp
 
-/**
- * Figma: Article - Recommendation Card (17:3859 / 17:3895), versi ringkas: tinggi mengikuti isi
- * (gambar → judul → deskripsi → budget) tanpa ruang kosong. Judul & deskripsi memakai
- * minLines = maxLines = 2 agar semua kartu di carousel sama tinggi.
- */
 @Composable
 internal fun RecommendationCard(
     project: DashboardProject,
@@ -98,7 +93,6 @@ internal fun RecommendationCard(
             overflow = TextOverflow.Ellipsis
         )
 
-        // Budget langsung di bawah deskripsi (jarak total 8.451 = spacedBy + padding).
         Text(
             text = project.budget,
             style = DashboardTypography.CardTitle,

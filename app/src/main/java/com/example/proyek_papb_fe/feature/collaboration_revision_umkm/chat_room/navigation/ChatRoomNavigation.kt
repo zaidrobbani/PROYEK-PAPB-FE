@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.container.ChatRoomScreen
 import kotlinx.serialization.Serializable
 
-/** Membawa id percakapan saja; isi percakapan dibaca dari UmkmConversationStore. */
 @Serializable
 data class UmkmChatRoomRoute(val conversationId: String)
 
@@ -18,14 +17,16 @@ fun NavController.navigateToUmkmChatRoom(conversationId: String) {
 fun NavGraphBuilder.umkmChatRoomScreen(
     onBack: () -> Unit,
     onOpenProject: ((projectId: String) -> Unit)?,
-    onCompareDrafts: ((conversationId: String, draftMessageId: String) -> Unit)?
+    onCompareDrafts: ((conversationId: String, draftMessageId: String) -> Unit)?,
+    onOpenNegotiation: (conversationId: String) -> Unit
 ) {
     composable<UmkmChatRoomRoute> { entry ->
         ChatRoomScreen(
             conversationId = entry.toRoute<UmkmChatRoomRoute>().conversationId,
             onBack = onBack,
             onOpenProject = onOpenProject,
-            onCompareDrafts = onCompareDrafts
+            onCompareDrafts = onCompareDrafts,
+            onOpenNegotiation = onOpenNegotiation
         )
     }
 }

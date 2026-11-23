@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-/** Tipografi Figma 17:1267 / 17:3177 (ukuran & line-height px persis). */
 internal object PaymentTypography {
     private fun style(weight: FontWeight, size: Float, line: Float, tracking: Float = 0f) =
         TextStyle(fontFamily = PlusJakartaSans, fontWeight = weight, fontSize = size.sp, lineHeight = line.sp, letterSpacing = tracking.sp)
@@ -46,12 +45,12 @@ internal object PaymentColors {
     val MethodChip = Color(0xFFDEE6C7)
     val OnMethodChip = Color(0xFF171E0A)
     val Olive = Color(0xFF5A6149)
-    val EscrowNote = Color(0x99F1E4C6) // rgba(241,228,198,0.6)
-    val NetText = Color(0xCC50443F) // rgba(80,68,63,0.8)
+    val EscrowNote = Color(0x99F1E4C6)
+    val NetText = Color(0xCC50443F)
     val UmkmAvatar = Color(0xFFEADBC8)
     val Divider = Color(0xFFE2D5BA)
-    val Shadow = Color(0x0D000000) // rgba(0,0,0,0.05)
-    val ButtonShadow = Color(0x1A000000) // rgba(0,0,0,0.1)
+    val Shadow = Color(0x0D000000)
+    val ButtonShadow = Color(0x1A000000)
 }
 
 internal val PaymentCardShape = RoundedCornerShape(16.dp)
@@ -61,10 +60,8 @@ internal val P17 = 16.903.dp
 internal val P13 = 12.677.dp
 internal val P8 = 8.451.dp
 
-/** drop-shadow 0 1.056 1.056 rgba(0,0,0,0.05) (kartu Figma). */
 internal fun Modifier.paymentCardShadow(shape: Shape): Modifier =
     dropShadow(shape = shape, shadow = Shadow(radius = 1.056.dp, color = PaymentColors.Shadow, offset = DpOffset(0.dp, 1.056.dp)))
 
-/** 2850000 → "Rp 2.850.000". */
 internal fun formatRupiah(amount: Long): String =
     "Rp " + amount.toString().reversed().chunked(3).joinToString(".").reversed()

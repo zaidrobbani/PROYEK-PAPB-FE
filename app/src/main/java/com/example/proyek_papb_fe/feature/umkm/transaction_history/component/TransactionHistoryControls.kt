@@ -52,7 +52,6 @@ import com.example.proyek_papb_fe.feature.umkm.data.FundStatus
 import com.example.proyek_papb_fe.feature.umkm.data.PaymentStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransaction
 
-/** Tab di Figma. "Dibatalkan / Refund" memakai status_pembayaran DIBATALKAN dari Blueprint. */
 enum class TransactionTab(val label: String, val showCount: Boolean) {
     Semua("Semua", showCount = true),
     DanaDitahan("Dana Ditahan", showCount = true),
@@ -67,7 +66,6 @@ enum class TransactionTab(val label: String, val showCount: Boolean) {
     }
 }
 
-/** Judul halaman "Riwayat Transaksi" dengan tombol unduh dan filter lanjutan. */
 @Composable
 fun TransactionHistoryHeader(
     onDownload: () -> Unit,
@@ -185,10 +183,6 @@ fun TransactionTabs(
     }
 }
 
-/**
- * Kolom cari (7/12 lebar) dan tombol periode (5/12 lebar) seperti grid Figma.
- * [months] berisi pasangan kunci bulan dan label pendek, misalnya "2026-10" ke "Okt 2026".
- */
 @Composable
 fun TransactionSearchAndPeriod(
     query: String,
@@ -275,7 +269,6 @@ fun TransactionSearchAndPeriod(
                 ) {
                     Image(painter = painterResource(R.drawable.ic_transaction_month), contentDescription = null)
                     Text(
-                        // Figma hanya menampilkan satu bulan; pilihan "Semua Periode" tambahan.
                         text = months.firstOrNull { it.first == selectedMonth }?.second ?: "Semua Periode",
                         color = colors.onSurface,
                         maxLines = 1,

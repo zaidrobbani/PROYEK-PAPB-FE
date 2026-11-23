@@ -10,15 +10,12 @@ import com.example.proyek_papb_fe.feature.freelancer.wallet.container.WithdrawCo
 import com.example.proyek_papb_fe.feature.freelancer.wallet.container.WithdrawResultContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Dompet Freelancer (27:80), judul "Dompet & Rekening". Halaman detail (tanpa bottom bar). */
 @Serializable
 data object WalletRoute
 
-/** Figma: Ajukan Pencairan Dana (27:161), Pengajuan Pencairan Dana dari "Cairkan Dana". */
 @Serializable
 data object WithdrawRoute
 
-/** Figma: Pencairan Sedang Diproses (27:218), setelah "Ajukan Pencairan". */
 @Serializable
 data class WithdrawResultRoute(val withdrawalId: String)
 

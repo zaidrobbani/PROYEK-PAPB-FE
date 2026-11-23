@@ -50,7 +50,6 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.component.shared.UriImage
 
-/** Line-height 1.4 seperti frame Kelola Profil (Figma 534:961). */
 @Composable
 private fun text(weight: FontWeight, size: Float): TextStyle =
     MaterialTheme.typography.bodySmall.withFrameMetrics(
@@ -62,7 +61,6 @@ private fun text(weight: FontWeight, size: Float): TextStyle =
 private val FieldShape = RoundedCornerShape(12.dp)
 private val CardShape = RoundedCornerShape(16.dp)
 
-/** Figma "Banner Validasi" (534:1067): jumlah isian yang perlu diperbaiki. */
 @Composable
 fun KelolaErrorBanner(count: Int, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -84,7 +82,6 @@ fun KelolaErrorBanner(count: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Figma "Foto Profil" (534:973): avatar inisial/foto, badge kamera, dan tombol Ubah foto. */
 @Composable
 fun KelolaPhotoCard(
     initials: String,
@@ -151,7 +148,6 @@ fun KelolaPhotoCard(
     }
 }
 
-/** Figma "Section Informasi Dasar": judul bagian dan keterangan. */
 @Composable
 fun KelolaSectionTitle(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -161,10 +157,6 @@ fun KelolaSectionTitle(title: String, subtitle: String? = null, modifier: Modifi
     }
 }
 
-/**
- * Figma "Kelola/Form Field" (533:979): label, input, dan teks bantuan. State Focus = garis
- * primary 1.5dp; Error = garis merah + pesan dengan ikon.
- */
 @Composable
 fun KelolaFormField(
     label: String,
@@ -176,7 +168,8 @@ fun KelolaFormField(
     error: String? = null,
     singleLine: Boolean = true,
     @DrawableRes trailingIcon: Int? = null,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val colors = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
@@ -218,7 +211,9 @@ fun KelolaFormField(
                         if (value.isEmpty()) Text(placeholder, color = colors.outline, style = text(FontWeight.Normal, 14.8f))
                         inner()
                     }
-                    if (trailingIcon != null) {
+                    if (trailingContent != null) {
+                        trailingContent()
+                    } else if (trailingIcon != null) {
                         Icon(painterResource(trailingIcon), null, tint = colors.outline, modifier = Modifier.size(20.dp))
                     }
                 }
@@ -234,7 +229,6 @@ fun KelolaFormField(
     }
 }
 
-/** Figma "Kelola/Sticky Action Bar" (533:980): tombol Simpan Perubahan di bawah. */
 @Composable
 fun KelolaStickyActionBar(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -258,7 +252,6 @@ fun KelolaStickyActionBar(label: String, onClick: () -> Unit, modifier: Modifier
     }
 }
 
-/** Figma snackbar "Tersimpan" (534:1169): pesan sukses + aksi "Lihat Profil". */
 @Composable
 fun KelolaSnackbar(
     visible: Boolean,

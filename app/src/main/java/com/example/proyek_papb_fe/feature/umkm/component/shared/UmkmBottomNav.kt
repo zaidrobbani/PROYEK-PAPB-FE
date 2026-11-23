@@ -34,7 +34,6 @@ import com.example.proyek_papb_fe.core.ui.theme.NavInactive
 import com.example.proyek_papb_fe.core.ui.theme.SandContainer
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** Lima menu Bottom Nav UMKM sesuai komponen Figma. */
 enum class UmkmTab(val label: String, @param:DrawableRes val iconRes: Int) {
     Beranda("Beranda", R.drawable.ic_symbol_home),
     Freelancer("Freelancer", R.drawable.ic_symbol_person_search),
@@ -43,7 +42,6 @@ enum class UmkmTab(val label: String, @param:DrawableRes val iconRes: Int) {
     Profil("Profil", R.drawable.ic_symbol_account_circle)
 }
 
-/** Aktif: #684738 dengan pill pasir #EADBC8. Tidak aktif: #8C7B71. Latar #FBF3E0 dengan garis atas. */
 @Composable
 fun UmkmBottomNav(
     selectedTab: UmkmTab,

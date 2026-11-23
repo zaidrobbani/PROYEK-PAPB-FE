@@ -40,10 +40,6 @@ private val FieldHeight = 48.dp
 private val WeightFieldWidth = 92.dp
 private val DeleteSlotWidth = 23.dp
 
-/**
- * Figma: "Milestone n" (88:31) — label + "Bobot (%)", lalu input nama (fleksibel),
- * input bobot 92dp, dan ikon hapus.
- */
 @Composable
 internal fun MilestoneRow(
     index: Int,
@@ -84,7 +80,6 @@ internal fun MilestoneRow(
                 color = TemuKaryaColors.TextBody,
                 modifier = Modifier.width(WeightFieldWidth)
             )
-            // Figma 88:35: kolom kosong selebar area ikon hapus.
             Spacer(modifier = Modifier.width(28.dp))
         }
 
@@ -181,7 +176,6 @@ internal fun MilestoneRow(
     }
 }
 
-/** Figma: "Input Nama"/"Input Bobot" — putih, border #E2D5BA, radius 12, tinggi 48, px 14. */
 @Composable
 private fun FieldFrame(isError: Boolean, content: @Composable () -> Unit) {
     Box(

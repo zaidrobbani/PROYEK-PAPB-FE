@@ -15,10 +15,8 @@ private fun format(pattern: String, millis: Long): String =
 private fun dayIndex(millis: Long): Int =
     Calendar.getInstance(Jakarta).apply { timeInMillis = millis }.let { it.get(Calendar.YEAR) * 1000 + it.get(Calendar.DAY_OF_YEAR) }
 
-/** Hari kalender (WIB) yang sama — dipakai untuk pemisah tanggal di ruang chat. */
 internal fun isSameDay(a: Long, b: Long): Boolean = dayIndex(a) == dayIndex(b)
 
-/** Label waktu di daftar: "09.48" (hari ini), "Kemarin", atau "5 Okt". */
 internal fun formatListTime(millis: Long, now: Long = System.currentTimeMillis()): String {
     val yesterday = Calendar.getInstance(Jakarta).apply { timeInMillis = now; add(Calendar.DAY_OF_YEAR, -1) }.timeInMillis
     return when {
@@ -28,11 +26,8 @@ internal fun formatListTime(millis: Long, now: Long = System.currentTimeMillis()
     }
 }
 
-/** Jam di bubble: "09.15 WIB". */
 internal fun formatBubbleTime(millis: Long): String = "${format("HH.mm", millis)} WIB"
 
-/** Pemisah tanggal: "Jumat, 24 Okt 2026". */
 internal fun formatDateSeparator(millis: Long): String = format("EEEE, d MMM yyyy", millis)
 
-/** Tanggal ringkas: "28 Okt 2026". */
 internal fun formatShortDate(millis: Long): String = format("d MMM yyyy", millis)

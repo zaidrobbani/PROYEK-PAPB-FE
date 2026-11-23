@@ -13,6 +13,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.feature.umkm.project_monitoring.viewmodel.ProjectMonitoringViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +36,6 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
-import com.example.proyek_papb_fe.feature.umkm.data.UmkmWorkPlanStore
 import com.example.proyek_papb_fe.feature.umkm.data.evaluateProject
 import com.example.proyek_papb_fe.feature.umkm.data.utcMillisToDate
 import com.example.proyek_papb_fe.feature.umkm.project_monitoring.component.MilestoneList
@@ -46,23 +53,40 @@ import java.util.Locale
 
 private val UpdatedFormat = DateTimeFormatter.ofPattern("d MMM yyyy, HH.mm", Locale.forLanguageTag("id-ID"))
 
-/**
- * Pemantauan Progres Proyek UMKM (Blueprint Fungsi 4). Hanya membaca project dari
- * [UmkmProjectStore] (DATA DUMMY lokal); UMKM tidak bisa mengubah milestone atau progres.
- * [onChatFreelancer] membuka Ruang Chat percakapan project ini; null = Chat belum tersedia.
- */
 @Composable
 fun ProjectMonitoringScreen(
     projectId: String,
     onBack: () -> Unit,
     onChatFreelancer: ((conversationId: String) -> Unit)?,
     onOpenWorkPlan: ((planId: String) -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProjectMonitoringViewModel = viewModel(
+        factory = ProjectMonitoringViewModel.factory(
+            projectId,
+            AppContainer.workflowRepository,
+            AppContainer.chatRepository,
+            AppContainer.masterDataRepository
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val project = UmkmProjectStore.project(projectId)
-    val evaluatedAt = remember { LocalDateTime.now() }
-    val result = project?.let { evaluateProject(it, evaluatedAt.toLocalDate()) }
+    val project = uiState.project
+    val evaluatedAt = remember(uiState.loadedAtMillis) { LocalDateTime.now() }
+    val result = uiState.result
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.chatConversationId) {
+        uiState.chatConversationId?.let { conversationId ->
+            viewModel.onChatOpened()
+            onChatFreelancer?.invoke(conversationId)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -71,10 +95,17 @@ fun ProjectMonitoringScreen(
     ) {
         AuthAppBar(title = "Progres Proyek", onBack = onBack)
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            if (project == null && uiState.isLoading) {
+                LoadingContent()
+                return@Box
+            }
+            if (project == null && uiState.errorMessage != null) {
+                ErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load)
+                return@Box
+            }
             if (project == null || result == null) {
-                // Tidak ada di Figma: project tidak ditemukan atau belum punya milestone/tanggal.
                 Text(
-                    text = "Data pemantauan untuk project ini belum tersedia.",
+                    text = "Data pemantauan tersedia setelah freelancer memulai pengerjaan dengan rencana milestone lengkap.",
                     modifier = Modifier.align(Alignment.Center).padding(horizontal = 17.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -88,7 +119,6 @@ fun ProjectMonitoringScreen(
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                // Figma: pt 84 (di bawah App Bar 64), pb 120 di atas bar Chat yang menempel.
                 contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -106,14 +136,16 @@ fun ProjectMonitoringScreen(
                 }
                 item(key = "timeline") { MonitoringTimeline(result) }
                 item(key = "milestone-header") {
-                    val planId = UmkmWorkPlanStore.planForProject(project.id)?.id
                     MilestoneSectionHeader(
                         agreedDate = project.agreedUtcMillis?.let(::utcMillisToDate),
-                        onOpenPlan = if (planId != null && onOpenWorkPlan != null) { { onOpenWorkPlan(planId) } } else null
+                        onOpenPlan = onOpenWorkPlan?.let { open -> { open(project.id) } }
                     )
                 }
                 item(key = "milestones") {
-                    MilestoneList(project.milestones, inProgress = project.status == ProjectStatus.SedangDikerjakan)
+                    MilestoneList(
+                        project.milestones,
+                        inProgress = project.status == ProjectStatus.SedangDikerjakan || project.status == ProjectStatus.Revisi
+                    )
                 }
                 item(key = "info") { MonitoringInfoNote() }
                 item(key = "updated") {
@@ -122,26 +154,14 @@ fun ProjectMonitoringScreen(
             }
             MonitoringBottomBar(
                 onChat = {
-                    // Tidak ada di Figma: pengaman bila project belum punya percakapan.
-                    val conversation = UmkmConversationStore.conversationForProject(projectId)
-                    when {
-                        onChatFreelancer == null ->
-                            Toast.makeText(context, "Chat belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
-                        conversation == null ->
-                            Toast.makeText(context, "Belum ada percakapan dengan freelancer untuk project ini.", Toast.LENGTH_SHORT).show()
-                        else -> onChatFreelancer(conversation.id)
+                    if (onChatFreelancer == null) {
+                        Toast.makeText(context, "Chat belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        viewModel.openChat()
                     }
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ProjectMonitoringScreenPreview() {
-    PROYEKPAPBFETheme {
-        ProjectMonitoringScreen(projectId = "dummy-project-kopi", onBack = {}, onChatFreelancer = null, onOpenWorkPlan = null)
     }
 }

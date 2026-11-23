@@ -24,10 +24,6 @@ import com.example.proyek_papb_fe.core.data.model.ProjectFilter
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/**
- * Pill filter status di daftar "Project", mengikuti gaya Category Pills di
- * "Cari Project" (2011:274): aktif = coklat + bayangan, tidak aktif = container pasir.
- */
 @Composable
 internal fun ProposalFilterRow(
     options: List<ProposalFilterOption>,
@@ -35,8 +31,6 @@ internal fun ProposalFilterRow(
     onFilterSelect: (ProjectFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Figma "Filter Pills" (449:866): px 16, gap 7.6, tinggi pill 29.6 (hug).
-    // contentPadding vertikal 4dp = ruang bayangan pill aktif (Figma memotong 4dp di bawah).
     LazyRow(
         modifier = modifier
             .fillMaxWidth()

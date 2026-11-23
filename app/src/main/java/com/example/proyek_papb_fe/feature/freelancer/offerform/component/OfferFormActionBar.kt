@@ -24,11 +24,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 private val ButtonHeight = 50.708.dp
 
-/**
- * Figma: Sticky Bottom Action Bar (17:4587).
- * Latar krem 95% + bayangan ke atas; backdrop blur Figma tidak direplikasi
- * (sama seperti action bar Detail Project).
- */
 @Composable
 internal fun OfferFormActionBar(
     onSaveDraftClick: () -> Unit,

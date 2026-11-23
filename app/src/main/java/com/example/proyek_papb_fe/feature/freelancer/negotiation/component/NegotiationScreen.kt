@@ -23,7 +23,6 @@ import com.example.proyek_papb_fe.core.data.model.NegotiationMessage
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan (sudah diformat) untuk ruang negosiasi satu project. */
 data class NegotiationUiState(
     val projectTitle: String,
     val client: NegotiationParty,
@@ -36,11 +35,6 @@ data class NegotiationUiState(
     val messages: List<NegotiationMessage>
 )
 
-/**
- * Figma: Negosiasi (Freelancer) (26:2).
- * Seluruh konten di-scroll; top bar dan bottom bar tetap. Frame ini tidak punya
- * kolom ketik pesan — percakapan hanya ditampilkan.
- */
 @Composable
 fun NegotiationScreen(
     state: NegotiationUiState,
@@ -65,7 +59,6 @@ fun NegotiationScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    // Figma: Main pt 84 (app bar 64 + 20), px 17, pb 120 (bottom bar 80 + 40).
                     .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -99,7 +92,6 @@ fun NegotiationScreen(
     }
 }
 
-/** Figma: kartu info (26:77) — pembatalan tanpa biaya sebelum pembayaran. */
 @Composable
 private fun CancellationInfoCard() {
     Row(

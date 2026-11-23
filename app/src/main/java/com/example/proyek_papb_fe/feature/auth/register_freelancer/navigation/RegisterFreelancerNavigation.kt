@@ -16,7 +16,7 @@ fun NavController.navigateToRegisterFreelancer() {
 fun NavGraphBuilder.registerFreelancerScreen(
     onChangeRole: () -> Unit,
     onLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: (email: String) -> Unit
 ) {
     composable<RegisterFreelancerRoute> {
         RegisterFreelancerScreen(

@@ -7,7 +7,6 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.umkm.project_monitoring.container.ProjectMonitoringScreen
 import kotlinx.serialization.Serializable
 
-/** Membawa id project saja; data dibaca dari UmkmProjectStore agar selalu sama dengan Project Saya. */
 @Serializable
 data class ProjectMonitoringRoute(val projectId: String)
 

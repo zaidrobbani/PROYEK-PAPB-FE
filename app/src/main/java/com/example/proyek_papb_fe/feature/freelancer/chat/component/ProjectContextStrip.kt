@@ -31,20 +31,15 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.NegotiationColors
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
-/**
- * Figma: Project Context (17:4612) — strip ringan di bawah app bar, bukan kartu:
- * chip dana tertahan, judul project satu baris, catatan tenggat, dan panah ke detail.
- */
 @Composable
 internal fun ProjectContextStrip(
     projectTitle: String,
     context: ChatProjectContext,
     onDetailClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    /**
-     * Tahap negosiasi (Figma "Ruang Chat (Freelancer) · Negosiasi"): chip status dari
-     * Negosiasi 26:2 menggantikan chip dana & baris catatan.
-     */
+
+
+
     isNegotiation: Boolean = false
 ) {
     Row(
@@ -117,7 +112,6 @@ internal fun ProjectContextStrip(
     }
 }
 
-/** Chip status negosiasi (warna "menunggu" yang sama dengan Negosiasi 26:2 / Status Pengajuan). */
 @Composable
 private fun NegotiationStatusChip(iconRes: Int, label: String) {
     Row(

@@ -2,10 +2,6 @@ package com.example.proyek_papb_fe.feature.freelancer.dashboard.component
 
 import androidx.compose.ui.graphics.Color
 
-/**
- * Warna brand dari Figma "Beranda Freelancer" (node 17:3704).
- * Sengaja lokal di fitur Dashboard karena Dynamic Color global tetap aktif.
- */
 internal object DashboardColors {
     val BgCanvas = Color(0xFFFEF7E6)
     val ActionPrimary = Color(0xFF684738)
@@ -22,5 +18,5 @@ internal object DashboardColors {
     val ProgressTrack = Color(0xFFE2D5BA)
     val Divider = Color(0xFFEADFC6)
     val BellIcon = Color(0xFF6B5A50)
-    val CardShadow = Color(0x14684738) // rgba(104,71,56,0.08)
+    val CardShadow = Color(0x14684738)
 }

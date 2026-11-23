@@ -8,11 +8,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 
-/**
- * Token visual section Figma "6 · Profil (Freelancer) · Kelola" (Kelola Profil Profesional,
- * Kelola Portofolio, Kelola Pengalaman, Notifikasi). Ukuran 11.6–19 dengan line-height 1.4×
- * seperti layar Profil (27:250); didefinisikan lokal agar tema bersama tidak berubah.
- */
 internal object KelolaTypography {
     private fun style(weight: FontWeight, size: Float) = TextStyle(
         fontFamily = PlusJakartaSans, fontWeight = weight, fontSize = size.sp, lineHeight = (size * 1.4f).sp
@@ -42,37 +37,34 @@ internal object KelolaTypography {
     val Initials = style(FontWeight.Bold, 22f)
 }
 
-/** Warna dari variabel Figma (Color collection) yang belum ada di TemuKaryaColors. */
 internal object KelolaColors {
-    val Border = Color(0xFFE2D5BA) // color/border/default
-    val Muted = Color(0xFF82746E) // m3/outline
-    val Chip = Color(0xFFEDE0C2) // m3/surface-container-highest
-    val SurfaceHigh = Color(0xFFF1E4C6) // m3/surface-container-high
-    val SkillChip = Color(0xFFDBE3C4) // m3/secondary-container
-    val OnSkillChip = Color(0xFF5E664D) // m3/on-secondary-container
+    val Border = Color(0xFFE2D5BA)
+    val Muted = Color(0xFF82746E)
+    val Chip = Color(0xFFEDE0C2)
+    val SurfaceHigh = Color(0xFFF1E4C6)
+    val SkillChip = Color(0xFFDBE3C4)
+    val OnSkillChip = Color(0xFF5E664D)
     val Avatar = Color(0xFFDBE3C4)
-    val OnAvatar = Color(0xFF5A6149) // m3/secondary
-    val Error = Color(0xFFBA1A1A) // color/error/default
-    val ErrorContainer = Color(0xFFFFDAD6) // m3/error-container
-    val OnErrorContainer = Color(0xFF93000A) // m3/on-error-container
-    val InverseSurface = Color(0xFF3F2C23) // m3/inverse-surface
-    val InverseOnSurface = Color(0xFFFEF7E6) // m3/inverse-on-surface
-    val InversePrimary = Color(0xFFEADBC8) // m3/inverse-primary
-    val RevisionChip = Color(0xFFD08A6B) // color/status/revisi/bg
-    val OnRevisionChip = Color(0xFFFFFFFF) // color/status/revisi/fg
-    val BottomBar = Color(0xF7FEF7E6) // color/bg/canvas 97%
-    val Scrim = Color(0x663E2B22) // #3E2B22 40%
-    val SheetHandle = Color(0x6682746E) // m3/outline 40%
+    val OnAvatar = Color(0xFF5A6149)
+    val Error = Color(0xFFBA1A1A)
+    val ErrorContainer = Color(0xFFFFDAD6)
+    val OnErrorContainer = Color(0xFF93000A)
+    val InverseSurface = Color(0xFF3F2C23)
+    val InverseOnSurface = Color(0xFFFEF7E6)
+    val InversePrimary = Color(0xFFEADBC8)
+    val RevisionChip = Color(0xFFD08A6B)
+    val OnRevisionChip = Color(0xFFFFFFFF)
+    val BottomBar = Color(0xF7FEF7E6)
+    val Scrim = Color(0x663E2B22)
+    val SheetHandle = Color(0x6682746E)
 }
 
 internal val KelolaCardShape = RoundedCornerShape(16.dp)
 internal val KelolaFieldShape = RoundedCornerShape(12.dp)
 internal val KelolaSheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 
-/** Padding Main tiap layar Kelola: pt 84 − app bar 64 = 20, px 17, gap 16. */
 internal val KelolaHorizontalPadding = 17.dp
 internal val KelolaTopPadding = 20.dp
 internal val KelolaSectionGap = 16.dp
-/** Main pb 120 pada layar dengan Sticky Action Bar (±80). */
 internal val KelolaBottomPaddingWithBar = 120.dp
 internal val KelolaBottomPadding = 32.dp

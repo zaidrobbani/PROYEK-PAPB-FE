@@ -7,16 +7,14 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.umkm.planreview.container.PlanReviewContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Tinjau Rencana Pengerjaan (UMKM) (270:663) untuk project [projectId]. */
 @Serializable
-data class PlanReviewRoute(val projectId: Int)
+data class PlanReviewRoute(val projectId: String)
 
-fun NavController.navigateToPlanReview(projectId: Int) = navigate(PlanReviewRoute(projectId)) { launchSingleTop = true }
+fun NavController.navigateToPlanReview(projectId: String) = navigate(PlanReviewRoute(projectId)) { launchSingleTop = true }
 
 fun NavGraphBuilder.planReviewScreen(
     onBack: () -> Unit,
-    /** "Setujui Rencana" berhasil: buka Pembayaran (17:1267). */
-    onApproved: (projectId: Int) -> Unit
+    onApproved: (projectId: String) -> Unit
 ) {
     composable<PlanReviewRoute> { entry ->
         PlanReviewContainer(projectId = entry.toRoute<PlanReviewRoute>().projectId, onBack = onBack, onApproved = onApproved)

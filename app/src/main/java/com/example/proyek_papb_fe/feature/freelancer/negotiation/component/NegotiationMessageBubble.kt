@@ -18,13 +18,8 @@ import com.example.proyek_papb_fe.core.data.model.MessageSender
 import com.example.proyek_papb_fe.core.data.model.NegotiationMessage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Figma: lebar teks bubble 250 + padding horizontal 14×2. */
 private val BubbleMaxWidth = 278.dp
 
-/**
- * Figma: Bubble (26:61, 26:67). Klien di kiri dengan avatar (putih + border),
- * freelancer (pengguna) di kanan tanpa avatar (cokelat).
- */
 @Composable
 internal fun NegotiationMessageBubble(
     message: NegotiationMessage,
@@ -75,7 +70,6 @@ internal fun NegotiationMessageBubble(
     }
 }
 
-/** Figma: Chip "Hari ini" (26:59), pemisah tanggal di tengah. */
 @Composable
 internal fun DaySeparatorChip(label: String, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

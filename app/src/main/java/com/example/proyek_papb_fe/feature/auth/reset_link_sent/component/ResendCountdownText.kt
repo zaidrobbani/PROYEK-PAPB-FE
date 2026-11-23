@@ -16,10 +16,6 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/**
- * Figma hanya menampilkan saat hitung mundur berjalan ("Kirim ulang dalam 00:59").
- * Setelah habis, "Kirim ulang" bisa ditekan untuk memulai hitung mundur lagi.
- */
 @Composable
 fun ResendCountdownText(
     secondsLeft: Int,

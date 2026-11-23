@@ -1,4 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.chat.container
+import com.example.proyek_papb_fe.core.push.VisibleConversationEffect
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -11,6 +14,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,60 +25,72 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.proyek_papb_fe.core.data.ChatStore
-import com.example.proyek_papb_fe.core.data.FreelancerProjectDummyData
-import com.example.proyek_papb_fe.core.data.NegotiationDummyData
-import com.example.proyek_papb_fe.core.data.SubmittedOfferStore
-import com.example.proyek_papb_fe.core.data.WorkDraftStore
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyek_papb_fe.core.data.ResultReviewStage
-import com.example.proyek_papb_fe.core.data.ResultReviewStore
-import com.example.proyek_papb_fe.feature.freelancer.workplan.component.UmkmSimulationCard
-import com.example.proyek_papb_fe.feature.freelancer.workplan.component.UmkmSimulationEntry
+import com.example.proyek_papb_fe.core.data.WorkDraftStore
 import com.example.proyek_papb_fe.core.data.model.CancellationReason
+import com.example.proyek_papb_fe.core.data.model.ChatAttachment
 import com.example.proyek_papb_fe.core.data.model.ChatProjectContext
 import com.example.proyek_papb_fe.core.data.model.ProjectStatus
-import com.example.proyek_papb_fe.core.data.model.SubmittedOffer
-import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatNegotiationUi
-import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.CancelProjectBottomSheet
-import com.example.proyek_papb_fe.core.data.model.ChatAttachment
-import com.example.proyek_papb_fe.core.data.model.ChatConversation
-import com.example.proyek_papb_fe.core.data.model.ChatMessage
-import com.example.proyek_papb_fe.core.data.model.MessageSender
+import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.domain.model.FundStatusCode
+import com.example.proyek_papb_fe.core.domain.model.Message
+import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
+import com.example.proyek_papb_fe.core.domain.model.UploadFile
+import com.example.proyek_papb_fe.core.domain.model.WorkflowActionCode
+import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
-import com.example.proyek_papb_fe.core.ui.components.FeaturePlaceholder
+import com.example.proyek_papb_fe.core.ui.components.ErrorContent
+import com.example.proyek_papb_fe.core.ui.components.LoadingContent
+import com.example.proyek_papb_fe.core.ui.components.initialsOf
+import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
+import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
+import com.example.proyek_papb_fe.core.ui.components.chat.FailedAttachmentDialog
+import com.example.proyek_papb_fe.core.ui.components.chat.rememberChatAttachmentController
+import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
+import com.example.proyek_papb_fe.core.util.rupiah
+import com.example.proyek_papb_fe.feature.chat.viewmodel.ChatRoomViewModel
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatBubbleUi
+import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatNegotiationUi
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatRoomItem
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatRoomScreen
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatRoomUiState
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.UploadDraftSheet
+import com.example.proyek_papb_fe.feature.freelancer.data.freelancerStatusOf
+import com.example.proyek_papb_fe.feature.freelancer.negotiation.component.CancelProjectBottomSheet
+import com.example.proyek_papb_fe.feature.freelancer.negotiation.viewmodel.toCode
+import com.example.proyek_papb_fe.feature.freelancer.workplan.component.UmkmSimulationCard
+import com.example.proyek_papb_fe.feature.freelancer.workplan.component.UmkmSimulationEntry
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
+import kotlinx.coroutines.delay
 
-/**
- * Menyusun pesan menjadi item tampilan: pemisah tanggal saat hari berganti, grup per
- * pengirim (jarak 12 saat berganti, 4 untuk lanjutan), dan label pengirim di pesan masuk
- * pertama tiap grup ("Nama · UMKM" untuk grup pertama di hari itu).
- */
-private fun ChatConversation.toRoomItems(): List<ChatRoomItem> {
+private const val PollIntervalMillis = 5_000L
+
+private fun List<Message>.toRoomItems(
+    myId: String?,
+    contactName: String,
+    umkmName: String,
+    pending: List<OutgoingAttachment>
+): List<ChatRoomItem> {
     val items = mutableListOf<ChatRoomItem>()
-    var previous: ChatMessage? = null
+    var previous: Message? = null
     var labelledToday = false
-    for (message in messages) {
+    for (message in this) {
         val newDay = previous == null || !isSameDay(previous.sentAtMillis, message.sentAtMillis)
         if (newDay) {
             items += ChatRoomItem.DateSeparator(formatDateSeparator(message.sentAtMillis))
             labelledToday = false
         }
-        val mine = message.sender == MessageSender.FREELANCER
-        val first = newDay || previous?.sender != message.sender
+        val mine = message.senderUserId == myId
+        val first = newDay || previous?.senderUserId != message.senderUserId
         val label = if (!mine && first) {
             (if (labelledToday) contactName else "$contactName · $umkmName").also { labelledToday = true }
         } else null
@@ -87,29 +103,48 @@ private fun ChatConversation.toRoomItems(): List<ChatRoomItem> {
                 isFirstInGroup = first,
                 topGap = when { newDay -> 0; first -> 12; else -> 4 },
                 senderLabel = label,
-                attachmentName = message.attachment?.fileName,
-                attachmentIsImage = message.attachment?.isImage ?: true
+                file = message.attachments.firstOrNull()?.let { ChatFileUi.Remote(it) },
+                status = if (!mine) null else if (message.readAtMillis != null) DeliveryStatus.READ else DeliveryStatus.SENT
             )
         )
         previous = message
     }
+    // Lampiran yang masih dikirim/gagal tampil di akhir, seperti WhatsApp.
+    pending.forEachIndexed { index, item ->
+        val newDay = previous == null || !isSameDay(previous!!.sentAtMillis, item.createdAtMillis)
+        if (index == 0 && newDay) items += ChatRoomItem.DateSeparator(formatDateSeparator(item.createdAtMillis))
+        val first = index == 0 && (newDay || previous?.senderUserId != myId)
+        items += ChatRoomItem.Message(
+            ChatBubbleUi(
+                id = item.localId,
+                isMine = true,
+                text = item.caption,
+                time = formatBubbleTime(item.createdAtMillis),
+                isFirstInGroup = first,
+                topGap = if (first && !newDay) 12 else if (first) 0 else 4,
+                file = ChatFileUi.Local(item),
+                status = if (item.failedMessage != null) DeliveryStatus.FAILED else DeliveryStatus.SENDING
+            )
+        )
+    }
     return items
 }
 
-/**
- * Strip konteks sesuai status project (sumber: penawaran project ini). null = pakai konteks
- * bawaan percakapan (mis. ringkasan negosiasi yang sudah ada).
- */
-private fun contextFor(status: ProjectStatus, offer: SubmittedOffer, now: Long = System.currentTimeMillis()): ChatProjectContext? =
-    when (status) {
-        ProjectStatus.MENUNGGU_KESEPAKATAN ->
-            ChatProjectContext(escrowLabel = null, note = "Menunggu persetujuan UMKM atas penawaranmu")
-        ProjectStatus.NEGOSIASI -> null
+private fun contextFor(detail: WorkflowDetail?, now: Long = System.currentTimeMillis()): ChatProjectContext {
+    if (detail == null) return ChatProjectContext(escrowLabel = null, note = "Menunggu persetujuan UMKM atas penawaranmu")
+    val agreement = detail.agreement
+    return when (freelancerStatusOf(null, detail.project.status)) {
+        ProjectStatus.MENUNGGU_KESEPAKATAN, ProjectStatus.NEGOSIASI -> ChatProjectContext(
+            escrowLabel = null,
+            note = "Status: ",
+            noteEmphasis = detail.project.statusLabel
+        )
         ProjectStatus.PROJECT_BERJALAN -> {
-            val deadline = (offer.agreedAtMillis ?: now) + TimeUnit.DAYS.toMillis(offer.durationDays.toLong())
+            val deadline = agreement?.agreedDeadlineMillis ?: detail.project.deadlineMillis ?: now
             val daysLeft = ceil((deadline - now) / TimeUnit.DAYS.toMillis(1).toDouble()).toInt().coerceAtLeast(0)
             ChatProjectContext(
-                escrowLabel = "Saldo tertahan ${formatRupiah(offer.netAmount)}",
+                escrowLabel = detail.payment?.takeIf { it.fundStatus == FundStatusCode.HELD }
+                    ?.let { "Saldo tertahan ${rupiah(it.freelancerAmount)}" },
                 note = "Tenggat proyek: ",
                 noteEmphasis = "$daysLeft hari lagi",
                 noteSuffix = " (${formatShortDate(deadline)})"
@@ -118,87 +153,124 @@ private fun contextFor(status: ProjectStatus, offer: SubmittedOffer, now: Long =
         ProjectStatus.SELESAI -> ChatProjectContext(
             escrowLabel = null,
             note = "Proyek selesai pada ",
-            noteEmphasis = formatShortDate(offer.completedAtMillis ?: now)
+            noteEmphasis = formatShortDate(detail.project.completedAtMillis ?: now)
         )
         ProjectStatus.DIBATALKAN -> ChatProjectContext(
             escrowLabel = null,
             note = "Proyek dibatalkan · Alasan: ",
-            noteEmphasis = offer.cancellation?.reason?.label
+            noteEmphasis = detail.cancellation?.reasonLabel
         )
     }
+}
 
-/** Nama file dari URI pemilih sistem (Galeri / Dokumen); null bila tidak tersedia. */
+private fun resultStageEntry(detail: WorkflowDetail?): Pair<ResultReviewStage, UmkmSimulationEntry>? {
+    val status = detail?.project?.status ?: return null
+    return when (status) {
+        ProjectStatusCode.MENUNGGU_REVIEW -> ResultReviewStage.WAITING_REVIEW to UmkmSimulationEntry(
+            "Draf terbaru sudah terkirim. Menunggu UMKM menyetujui hasil atau meminta revisi.",
+            "Muat ulang status"
+        )
+        ProjectStatusCode.REVISI -> ResultReviewStage.REVISION_REQUESTED to UmkmSimulationEntry(
+            "UMKM meminta revisi untuk draf terakhir. Unggah draf baru setelah memperbaikinya.",
+            "Lihat permintaan revisi"
+        )
+        ProjectStatusCode.SELESAI -> ResultReviewStage.COMPLETED to UmkmSimulationEntry(
+            "Hasil disetujui UMKM. Proyek selesai dan dana sudah diteruskan ke dompetmu.",
+            "Lihat dompet"
+        )
+        else -> null
+    }
+}
+
 private fun Context.displayNameOf(uri: Uri): String? =
     contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
         if (cursor.moveToFirst()) cursor.getString(0) else null
     }
 
-/**
- * Container ruang chat satu percakapan: membaca percakapan dari [ChatStore], menandai
- * terbaca saat dibuka, menyimpan draf + status panel lampiran, mengirim pesan/lampiran
- * secara lokal, dan selalu menampilkan pesan terbaru.
- *
- * Aksi yang tersedia mengikuti status project ([ChatStore.statusOf], sama dengan tab
- * Project), sehingga sama dari pintu masuk mana pun (tab Chat, Detail Project, Status):
- * - Negosiasi → Ringkasan Kesepakatan + aksi Batalkan / Lanjut Project.
- * - Project Berjalan → "Unggah Draf Pekerjaan" di panel lampiran (hanya di status ini),
- *   membuka bottom sheet Unggah Draf (Figma 17:5174) di atas ruang ini.
- * - Status lain → ruang chat biasa (pesan, Galeri/Kamera/Dokumen).
- */
 @Composable
 fun ChatRoomContainer(
-    conversationId: Int,
+    conversationId: String,
     onBack: () -> Unit,
-    onProjectDetailClick: (projectId: Int) -> Unit,
-    /** "Lanjut Project" di tahap negosiasi → Rencana Pengerjaan (alur yang sudah ada). */
-    onContinueProject: (projectId: Int) -> Unit = {},
-    /** Pembatalan negosiasi sudah tersimpan; navigasi keluar seperti Negosiasi lama. */
-    onProjectCancelled: (projectId: Int) -> Unit = {},
-    /**
-     * Kartu simulasi sisi UMKM setelah pembayaran: buka langkah review hasil sesuai tahap
-     * (Review Hasil 17:1468, Permintaan Revisi 17:5737, atau Proyek Selesai 17:6338).
-     */
-    onOpenResultStage: (projectId: Int, stage: ResultReviewStage) -> Unit = { _, _ -> }
+    onProjectDetailClick: (projectId: String) -> Unit,
+    onContinueProject: (projectId: String) -> Unit = {},
+    onProjectCancelled: (projectId: String) -> Unit = {},
+    onOpenResultStage: (projectId: String, stage: ResultReviewStage) -> Unit = { _, _ -> },
+    viewModel: ChatRoomViewModel = viewModel(
+        factory = ChatRoomViewModel.factory(
+            conversationId,
+            AppContainer.chatRepository,
+            AppContainer.chatOverviewRepository,
+            AppContainer.workflowRepository,
+            AppContainer.submissionRepository
+        )
+    )
 ) {
-    // Dibaca langsung (snapshot state) agar pesan yang baru dikirim langsung tampil.
-    val conversation = ChatStore.get(conversationId)
-    if (conversation == null) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val pendingAttachments by viewModel.pendingAttachments.collectAsStateWithLifecycle()
+    VisibleConversationEffect(setOf(conversationId))
+    var failedAttachment by remember(conversationId) { mutableStateOf<OutgoingAttachment?>(null) }
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val deviceAccess = rememberDeviceAccess()
+    var draft by rememberSaveable(conversationId) { mutableStateOf("") }
+    var isAttachmentOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
+    var isUploadDraftOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
+    var isCancelSheetVisible by rememberSaveable(conversationId) { mutableStateOf(false) }
+    var selectedReason by rememberSaveable(conversationId) { mutableStateOf(CancellationReason.PRICE_MISMATCH) }
+    val toast = { text: String -> Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(PollIntervalMillis)
+            if (!viewModel.isRealtime.value) viewModel.refreshMessages()
+        }
+    }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.resultSubmitted) {
+        if (uiState.resultSubmitted) {
+            viewModel.onResultSubmittedHandled()
+            WorkDraftStore.markSent(conversationId)
+        }
+    }
+    val projectId = uiState.overview?.conversation?.projectId
+    LaunchedEffect(uiState.cancelled) {
+        if (uiState.cancelled) {
+            viewModel.onCancelledHandled()
+            projectId?.let(onProjectCancelled)
+        }
+    }
+    BackHandler(enabled = isAttachmentOpen) { isAttachmentOpen = false }
+
+    val overview = uiState.overview
+    if (overview == null) {
         Column(modifier = Modifier.fillMaxSize()) {
             DetailTopBar(title = "Chat", onBack = onBack)
-            FeaturePlaceholder(
-                title = "Percakapan tidak ditemukan",
-                description = "Percakapan dengan id $conversationId tidak tersedia."
-            )
+            if (uiState.isLoading) LoadingContent() else ErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load)
         }
         return
     }
 
-    val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-    var draft by rememberSaveable(conversationId) { mutableStateOf("") }
-    var isAttachmentOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
-    var isUploadDraftOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
-    LaunchedEffect(conversationId) { ChatStore.markRead(conversationId) }
-
-    // Back menutup panel lampiran dulu, baru keluar dari ruang chat.
-    BackHandler(enabled = isAttachmentOpen) { isAttachmentOpen = false }
-
-    // Satu sumber status untuk seluruh ruang ini (dibaca langsung: ikut berubah saat
-    // project disetujui / disepakati / dibatalkan).
-    val status = ChatStore.statusOf(conversation)
-    val projectOffer = conversation.projectId?.let { SubmittedOfferStore.get(it) }
-    val state = remember(conversation, projectOffer, status) {
-        ChatRoomUiState(
-            contactName = conversation.contactName,
-            contactInitials = conversation.contactInitials,
-            umkmName = conversation.umkmName,
-            projectTitle = conversation.projectTitle,
-            context = projectOffer?.let { contextFor(status, it) } ?: conversation.context,
-            items = conversation.toRoomItems()
-        )
+    val detail = uiState.workflow
+    val contactName = overview.counterpartName
+    val umkmName = overview.counterpartSubtitle ?: contactName
+    val items = remember(uiState.messages, pendingAttachments) {
+        uiState.messages.toRoomItems(AppContainer.currentUserId, contactName, umkmName, pendingAttachments)
     }
+    val state = ChatRoomUiState(
+        contactName = contactName,
+        contactInitials = initialsOf(contactName),
+        umkmName = umkmName,
+        contactPhotoUrl = overview.counterpartPhotoUrl,
+        projectTitle = overview.projectTitle ?: "Percakapan umum",
+        context = contextFor(detail),
+        items = items
+    )
 
-    // Buka di pesan terbaru; gulir ke bawah lagi setiap ada pesan baru terkirim.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = state.items.lastIndex.coerceAtLeast(0))
     var shownCount by remember(conversationId) { mutableIntStateOf(state.items.size) }
     LaunchedEffect(state.items.size) {
@@ -206,56 +278,25 @@ fun ChatRoomContainer(
         shownCount = state.items.size
     }
 
-    val toast = { text: String -> Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }
-    fun sendAttachment(attachment: ChatAttachment) {
+    val attachments = rememberChatAttachmentController(recipientName = contactName) { file, caption, asImage ->
+        viewModel.sendAttachment(file, caption, asImage)
+    }
+    fun launchPicker(open: () -> Unit) {
         isAttachmentOpen = false
-        ChatStore.sendAttachment(conversationId, attachment)
+        open()
     }
 
-    // Pemilih bawaan sistem (tanpa library tambahan). Hasilnya hanya dikirim sebagai pesan
-    // lampiran lokal; belum ada unggah ke backend.
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { sendAttachment(ChatAttachment(context.displayNameOf(it) ?: "Foto dari Galeri", isImage = true)) }
-    }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) {
-            val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.ROOT).format(Date())
-            sendAttachment(ChatAttachment("Foto_Kamera_$stamp.jpg", isImage = true))
-        }
-    }
-    val documentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            val isImage = context.contentResolver.getType(it)?.startsWith("image/") == true
-            sendAttachment(ChatAttachment(context.displayNameOf(it) ?: "Dokumen", isImage = isImage))
-        }
-    }
-    // Seperti WhatsApp: memilih aksi langsung menutup panel, termasuk bila pemilih dibatalkan.
-    fun launchSafely(launch: () -> Unit) {
-        isAttachmentOpen = false
-        try { launch() } catch (_: ActivityNotFoundException) { toast("Aplikasi untuk aksi ini tidak tersedia") }
-    }
-
-    // Detail hanya tersedia bila project-nya ada di data project freelancer.
-    val projectId = conversation.projectId?.takeIf { FreelancerProjectDummyData.getById(it) != null }
-
-    // UI negosiasi hanya saat status Negosiasi (bukan setelah kesepakatan final / selesai /
-    // batal). Isinya = Ringkasan Kesepakatan Negosiasi 26:2.
-    val offer = projectId?.let { SubmittedOfferStore.get(it) }
-    val negotiation = offer?.takeIf { status == ProjectStatus.NEGOSIASI }?.let {
+    val agreement = detail?.agreement
+    val negotiation = detail?.takeIf { it.project.status == ProjectStatusCode.MENUNGGU_KESEPAKATAN }?.let {
         ChatNegotiationUi(
-            projectValue = formatRupiah(it.offerAmount),
-            duration = "${it.durationDays} hari kalender",
-            output = NegotiationDummyData.agreedOutputFor(it.projectId),
-            paymentMethod = "QRIS (simulasi)"
+            projectValue = rupiah(agreement?.agreedPrice ?: it.project.budget),
+            duration = "${agreement?.durationDays ?: 0} hari kalender",
+            output = agreement?.scopeOfWork ?: it.project.description,
+            paymentMethod = agreement?.paymentMethodLabel ?: "QRIS (simulasi)"
         )
     }
-    var isCancelSheetVisible by rememberSaveable(conversationId) { mutableStateOf(false) }
-    var selectedReason by rememberSaveable(conversationId) { mutableStateOf(CancellationReason.PRICE_MISMATCH) }
-
-    // Satu aturan untuk aksi & modal Unggah Draf: hanya status Project Berjalan.
-    val canUploadDraft = status == ProjectStatus.PROJECT_BERJALAN
-    // Pilih banyak file dari perangkat (pemilih sistem). Hanya metadata lokal yang disimpan;
-    // tidak ada unggahan ke server.
+    val canUploadDraft = detail?.can(WorkflowActionCode.SUBMIT_RESULT) == true
+    val nextVersion = (uiState.submissions?.latest?.versionNumber ?: 0) + 1
     val draftFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) {
             val picked = context.readDraftFiles(uris)
@@ -265,31 +306,38 @@ fun ChatRoomContainer(
             }
         }
     }
+    val stage = resultStageEntry(detail)
+    // Proyek berjalan: jalan pintas ke Rencana Pengerjaan untuk mulai kerja & menandai milestone.
+    val workEntry = when (detail?.project?.status) {
+        ProjectStatusCode.SIAP_DIKERJAKAN -> UmkmSimulationEntry(
+            "Dana sudah ditahan TEMUKARYA. Mulai pengerjaan di Rencana Pengerjaan.",
+            "Buka Rencana Pengerjaan"
+        )
+        ProjectStatusCode.SEDANG_DIKERJAKAN -> UmkmSimulationEntry(
+            "Proyek berjalan. Tandai milestone selesai di Rencana Pengerjaan; kirim hasil lewat + → Unggah Draf Pekerjaan.",
+            "Buka Rencana Pengerjaan"
+        )
+        else -> null
+    }
 
     ChatRoomScreen(
         state = state,
         draft = draft,
         onDraftChange = { draft = it },
         onSendClick = {
-            val text = draft.trim()
-            if (text.isNotEmpty()) {
-                ChatStore.send(conversationId, text)
+            if (draft.isNotBlank() && !uiState.isSending) {
+                viewModel.send(draft)
                 draft = ""
             }
         },
         isAttachmentOpen = isAttachmentOpen,
         onAttachmentToggle = {
-            // Seperti WhatsApp: panel dan keyboard tidak tampil bersamaan.
             if (!isAttachmentOpen) focusManager.clearFocus()
             isAttachmentOpen = !isAttachmentOpen
         },
-        onGalleryClick = {
-            launchSafely { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
-        },
-        onCameraClick = { launchSafely { cameraLauncher.launch(null) } },
-        onDocumentClick = { launchSafely { documentLauncher.launch(arrayOf("*/*")) } },
-        // Unggah Draf Pekerjaan hanya untuk project yang sedang dikerjakan; status lain
-        // tidak menampilkan aksinya sama sekali.
+        onGalleryClick = { launchPicker(attachments.openGallery) },
+        onCameraClick = { launchPicker(attachments.openCamera) },
+        onDocumentClick = { launchPicker(attachments.openDocument) },
         onUploadDraftClick = if (canUploadDraft) {
             {
                 isAttachmentOpen = false
@@ -301,63 +349,102 @@ fun ChatRoomContainer(
         onMoreClick = { toast("Menu lainnya segera hadir") },
         onProjectDetailClick = projectId?.let { id -> { onProjectDetailClick(id) } },
         listState = listState,
+        onFileClick = { bubble ->
+            val file = bubble.file
+            when {
+                file is ChatFileUi.Local && file.outgoing.failedMessage != null -> failedAttachment = file.outgoing
+                file != null -> attachments.open(file)
+            }
+        },
+        isOpening = { bubble -> bubble.file?.let(attachments::isOpening) == true },
         negotiation = negotiation,
         onCancelProjectClick = {
-            // Pembatalan hanya sebelum kesepakatan final (tab Project "Project Berjalan").
-            if (offer?.isAgreed == true) toast("Proyek sudah disepakati dan resmi dikerjakan, tidak dapat dibatalkan.") else isCancelSheetVisible = true
+            if (detail?.can(WorkflowActionCode.CANCEL_PROJECT) == true) isCancelSheetVisible = true
+            else toast("Proyek sudah dibayar dan resmi dikerjakan, tidak dapat dibatalkan.")
         },
         onContinueProjectClick = { projectId?.let(onContinueProject) },
-        topBanner = resultStageEntry(projectId)?.let { (stage, entry) ->
-            { UmkmSimulationCard(entry, onClick = { onOpenResultStage(projectId!!, stage) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
+        topBanner = stage?.let { (resultStage, entry) ->
+            {
+                UmkmSimulationCard(
+                    entry,
+                    onClick = {
+                        if (resultStage == ResultReviewStage.WAITING_REVIEW) viewModel.load()
+                        else projectId?.let { onOpenResultStage(it, resultStage) }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+        } ?: workEntry?.let { entry ->
+            {
+                UmkmSimulationCard(
+                    entry,
+                    onClick = { projectId?.let(onContinueProject) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     )
 
-    // Modal Unggah Draf (Figma 17:5174) di atas ruang chat; state ruang chat tetap utuh.
+    failedAttachment?.let { item ->
+        FailedAttachmentDialog(
+            item = item,
+            onRetry = {
+                failedAttachment = null
+                viewModel.retryAttachment(item.localId)
+            },
+            onDiscard = {
+                failedAttachment = null
+                viewModel.discardAttachment(item.localId)
+            },
+            onDismiss = { failedAttachment = null }
+        )
+    }
+
     if (isUploadDraftOpen && canUploadDraft) {
-        val draft = WorkDraftStore.current(conversationId)
-        val draftUi = draft.toUiState(conversation.projectTitle, conversation.contactName)
+        val workDraft = WorkDraftStore.current(conversationId).copy(version = nextVersion)
+        val draftUi = workDraft.toUiState(state.projectTitle, contactName)
         UploadDraftSheet(
             state = draftUi,
             onPickFiles = {
-                try {
-                    draftFileLauncher.launch(arrayOf("*/*"))
-                } catch (_: ActivityNotFoundException) {
-                    toast("Aplikasi untuk memilih file tidak tersedia")
+                deviceAccess.request(DeviceAccess.Document) {
+                    try {
+                        draftFileLauncher.launch(arrayOf("*/*"))
+                    } catch (_: ActivityNotFoundException) {
+                        toast("Aplikasi untuk memilih file tidak tersedia")
+                    }
                 }
             },
             onRemoveFile = { uri -> WorkDraftStore.removeFile(conversationId, uri) },
             onNoteChange = { WorkDraftStore.updateNote(conversationId, it) },
             onSaveAndClose = {
                 isUploadDraftOpen = false
-                if (draft.files.isNotEmpty() || draft.note.isNotBlank()) toast("Draf disimpan")
+                if (workDraft.files.isNotEmpty() || workDraft.note.isNotBlank()) toast("Draf disimpan di perangkat")
             },
             onSend = {
-                isUploadDraftOpen = false
-                // Belum ada backend: file "dikirim" sebagai pesan lampiran lokal di ruang ini
-                // (sama seperti lampiran Galeri/Dokumen), tanpa unggahan ke server.
-                val note = draft.note.trim()
-                draft.files.forEachIndexed { index, file ->
-                    val caption = if (index == 0) {
-                        "${draftUi.versionLabel} untuk ditinjau." + if (note.isNotEmpty()) "\n$note" else ""
-                    } else ""
-                    ChatStore.sendAttachment(conversationId, ChatAttachment(file.name, isImage = file.extension == "png"), caption)
+                if (workDraft.files.isEmpty() && workDraft.note.isBlank()) {
+                    toast("Pilih file hasil atau tulis catatan terlebih dahulu")
+                } else {
+                    isUploadDraftOpen = false
+                    viewModel.submitResult(
+                        files = workDraft.files.map { UploadFile(it.uri, it.name, null) },
+                        note = workDraft.note
+                    )
                 }
-                WorkDraftStore.markSent(conversationId)
-                toast("${draftUi.versionLabel} dikirim ke klien untuk ditinjau.")
             },
             onDismiss = { isUploadDraftOpen = false }
         )
     }
 
-    // Modal "Batalkan Project" (Negosiasi 26:87) dan aturan pembatalannya dipakai ulang apa adanya.
     if (isCancelSheetVisible && projectId != null) {
         CancelProjectBottomSheet(
             selectedReason = selectedReason,
             onReasonSelected = { selectedReason = it },
             onConfirm = {
-                SubmittedOfferStore.markCancelled(projectId, selectedReason)
                 isCancelSheetVisible = false
-                onProjectCancelled(projectId)
+                viewModel.cancelProject(
+                    selectedReason.toCode(),
+                    if (selectedReason == CancellationReason.OTHER) selectedReason.label else null
+                )
             },
             onDismiss = {
                 isCancelSheetVisible = false
@@ -365,38 +452,4 @@ fun ChatRoomContainer(
             }
         )
     }
-}
-
-/** 1500000 → "Rp 1.500.000". */
-private fun formatRupiah(amount: Long): String =
-    "Rp " + amount.toString().reversed().chunked(3).joinToString(".").reversed()
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ChatRoomContainerPreview() {
-    ChatRoomContainer(conversationId = 1, onBack = {}, onProjectDetailClick = {})
-}
-
-/**
- * Kartu demo sisi UMKM untuk tahap review hasil project ini (aplikasi belum punya sisi UMKM).
- * null = tidak ada langkah UMKM (belum dibayar, belum ada draf terkirim, dsb.).
- */
-private fun resultStageEntry(projectId: Int?): Pair<ResultReviewStage, UmkmSimulationEntry>? {
-    val stage = projectId?.let(ResultReviewStore::stageOf) ?: return null
-    val entry = when (stage) {
-        ResultReviewStage.WAITING_REVIEW -> UmkmSimulationEntry(
-            "Draf terbaru sudah terkirim. Buka sisi UMKM untuk menyetujui hasil atau meminta revisi.",
-            "Review hasil sebagai UMKM"
-        )
-        ResultReviewStage.REVISION_REQUESTED -> UmkmSimulationEntry(
-            "UMKM meminta revisi untuk draf terakhir. Unggah draf baru setelah memperbaikinya.",
-            "Lihat permintaan revisi"
-        )
-        ResultReviewStage.COMPLETED -> UmkmSimulationEntry(
-            "Hasil disetujui UMKM. Proyek selesai dan dana sudah diteruskan ke dompetmu.",
-            "Lihat ringkasan proyek selesai"
-        )
-        ResultReviewStage.NO_SUBMISSION -> return null
-    }
-    return stage to entry
 }

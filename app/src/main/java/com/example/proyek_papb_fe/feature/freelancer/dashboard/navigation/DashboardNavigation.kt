@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.dashboard.navigation
 
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.proyek_papb_fe.feature.freelancer.dashboard.container.DashboardContainer
@@ -8,15 +9,17 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object DashboardRoute
 
+fun NavController.navigateToFreelancerDashboard() {
+    navigate(DashboardRoute) {
+        popUpTo(graph.id) { inclusive = true }
+    }
+}
+
 fun NavGraphBuilder.dashboardScreen(
     onWalletClick: () -> Unit,
-    /** Kartu "Proyek Aktif Saya": buka halaman proyek milik projectId ini. */
-    onActiveProjectClick: (projectId: Int) -> Unit,
-    /** "Lihat Semua" di "Proyek Aktif Saya". */
+    onActiveProjectClick: (projectId: String) -> Unit,
     onSeeAllActiveProjectsClick: () -> Unit,
-    /** Kartu "Rekomendasi Proyek": buka Detail Proyek projectId ini. */
-    onRecommendedProjectClick: (projectId: Int) -> Unit,
-    /** "Lihat Semua" di "Rekomendasi Proyek". */
+    onRecommendedProjectClick: (projectId: String) -> Unit,
     onSeeAllRecommendationsClick: () -> Unit,
     onNotificationClick: () -> Unit
 ) {

@@ -29,7 +29,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 private val ButtonHeight = 51.dp
 private const val DisabledAlpha = 0.38f
 
-/** Figma: "Button Tambah Milestone" (88:79) — garis putus-putus 1.2dp, radius 12. */
 @Composable
 internal fun AddMilestoneButton(
     enabled: Boolean,
@@ -77,7 +76,6 @@ internal fun AddMilestoneButton(
     }
 }
 
-/** Figma: Sticky Bottom Bar (88:114) — "Simpan Draf" (outline) + "Ajukan ke UMKM" (primary). */
 @Composable
 internal fun WorkPlanActionBar(
     isSubmitted: Boolean,

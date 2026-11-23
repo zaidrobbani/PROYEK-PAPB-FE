@@ -44,29 +44,21 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Chip nominal cepat: "Rp 500rb", "Rp 1 jt", "Semua saldo". */
 data class QuickAmountUi(
     val label: String,
     val amount: Long,
     val isSelected: Boolean
 )
 
-/** Satu pilihan Rekening tujuan (diambil dari rekening Dompet & Rekening). */
 data class PayoutAccountOptionUi(
-    /** Nomor rekening, sebagai kunci pilihan. */
     val key: String,
-    /** "BCA akhiran 4821". */
     val title: String,
-    /** "a.n. Andi Ramadhan". */
     val holder: String,
     val isSelected: Boolean
 )
 
-/** Data tampilan Pengajuan Pencairan Dana (sudah diformat). */
 data class WithdrawUiState(
-    /** "Rp 2.850.000". */
     val availableBalance: String,
-    /** Nominal mentah tanpa pemisah ("2850000"); kosong = belum diisi. */
     val amountDigits: String,
     val quickAmounts: List<QuickAmountUi>,
     val amountError: String?,
@@ -80,11 +72,6 @@ data class WithdrawUiState(
 
 private val MainPadding = 17.dp
 
-/**
- * Figma: Ajukan Pencairan Dana (27:161), dibuka dari "Cairkan Dana" di Dompet & Rekening.
- * App bar Detail di atas, isi di-scroll (pt 84 − app bar 64 = 20, px 17, gap 16), dan
- * Sticky Bottom Bar "Ajukan Pencairan" menumpang di bawah (ikut naik bersama keyboard).
- */
 @Composable
 fun WithdrawScreen(
     state: WithdrawUiState,
@@ -107,7 +94,6 @@ fun WithdrawScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    // Figma: Main pb 120 (ruang untuk Sticky Bottom Bar ±80).
                     .padding(start = MainPadding, end = MainPadding, top = 20.dp, bottom = 120.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -128,7 +114,6 @@ fun WithdrawScreen(
     }
 }
 
-/** Figma 27:174: kartu "Saldo tersedia". */
 @Composable
 private fun AvailableBalanceCard(balance: String) {
     Column(
@@ -144,7 +129,6 @@ private fun AvailableBalanceCard(balance: String) {
     }
 }
 
-/** Figma 27:177: "Nominal pencairan" + input Rp + chip nominal cepat. */
 @Composable
 private fun AmountField(
     digits: String,
@@ -223,7 +207,6 @@ private fun QuickAmountChip(chip: QuickAmountUi, onClick: () -> Unit) {
     }
 }
 
-/** Figma 27:192: kartu rekening dengan radio; ditampilkan untuk setiap rekening Dompet. */
 @Composable
 private fun AccountOptions(accounts: List<PayoutAccountOptionUi>, error: String?, onSelect: (String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -279,7 +262,6 @@ private fun AccountOption(account: PayoutAccountOptionUi, onClick: () -> Unit) {
     }
 }
 
-/** Figma 27:199: kartu "Rincian". */
 @Composable
 private fun DetailsCard(state: WithdrawUiState) {
     Column(
@@ -298,7 +280,6 @@ private fun DetailsCard(state: WithdrawUiState) {
     }
 }
 
-/** Figma 27:217: Sticky Bottom Bar dengan tombol "Ajukan Pencairan". */
 @Composable
 private fun SubmitBar(onSubmitClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -332,12 +313,10 @@ private fun SubmitBar(onSubmitClick: () -> Unit, modifier: Modifier = Modifier) 
     }
 }
 
-/** Tampilkan "2850000" sebagai "2.850.000" tanpa mengubah nilai mentah di state. */
 private object ThousandsSeparatorTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val raw = text.text
         val out = StringBuilder()
-        // originalToTransformed[i] = posisi kursor hasil untuk kursor asli i.
         val originalToTransformed = IntArray(raw.length + 1)
         raw.forEachIndexed { i, c ->
             if (i > 0 && (raw.length - i) % 3 == 0) out.append('.')

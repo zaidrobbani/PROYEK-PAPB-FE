@@ -26,22 +26,16 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.data.model.ChatProjectContext
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Data tampilan ruang chat (sudah diformat). */
 data class ChatRoomUiState(
     val contactName: String,
     val contactInitials: String,
     val umkmName: String,
+    val contactPhotoUrl: String? = null,
     val projectTitle: String,
     val context: ChatProjectContext,
     val items: List<ChatRoomItem>
 )
 
-/**
- * Figma: Ruang Chat (Freelancer) (17:4612).
- * App bar + strip konteks project tetap di atas; daftar pesan di-scroll di tengah;
- * panel lampiran (bila terbuka) + composer menempel di bawah dan ikut naik bersama
- * keyboard lewat [imePadding], sehingga daftar pesan tetap terlihat di atasnya.
- */
 @Composable
 fun ChatRoomScreen(
     state: ChatRoomUiState,
@@ -53,7 +47,6 @@ fun ChatRoomScreen(
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
     onDocumentClick: () -> Unit,
-    /** null = "Unggah Draf Pekerjaan" tidak tersedia (status project selain Project Berjalan). */
     onUploadDraftClick: (() -> Unit)?,
     onInputFocused: () -> Unit,
     onBack: () -> Unit,
@@ -61,15 +54,13 @@ fun ChatRoomScreen(
     onProjectDetailClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
-    /** Terisi saat project ruang ini sedang negosiasi; null = ruang chat biasa. */
     negotiation: ChatNegotiationUi? = null,
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
-    /** Kartu tambahan di bawah konteks project (mis. simulasi sisi UMKM); null = tidak ada. */
-    topBanner: (@Composable () -> Unit)? = null
+    topBanner: (@Composable () -> Unit)? = null,
+    onFileClick: (ChatBubbleUi) -> Unit = {},
+    isOpening: (ChatBubbleUi) -> Boolean = { false }
 ) {
-    // Saat mengetik (keyboard terbuka) atau memilih lampiran, kartu & aksi negosiasi
-    // disembunyikan sementara agar daftar pesan dan composer tetap lega.
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val showNegotiationExtras = negotiation != null && !isImeVisible && !isAttachmentOpen
     Column(
@@ -82,6 +73,7 @@ fun ChatRoomScreen(
             contactName = state.contactName,
             contactInitials = state.contactInitials,
             umkmName = state.umkmName,
+            contactPhotoUrl = state.contactPhotoUrl,
             onBack = onBack,
             onMoreClick = onMoreClick
         )
@@ -115,12 +107,14 @@ fun ChatRoomScreen(
             items(items = state.items, key = { it.key }) { item ->
                 when (item) {
                     is ChatRoomItem.DateSeparator -> ChatDateSeparator(label = item.label)
-                    is ChatRoomItem.Message -> ChatMessageBubble(bubble = item.bubble)
+                    is ChatRoomItem.Message -> ChatMessageBubble(
+                        bubble = item.bubble,
+                        isOpening = isOpening(item.bubble),
+                        onFileClick = onFileClick
+                    )
                 }
             }
         }
-        // Aksi negosiasi (Negosiasi 26:86, dipakai ulang) di atas composer: mengubah status
-        // project, terpisah jelas dari composer yang mengirim pesan.
         AnimatedVisibility(
             visible = showNegotiationExtras,
             enter = expandVertically() + fadeIn(),

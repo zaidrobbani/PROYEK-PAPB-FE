@@ -25,7 +25,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 
-/** Figma: App Bar (162:175), varian Root/Brand. */
 @Composable
 internal fun DashboardTopBar(
     hasUnreadNotification: Boolean,

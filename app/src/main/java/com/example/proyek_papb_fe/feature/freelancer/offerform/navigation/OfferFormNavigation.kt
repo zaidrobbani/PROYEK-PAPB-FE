@@ -7,11 +7,10 @@ import androidx.navigation.toRoute
 import com.example.proyek_papb_fe.feature.freelancer.offerform.container.OfferFormContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Form Pengajuan Freelancer (17:4405) — "Ajukan Penawaran". */
 @Serializable
-data class OfferFormRoute(val projectId: Int)
+data class OfferFormRoute(val projectId: String)
 
-fun NavController.navigateToOfferForm(projectId: Int) {
+fun NavController.navigateToOfferForm(projectId: String) {
     navigate(OfferFormRoute(projectId)) {
         launchSingleTop = true
     }
@@ -19,8 +18,7 @@ fun NavController.navigateToOfferForm(projectId: Int) {
 
 fun NavGraphBuilder.offerFormScreen(
     onBack: () -> Unit,
-    /** Penawaran lolos validasi dan terkirim; tujuan berikutnya: Status Pengajuan. */
-    onOfferSubmitted: (projectId: Int) -> Unit
+    onOfferSubmitted: (projectId: String) -> Unit
 ) {
     composable<OfferFormRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<OfferFormRoute>()

@@ -16,7 +16,7 @@ fun NavController.navigateToFreelancerApplications(projectId: String) {
 
 fun NavGraphBuilder.freelancerApplicationsScreen(
     onBack: () -> Unit,
-    onViewProfile: (applicationId: String) -> Unit,
+    onViewProfile: (freelancerId: String, applicationId: String) -> Unit,
     onFreelancerSelected: (applicationId: String) -> Unit
 ) {
     composable<FreelancerApplicationsRoute> { entry ->

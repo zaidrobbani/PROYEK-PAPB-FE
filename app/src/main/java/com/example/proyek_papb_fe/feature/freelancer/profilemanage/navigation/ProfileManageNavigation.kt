@@ -11,23 +11,18 @@ import com.example.proyek_papb_fe.feature.freelancer.profilemanage.container.Por
 import com.example.proyek_papb_fe.feature.freelancer.profilemanage.container.ProfessionalProfileContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Kelola Profil Profesional (534:961). Halaman detail dari Profil (tanpa bottom bar). */
 @Serializable
 data object ProfessionalProfileRoute
 
-/** Figma: Kelola Portofolio (535:1081). */
 @Serializable
 data object PortfolioRoute
 
-/** Figma: Tambah Portofolio (535:1163) bila [portfolioId] null, Edit Portofolio (535:1222) bila diisi. */
 @Serializable
 data class PortfolioFormRoute(val portfolioId: String? = null)
 
-/** Figma: Kelola Pengalaman (538:1235). */
 @Serializable
 data object ExperienceRoute
 
-/** Figma: Tambah Pengalaman (538:1305) bila [experienceId] null, Edit Pengalaman (538:1363) bila diisi. */
 @Serializable
 data class ExperienceFormRoute(val experienceId: String? = null)
 
@@ -49,7 +44,6 @@ fun NavGraphBuilder.portfolioScreens(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (String) -> Unit,
-    /** Setelah simpan/hapus di form: kembali ke Kelola Portofolio. */
     onFormDone: () -> Unit
 ) {
     composable<PortfolioRoute> { PortfolioListContainer(onBack = onBack, onAddClick = onAddClick, onEditClick = onEditClick) }
@@ -62,7 +56,6 @@ fun NavGraphBuilder.experienceScreens(
     onBack: () -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (String) -> Unit,
-    /** Setelah simpan/hapus di form: kembali ke Kelola Pengalaman. */
     onFormDone: () -> Unit
 ) {
     composable<ExperienceRoute> { ExperienceListContainer(onBack = onBack, onAddClick = onAddClick, onEditClick = onEditClick) }

@@ -8,25 +8,24 @@ import com.example.proyek_papb_fe.feature.freelancer.notification.container.Noti
 import com.example.proyek_papb_fe.feature.freelancer.revision.container.RevisionRequestContainer
 import kotlinx.serialization.Serializable
 
-/** Figma: Notifikasi (539:1407). Halaman detail dari Profil dan lonceng Beranda (tanpa bottom bar). */
 @Serializable
 data object NotificationRoute
 
-/** Figma: Notifikasi Permintaan Revisi (Freelancer) (17:5737), untuk project [projectId]. */
 @Serializable
-data class RevisionRequestRoute(val projectId: Int)
+data class RevisionRequestRoute(val projectId: String)
 
 fun NavController.navigateToNotifications() = navigate(NotificationRoute) { launchSingleTop = true }
 
-fun NavController.navigateToRevisionRequest(projectId: Int) = navigate(RevisionRequestRoute(projectId)) { launchSingleTop = true }
+fun NavController.navigateToRevisionRequest(projectId: String) = navigate(RevisionRequestRoute(projectId)) { launchSingleTop = true }
 
 fun NavGraphBuilder.notificationScreen(
     onBack: () -> Unit,
-    onRevisionRequestClick: (projectId: Int) -> Unit,
-    onMessageClick: (projectId: Int) -> Unit,
+    onRevisionRequestClick: (projectId: String) -> Unit,
+    onMessageClick: (conversationId: String) -> Unit,
     onWalletClick: () -> Unit,
     onProfessionalProfileClick: () -> Unit,
-    onFindProjectsClick: () -> Unit
+    onFindProjectsClick: () -> Unit,
+    onProjectClick: (projectId: String) -> Unit
 ) {
     composable<NotificationRoute> {
         NotificationContainer(
@@ -35,14 +34,15 @@ fun NavGraphBuilder.notificationScreen(
             onMessageClick = onMessageClick,
             onWalletClick = onWalletClick,
             onProfessionalProfileClick = onProfessionalProfileClick,
-            onFindProjectsClick = onFindProjectsClick
+            onFindProjectsClick = onFindProjectsClick,
+            onProjectClick = onProjectClick
         )
     }
 }
 
 fun NavGraphBuilder.revisionRequestScreen(
     onBack: () -> Unit,
-    onOpenProjectChat: (projectId: Int) -> Unit
+    onOpenProjectChat: (projectId: String) -> Unit
 ) {
     composable<RevisionRequestRoute> { entry ->
         RevisionRequestContainer(

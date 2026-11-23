@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Build debug boleh http ke host mana pun (mis. IP LAN laptop saat tes di HP via Wi-Fi) -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

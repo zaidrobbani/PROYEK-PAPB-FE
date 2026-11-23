@@ -44,7 +44,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.example.proyek_papb_fe.core.ui.components.LocalImage
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.components.chat.ChatDocumentAttachment
+import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
+import com.example.proyek_papb_fe.core.ui.components.chat.ChatImageAttachment
+import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryIcon
+import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
 import com.example.proyek_papb_fe.core.ui.theme.AppBarBorder
 import com.example.proyek_papb_fe.core.ui.theme.AppBarIcon
 import com.example.proyek_papb_fe.core.ui.theme.NavInactive
@@ -54,10 +68,8 @@ import com.example.proyek_papb_fe.core.ui.theme.SandContainer
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ChatMessage
 
-/** Warna ikon pratinjau gambar Figma (#B8A68A); belum ada di tema, disimpan lokal. */
 private val AttachmentIcon = Color(0xFFB8A68A)
 
-/** Lebar teks bubble di Figma 264 + padding 14 kiri-kanan. */
 private val BubbleMaxWidth = 264.dp + 28.dp
 
 @Composable
@@ -98,10 +110,10 @@ private fun IconButtonBox(
     }
 }
 
-/** App Bar varian Chat: kembali, avatar inisial, nama + peran, dan menu. */
 @Composable
 fun ChatRoomTopBar(
     initials: String,
+    photoUrl: String?,
     name: String,
     role: String,
     onBack: () -> Unit,
@@ -119,13 +131,24 @@ fun ChatRoomTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButtonBox(R.drawable.ic_symbol_arrow_back, "Kembali", 48.dp, 24.dp, AppBarIcon, Color.Transparent, onBack)
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .background(SandContainer, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(initials, color = colors.primary, style = text(FontWeight.Bold, 13.sp, 18.sp))
+        val photo = rememberServerImageUri(photoUrl)
+        if (photo != null) {
+            LocalImage(
+                uri = photo,
+                fallbackRes = null,
+                contentDescription = "Foto $name",
+                modifier = Modifier.size(38.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(SandContainer, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(initials, color = colors.primary, style = text(FontWeight.Bold, 13.sp, 18.sp))
+            }
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(name, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, style = text(FontWeight.SemiBold, 15.sp, 20.sp))
@@ -135,10 +158,6 @@ fun ChatRoomTopBar(
     }
 }
 
-/**
- * Strip konteks project. [heldFunds] dan [deadline] hanya tampil bila datanya ada.
- * [deadline] = (sisa hari, tanggal) dari deadline project.
- */
 @Composable
 fun ChatProjectContext(
     projectTitle: String,
@@ -210,11 +229,6 @@ fun ChatDateSeparator(label: String) {
     }
 }
 
-/**
- * Satu pesan. Keluar (UMKM): bubble cokelat di kanan, sudut kanan atas 6. Masuk: bubble putih
- * bergaris di kiri, sudut kiri atas 6, dengan label pengirim bila [showSender]. Pesan bergambar
- * memakai sudut 18 penuh. Centang ganda hanya untuk pesan dummy yang ditandai sudah dibaca.
- */
 @Composable
 fun ChatBubble(
     message: ChatMessage,
@@ -222,7 +236,12 @@ fun ChatBubble(
     senderLabel: String,
     showSender: Boolean,
     topPadding: Dp,
-    onOpenDraft: (() -> Unit)? = null
+    onOpenDraft: (() -> Unit)? = null,
+    file: ChatFileUi? = message.file?.let { ChatFileUi.Remote(it) },
+    status: DeliveryStatus? = if (!message.fromUmkm) null
+    else if (message.readByFreelancer) DeliveryStatus.READ else DeliveryStatus.SENT,
+    isOpening: Boolean = false,
+    onFileClick: () -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
     val outgoing = message.fromUmkm
@@ -245,13 +264,41 @@ fun ChatBubble(
             .clip(shape)
             .background(if (outgoing) colors.primary else colors.surfaceContainerLowest)
             .then(if (outgoing) Modifier else Modifier.border(1.dp, AppBarBorder, shape))
-            // Draf hasil kerja bisa diketuk untuk mengajukan catatan & revisi.
             .then(
                 if (onOpenDraft != null) {
                     Modifier.clickable(role = Role.Button, onClickLabel = "Ajukan revisi draf", onClick = onOpenDraft)
                 } else Modifier
             )
-        if (message.attachment != null) {
+        if (file != null) {
+            Column(
+                modifier = bubble.padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (file.isImage) {
+                    ChatImageAttachment(file = file, status = status ?: DeliveryStatus.SENT, width = 264.dp, onClick = onFileClick)
+                } else {
+                    ChatDocumentAttachment(
+                        file = file,
+                        mine = outgoing,
+                        status = status ?: DeliveryStatus.SENT,
+                        isOpening = isOpening,
+                        onClick = onFileClick,
+                        modifier = Modifier.width(264.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier.width(264.dp).padding(horizontal = 10.dp),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (message.text.isNotBlank()) {
+                        Text(message.text, modifier = Modifier.fillMaxWidth(), color = textColor, style = text(FontWeight.Normal, 14.5.sp, 21.sp))
+                    }
+                    BubbleMeta(time, status)
+                }
+            }
+        } else if (message.attachment != null) {
             Column(modifier = bubble.padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier
@@ -279,7 +326,7 @@ fun ChatBubble(
                         Text(message.attachment.title, color = textColor, style = text(FontWeight.SemiBold, 12.5.sp, 18.sp))
                     }
                     Text(message.text, modifier = Modifier.fillMaxWidth(), color = textColor, style = text(FontWeight.Normal, 14.5.sp, 21.sp))
-                    BubbleMeta(time, outgoing, message.readByFreelancer)
+                    BubbleMeta(time, status)
                 }
             }
         } else {
@@ -289,35 +336,31 @@ fun ChatBubble(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(message.text, color = textColor, style = text(FontWeight.Normal, 14.5.sp, 21.sp))
-                BubbleMeta(time, outgoing, message.readByFreelancer)
+                BubbleMeta(time, status)
             }
         }
     }
 }
 
 @Composable
-private fun BubbleMeta(time: String, outgoing: Boolean, read: Boolean) {
+private fun BubbleMeta(time: String, status: DeliveryStatus?) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             time,
-            color = if (outgoing) SandContainer else MaterialTheme.colorScheme.outline,
+            color = if (status != null) SandContainer else MaterialTheme.colorScheme.outline,
             style = text(FontWeight.Medium, 11.sp, 14.sp)
         )
-        if (outgoing && read) {
-            Icon(painterResource(R.drawable.ic_symbol_done_all), "Dibaca", tint = SageBadge, modifier = Modifier.size(15.dp))
-        }
+        if (status != null) DeliveryIcon(status = status, sentTint = SandContainer)
     }
 }
 
-/** Composer: tombol tambah, kolom pesan (gambar, suara), dan tombol kirim. */
 @Composable
 fun ChatComposer(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     onAdd: () -> Unit,
-    onAttachImage: () -> Unit,
-    onVoice: () -> Unit
+    onAttachImage: () -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
     val style = text(FontWeight.Normal, 14.5.sp, 20.sp)
@@ -366,8 +409,77 @@ fun ChatComposer(
                 }
             )
             IconButtonBox(R.drawable.ic_symbol_image, "Lampirkan gambar", 34.dp, 22.dp, colors.onSurfaceVariant, Color.Transparent, onAttachImage)
-            IconButtonBox(R.drawable.ic_symbol_mic, "Pesan suara", 34.dp, 22.dp, colors.onSurfaceVariant, Color.Transparent, onVoice)
         }
         IconButtonBox(R.drawable.ic_symbol_send, "Kirim pesan", 44.dp, 20.dp, colors.onPrimary, colors.primary, onSend)
+    }
+}
+
+
+/** Pengingat kesepakatan yang menunggu tindakan UMKM; dibuka ke layar Negosiasi. */
+@Composable
+fun NegotiationBanner(text: String, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(SageBadge)
+            .clickable(role = Role.Button, onClickLabel = "Lihat kesepakatan", onClick = onClick)
+            .padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painterResource(R.drawable.ic_handshake), null, tint = OnSageBadge, modifier = Modifier.size(18.dp))
+        Text(text, modifier = Modifier.weight(1f), color = OnSageBadge, style = text(FontWeight.SemiBold, 12.5.sp, 17.sp))
+        Text("Lihat", color = colors.primary, style = text(FontWeight.SemiBold, 12.5.sp, 17.sp))
+        Icon(painterResource(R.drawable.ic_symbol_chevron_right), null, tint = colors.primary, modifier = Modifier.size(20.dp))
+    }
+}
+
+data class ReplyTarget(val conversationId: String, val title: String, val status: String)
+
+/** Pilihan project tujuan pesan saat UMKM punya beberapa project dengan freelancer yang sama. */
+@Composable
+fun ReplyTargetSelector(selected: String, options: List<ReplyTarget>, onSelect: (String) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxWidth().background(colors.background).topBorder().padding(horizontal = 16.dp, vertical = 6.dp)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.tertiaryContainer)
+                .clickable(role = Role.Button, onClickLabel = "Pilih project tujuan") { expanded = true }
+                .padding(start = 12.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("Kirim ke:", color = colors.outline, style = text(FontWeight.Medium, 12.sp, 16.sp))
+            Text(
+                selected,
+                modifier = Modifier.widthIn(max = 220.dp),
+                color = colors.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = text(FontWeight.SemiBold, 12.sp, 16.sp)
+            )
+            Icon(painterResource(R.drawable.ic_profile_expand_more), null, tint = colors.primary, modifier = Modifier.size(18.dp))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(option.title, style = text(FontWeight.SemiBold, 13.sp, 18.sp))
+                            Text(option.status, color = colors.outline, style = text(FontWeight.Normal, 11.5.sp, 16.sp))
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        onSelect(option.conversationId)
+                    }
+                )
+            }
+        }
     }
 }

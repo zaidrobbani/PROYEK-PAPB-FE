@@ -38,28 +38,33 @@ import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmTopBar
 import com.example.proyek_papb_fe.feature.umkm.data.ConversationStage
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.formatConversationTime
-import com.example.proyek_papb_fe.feature.umkm.data.searchConversations
+import com.example.proyek_papb_fe.feature.umkm.data.searchThreads
 import java.time.LocalDate
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.viewmodel.UmkmChatViewModel
 
-/**
- * Daftar Percakapan UMKM (tab Chat). Data dari DATA DUMMY lokal [UmkmConversationStore],
- * bukan chat real-time. [onOpenConversation] null = Ruang Chat belum tersedia; baris tetap
- * memberi respons berupa pesan singkat.
- */
 @Composable
 fun ConversationListScreen(
     onNotificationsClick: () -> Unit,
     onOpenConversation: ((conversationId: String) -> Unit)?,
     onTabSelected: (UmkmTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: UmkmChatViewModel = viewModel(factory = UmkmChatViewModel.factory(null))
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
+    }
     var query by rememberSaveable { mutableStateOf("") }
     var stageName by rememberSaveable { mutableStateOf<String?>(null) }
     val stage = stageName?.let { ConversationStage.valueOf(it) }
 
-    val all = UmkmConversationStore.conversations
-    val shown = searchConversations(all, query, stage)
+    // Satu baris per freelancer: percakapan per project digabung (lihat UmkmThread).
+    val all = UmkmConversationStore.threads
+    val shown = searchThreads(all, query, stage)
     val today = LocalDate.now()
 
     Column(
@@ -86,14 +91,13 @@ fun ConversationListScreen(
                 ConversationFilterPills(
                     selected = stage,
                     totalCount = all.size,
-                    countFor = { s -> all.count { it.stage == s } },
+                    countFor = { s -> all.count { it.hasStage(s) } },
                     onSelect = { stageName = it?.name }
                 )
             }
             item(key = "list-top") { Spacer(Modifier.height(8.dp)) }
             if (shown.isEmpty()) {
                 item(key = "empty") {
-                    // Figma tidak punya keadaan kosong; teks sederhana ini tambahan.
                     Text(
                         text = "Tidak ada percakapan yang cocok.",
                         modifier = Modifier
@@ -109,12 +113,12 @@ fun ConversationListScreen(
                     )
                 }
             }
-            items(shown, key = { it.id }) { conversation ->
+            items(shown, key = { it.freelancerId }) { conversation ->
                 ConversationRow(
                     conversation = conversation,
                     time = formatConversationTime(conversation.lastMessageAt, today),
                     onClick = {
-                        onOpenConversation?.invoke(conversation.id)
+                        onOpenConversation?.invoke(conversation.primaryConversationId)
                             ?: Toast.makeText(context, "Ruang Chat belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -129,10 +133,3 @@ fun ConversationListScreen(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun ConversationListScreenPreview() {
-    PROYEKPAPBFETheme {
-        ConversationListScreen(onNotificationsClick = {}, onOpenConversation = null, onTabSelected = {})
-    }
-}

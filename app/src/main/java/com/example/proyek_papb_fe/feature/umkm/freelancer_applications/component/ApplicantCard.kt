@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.example.proyek_papb_fe.core.ui.components.InitialsAvatar
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -42,8 +43,8 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputSha
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
 import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupiah
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
 
-/** Keadaan tombol pilih: belum ada pilihan, kartu ini dipilih, atau freelancer lain sudah dipilih. */
 enum class ApplicantSelection { Open, Selected, Closed }
 
 @Composable
@@ -54,10 +55,6 @@ private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): Text
         lineHeight = lineHeight
     )
 
-/**
- * Kartu pelamar. Figma memakai susunan berbeda untuk rekomendasi teratas
- * (rating di baris terpisah, label "Penawaran Biaya"/"Waktu Kerja") dibanding kartu lainnya.
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ApplicantCard(
@@ -83,15 +80,27 @@ fun ApplicantCard(
         verticalArrangement = Arrangement.spacedBy(12.677.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.677.dp)) {
-            Image(
-                painter = painterResource(application.photo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(59.159.dp)
-                    .registerInputShadow(CircleShape)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            val photo = application.photo
+            if (photo != null) {
+                Image(
+                    painter = painterResource(photo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(59.159.dp)
+                        .registerInputShadow(CircleShape)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                ProfilePhoto(
+                            photoUrl = application.photoUrl,
+                            name = application.freelancerName,
+                    modifier = Modifier
+                        .size(59.159.dp)
+                        .registerInputShadow(CircleShape),
+                    fontSize = 18.sp
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -171,7 +180,6 @@ fun ApplicantCard(
                 onClick = onViewProfile
             )
             ActionButton(
-                // Figma hanya punya "Setujui & Buat"; label sesudah memilih adalah tambahan.
                 text = if (selection == ApplicantSelection.Selected) "Freelancer Terpilih" else "Setujui & Buat",
                 iconRes = R.drawable.ic_applications_approve,
                 background = colors.primary,
