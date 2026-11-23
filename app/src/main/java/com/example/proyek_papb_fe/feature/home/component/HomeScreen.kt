@@ -1,6 +1,6 @@
 package com.example.proyek_papb_fe.feature.home.component
 
-import androidx.compose.foundation.layout.Arrangement
+import  androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
