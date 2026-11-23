@@ -20,6 +20,7 @@ import com.example.proyek_papb_fe.feature.umkm.payment.component.formatRupiah
 import com.example.proyek_papb_fe.feature.umkm.payment.viewmodel.PaymentViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 internal fun shortRole(headline: String): String = headline.substringBefore(" & ").trim()
 
@@ -70,7 +71,7 @@ fun PaymentContainer(
         state = PaymentUiState(
             projectTitle = payment.projectTitle,
             freelancerName = freelancer.name,
-            freelancerPhotoUri = freelancer.photoUrl,
+            freelancerPhotoUri = rememberServerImageUri(freelancer.photoUrl),
             freelancerRating = freelancer.averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "-",
             freelancerRole = shortRole(freelancer.subtitle.orEmpty()),
             duration = "${payment.durationDays} Hari Kalender",

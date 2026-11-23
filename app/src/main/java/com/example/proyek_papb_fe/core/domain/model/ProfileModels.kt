@@ -40,7 +40,8 @@ data class Portfolio(
     val title: String,
     val description: String,
     val projectUrl: String?,
-    val updatedAtMillis: Long?
+    val updatedAtMillis: Long?,
+    val coverImageUrl: String? = null
 )
 
 data class PortfolioMedia(

@@ -29,7 +29,8 @@ fun ProjectDetailContainer(
             projectId,
             AppContainer.projectRepository,
             AppContainer.masterDataRepository,
-            AppContainer.chatRepository
+            AppContainer.chatRepository,
+            AppContainer.workflowRepository
         )
     )
 ) {

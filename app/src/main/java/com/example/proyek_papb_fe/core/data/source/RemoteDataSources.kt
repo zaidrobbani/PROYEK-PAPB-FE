@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.core.data.source
 
+import com.example.proyek_papb_fe.core.data.remote.dto.DeviceTokenRequest
 import com.example.proyek_papb_fe.core.data.remote.ChatApiService
 import com.example.proyek_papb_fe.core.data.remote.FreelancerApiService
 import com.example.proyek_papb_fe.core.data.remote.MasterDataApiService
@@ -140,6 +141,8 @@ class ChatRemoteDataSource(private val api: ChatApiService) {
     suspend fun send(id: String, text: String) = apiCall { api.send(id, SendMessageRequest(text)) }
     suspend fun messages(id: String, beforeAt: String?, beforeId: String?) = apiCall { api.messages(id, 50, beforeAt, beforeId) }
     suspend fun markRead(id: String) = apiCall { api.markRead(id) }
+    suspend fun sendAttachment(id: String, file: okhttp3.MultipartBody.Part, caption: okhttp3.RequestBody?) =
+        apiCall { api.sendAttachment(id, file, caption) }
 }
 
 class NotificationRemoteDataSource(private val api: NotificationApiService) {
@@ -147,4 +150,6 @@ class NotificationRemoteDataSource(private val api: NotificationApiService) {
     suspend fun unreadCount() = apiCall { api.unreadCount() }
     suspend fun markAllRead() = apiCall { api.markAllRead() }
     suspend fun markRead(id: String) = apiCall { api.markRead(id) }
+    suspend fun registerDevice(token: String) = apiCallNoData { api.registerDevice(DeviceTokenRequest(token)) }
+    suspend fun unregisterDevice(token: String) = apiCallNoData { api.unregisterDevice(DeviceTokenRequest(token)) }
 }

@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
@@ -53,6 +54,9 @@ import com.example.proyek_papb_fe.core.ui.theme.TextMuted
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ConversationStage
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversation
+import com.example.proyek_papb_fe.feature.umkm.data.UmkmThread
+import com.example.proyek_papb_fe.core.ui.components.LocalImage
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 @Composable
 private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): TextStyle =
@@ -143,7 +147,7 @@ private fun Pill(label: String, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun ConversationRow(conversation: UmkmConversation, time: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ConversationRow(conversation: UmkmThread, time: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val unread = conversation.unreadCount > 0
     Row(
@@ -154,13 +158,24 @@ fun ConversationRow(conversation: UmkmConversation, time: String, onClick: () ->
             .padding(top = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(SageBadge, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(conversation.initials, color = colors.onSecondaryContainer, style = text(FontWeight.Bold, 14.sp, 18.sp))
+        val photo = rememberServerImageUri(conversation.photoUrl)
+        if (photo != null) {
+            LocalImage(
+                uri = photo,
+                fallbackRes = null,
+                contentDescription = "Foto ${conversation.freelancerName}",
+                modifier = Modifier.size(48.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(SageBadge, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(conversation.initials, color = colors.onSecondaryContainer, style = text(FontWeight.Bold, 14.sp, 18.sp))
+            }
         }
         Column(
             modifier = Modifier

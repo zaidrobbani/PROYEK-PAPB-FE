@@ -46,6 +46,7 @@ fun SubmissionStatusContainer(
     onOpenNegotiation: (projectId: String) -> Unit,
     onFindOtherProjects: () -> Unit,
     onViewProjectDetail: (projectId: String) -> Unit,
+    onOpenWorkPlan: (projectId: String) -> Unit = {},
     viewModel: SubmissionStatusViewModel = viewModel(
         factory = SubmissionStatusViewModel.factory(projectId, AppContainer.projectRepository, AppContainer.workflowRepository)
     )
@@ -91,6 +92,7 @@ fun SubmissionStatusContainer(
         onBack = onBack,
         onOpenNegotiationClick = { onOpenNegotiation(projectId) },
         onFindOtherProjectsClick = onFindOtherProjects,
-        onViewDetailClick = { onViewProjectDetail(projectId) }
+        onViewDetailClick = { onViewProjectDetail(projectId) },
+        onOpenWorkPlanClick = { onOpenWorkPlan(projectId) }
     )
 }

@@ -34,7 +34,9 @@ private fun NotificationType.iconRes(): Int = when (this) {
     NotificationType.SYSTEM -> R.drawable.ic_verified_user
 }
 
-internal fun AppNotification.freelancerType(): NotificationType = when (type) {
+internal fun AppNotification.freelancerType(): NotificationType = freelancerNotificationType(type)
+
+private fun freelancerNotificationType(backendType: String): NotificationType = when (backendType) {
     "REVISION_REQUESTED" -> NotificationType.REVISION_REQUEST
     "APPLICATION_ACCEPTED", "APPLICATION_NOT_SELECTED", "AGREEMENT_UPDATED", "AGREEMENT_APPROVED",
     "AGREEMENT_CHANGES_REQUESTED", "AGREEMENT_FINALIZED", "PROJECT_CANCELLED" -> NotificationType.PROPOSAL_UPDATE
@@ -43,6 +45,32 @@ internal fun AppNotification.freelancerType(): NotificationType = when (type) {
     "NEW_MESSAGE" -> NotificationType.MESSAGE
     "PAYMENT_SUCCEEDED", "PAYMENT_FAILED", "PAYMENT_RECEIVED", "FUNDS_RELEASED" -> NotificationType.PAYMENT
     else -> NotificationType.SYSTEM
+}
+
+/** Halaman tujuan notifikasi freelancer; dipakai daftar notifikasi dan ketukan notifikasi HP (push). */
+sealed interface FreelancerNotificationDestination {
+    data class Chat(val conversationId: String) : FreelancerNotificationDestination
+    data class RevisionRequest(val projectId: String) : FreelancerNotificationDestination
+    data object Wallet : FreelancerNotificationDestination
+    data class Project(val projectId: String) : FreelancerNotificationDestination
+    data object ProfessionalProfile : FreelancerNotificationDestination
+    data object NotificationList : FreelancerNotificationDestination
+}
+
+fun freelancerNotificationDestination(
+    backendType: String,
+    referenceType: String?,
+    referenceId: String?
+): FreelancerNotificationDestination {
+    val type = freelancerNotificationType(backendType)
+    return when {
+        referenceType == "CONVERSATION" && referenceId != null -> FreelancerNotificationDestination.Chat(referenceId)
+        type == NotificationType.REVISION_REQUEST && referenceId != null -> FreelancerNotificationDestination.RevisionRequest(referenceId)
+        type == NotificationType.PAYMENT -> FreelancerNotificationDestination.Wallet
+        referenceType == "PROJECT" && referenceId != null -> FreelancerNotificationDestination.Project(referenceId)
+        type == NotificationType.SYSTEM -> FreelancerNotificationDestination.ProfessionalProfile
+        else -> FreelancerNotificationDestination.NotificationList
+    }
 }
 
 internal fun dayOf(millis: Long?, now: Long = System.currentTimeMillis()): NotificationDay {
@@ -100,14 +128,13 @@ fun NotificationContainer(
         onItemClick = { id ->
             val notification = all.firstOrNull { it.id == id } ?: return@NotificationScreen
             viewModel.markRead(id)
-            val ref = notification.referenceId
-            when {
-                notification.referenceType == "CONVERSATION" && ref != null -> onMessageClick(ref)
-                notification.freelancerType() == NotificationType.REVISION_REQUEST && ref != null -> onRevisionRequestClick(ref)
-                notification.freelancerType() == NotificationType.PAYMENT -> onWalletClick()
-                notification.referenceType == "PROJECT" && ref != null -> onProjectClick(ref)
-                notification.freelancerType() == NotificationType.SYSTEM -> onProfessionalProfileClick()
-                else -> Unit
+            when (val destination = freelancerNotificationDestination(notification.type, notification.referenceType, notification.referenceId)) {
+                is FreelancerNotificationDestination.Chat -> onMessageClick(destination.conversationId)
+                is FreelancerNotificationDestination.RevisionRequest -> onRevisionRequestClick(destination.projectId)
+                FreelancerNotificationDestination.Wallet -> onWalletClick()
+                is FreelancerNotificationDestination.Project -> onProjectClick(destination.projectId)
+                FreelancerNotificationDestination.ProfessionalProfile -> onProfessionalProfileClick()
+                FreelancerNotificationDestination.NotificationList -> Unit
             }
         },
         onFindProjectsClick = onFindProjectsClick,

@@ -12,7 +12,9 @@ import kotlinx.coroutines.CancellationException
 
 class DefaultAuthRepository(
     private val remoteDataSource: AuthRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    /** Dijalankan selagi token masih berlaku, mis. melepas token push perangkat dari akun. */
+    private val beforeLogout: suspend () -> Unit = {}
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): SessionUser {
@@ -57,8 +59,16 @@ class DefaultAuthRepository(
         return user
     }
 
+    override suspend fun updateName(name: String): SessionUser {
+        val user = remoteDataSource.updateName(name.trim()).toSessionUser()
+            ?: throw ApiException("Peran akun tidak dikenali aplikasi.")
+        sessionManager.updateUser(user)
+        return user
+    }
+
     override suspend fun logout() {
         try {
+            beforeLogout()
             remoteDataSource.logout()
         } catch (e: CancellationException) {
             throw e

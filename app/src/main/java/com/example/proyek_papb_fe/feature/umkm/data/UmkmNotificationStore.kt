@@ -93,23 +93,31 @@ object UmkmNotificationStore {
     }
 }
 
-private fun AppNotification.toUmkmNotification(): UmkmNotification {
-    val type = when (this.type) {
-        "APPLICATION_RECEIVED" -> NotificationType.PengajuanFreelancer
-        "SUBMISSION_RECEIVED", "MILESTONE_COMPLETED", "WORK_STARTED", "REVIEW_RECEIVED" -> NotificationType.HasilKerjaDikirim
-        "PROJECT_CANCELLED" -> NotificationType.ProjectDibatalkan
-        "PAYMENT_SUCCEEDED", "PAYMENT_FAILED", "PAYMENT_RECEIVED", "FUNDS_RELEASED" -> NotificationType.PembayaranBerhasil
-        "NEW_MESSAGE" -> NotificationType.PesanBaru
-        else -> NotificationType.KesepakatanDibuat
-    }
-    val ref = referenceId
-    val target = when {
-        referenceType == "CONVERSATION" && ref != null -> NotificationTarget.ChatRoom(ref, "Buka Percakapan")
+private fun umkmNotificationTypeOf(backendType: String): NotificationType = when (backendType) {
+    "APPLICATION_RECEIVED" -> NotificationType.PengajuanFreelancer
+    "SUBMISSION_RECEIVED", "MILESTONE_COMPLETED", "WORK_STARTED", "REVIEW_RECEIVED" -> NotificationType.HasilKerjaDikirim
+    "PROJECT_CANCELLED" -> NotificationType.ProjectDibatalkan
+    "PAYMENT_SUCCEEDED", "PAYMENT_FAILED", "PAYMENT_RECEIVED", "FUNDS_RELEASED" -> NotificationType.PembayaranBerhasil
+    "NEW_MESSAGE" -> NotificationType.PesanBaru
+    else -> NotificationType.KesepakatanDibuat
+}
+
+/** Halaman tujuan notifikasi UMKM; dipakai detail notifikasi dan ketukan notifikasi HP (push). */
+fun umkmNotificationTarget(backendType: String, referenceType: String?, referenceId: String?): NotificationTarget {
+    val type = umkmNotificationTypeOf(backendType)
+    return when {
+        referenceType == "CONVERSATION" && referenceId != null -> NotificationTarget.ChatRoom(referenceId, "Buka Percakapan")
         type == NotificationType.PembayaranBerhasil -> NotificationTarget.Transactions
-        this.type == "APPLICATION_RECEIVED" && ref != null -> NotificationTarget.Applications(ref)
-        referenceType == "PROJECT" && ref != null && type == NotificationType.HasilKerjaDikirim -> NotificationTarget.Monitoring(ref)
+        backendType == "APPLICATION_RECEIVED" && referenceId != null -> NotificationTarget.Applications(referenceId)
+        referenceType == "PROJECT" && referenceId != null && type == NotificationType.HasilKerjaDikirim ->
+            NotificationTarget.Monitoring(referenceId)
         else -> NotificationTarget.Projects
     }
+}
+
+private fun AppNotification.toUmkmNotification(): UmkmNotification {
+    val type = umkmNotificationTypeOf(this.type)
+    val target = umkmNotificationTarget(this.type, referenceType, referenceId)
     return UmkmNotification(
         id = id,
         type = type,

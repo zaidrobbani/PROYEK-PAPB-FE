@@ -15,13 +15,15 @@ data object SubmissionRoute
 
 fun NavGraphBuilder.submissionScreen(
     onProposalClick: (projectId: String) -> Unit,
-    onFindProjectsClick: () -> Unit
+    onFindProjectsClick: () -> Unit,
+    onNotificationClick: () -> Unit
 ) {
     composable<SubmissionRoute> { backStackEntry ->
         KeepSizeWhileLeaving(entry = backStackEntry) {
             SubmissionScreen(
                 onProposalClick = onProposalClick,
-                onFindProjectsClick = onFindProjectsClick
+                onFindProjectsClick = onFindProjectsClick,
+                onNotificationClick = onNotificationClick
             )
         }
     }
@@ -44,7 +46,8 @@ fun NavGraphBuilder.submissionStatusScreen(
     onBack: () -> Unit,
     onOpenNegotiation: (projectId: String) -> Unit,
     onFindOtherProjects: () -> Unit,
-    onViewProjectDetail: (projectId: String) -> Unit
+    onViewProjectDetail: (projectId: String) -> Unit,
+    onOpenWorkPlan: (projectId: String) -> Unit = {}
 ) {
     composable<SubmissionStatusRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<SubmissionStatusRoute>()
@@ -53,7 +56,8 @@ fun NavGraphBuilder.submissionStatusScreen(
             onBack = onBack,
             onOpenNegotiation = onOpenNegotiation,
             onFindOtherProjects = onFindOtherProjects,
-            onViewProjectDetail = onViewProjectDetail
+            onViewProjectDetail = onViewProjectDetail,
+            onOpenWorkPlan = onOpenWorkPlan
         )
     }
 }

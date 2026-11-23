@@ -142,7 +142,7 @@ private fun PortfolioCard(item: PortfolioCardUi, onEdit: () -> Unit, onDelete: (
                 if (item.link.isNotBlank()) {
                     Icon(painterResource(R.drawable.ic_profile_link), null, tint = KelolaColors.Muted, modifier = Modifier.size(15.dp))
                     Text(
-                        item.link,
+                        item.link.substringAfter("://").removeSuffix("/"),
                         style = KelolaTypography.Caption,
                         color = KelolaColors.Muted,
                         maxLines = 1,

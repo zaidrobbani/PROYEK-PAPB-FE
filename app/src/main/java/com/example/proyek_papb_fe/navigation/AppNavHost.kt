@@ -33,7 +33,6 @@ import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import com.example.proyek_papb_fe.feature.umkm.business_profile.navigation.navigateToUmkmBusinessProfile
 import com.example.proyek_papb_fe.feature.umkm.business_profile.navigation.umkmBusinessProfileScreen
-import com.example.proyek_papb_fe.feature.umkm.data.NotificationTarget
 import com.example.proyek_papb_fe.feature.umkm.notification_detail.navigation.navigateToUmkmNotificationDetail
 import com.example.proyek_papb_fe.feature.umkm.notification_detail.navigation.umkmNotificationDetailScreen
 import com.example.proyek_papb_fe.feature.auth.change_password.navigation.changePasswordScreen
@@ -121,6 +120,7 @@ import com.example.proyek_papb_fe.feature.umkm.profile.navigation.logoutToLogin
 import com.example.proyek_papb_fe.feature.umkm.profile.navigation.navigateToUmkmProfile
 import com.example.proyek_papb_fe.feature.umkm.profile.navigation.umkmProfileScreen
 import com.example.proyek_papb_fe.feature.umkm.find_freelancer.navigation.navigateToFindFreelancer
+import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.navigation.FreelancerApplicationsRoute
 import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.navigation.freelancerApplicationsScreen
 import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.navigation.navigateToFreelancerApplications
 import com.example.proyek_papb_fe.feature.umkm.payment.navigation.PaymentRoute
@@ -194,7 +194,8 @@ fun AppNavHost(
                 navController.navigateToProjectDetail(projectId)
             },
             onFilterClick = {
-            }
+            },
+            onNotificationClick = { navController.navigateToNotifications() }
         )
         projectDetailScreen(
             onBack = { navController.navigateUp() },
@@ -215,6 +216,7 @@ fun AppNavHost(
         submissionStatusScreen(
             onBack = { navController.navigateUp() },
             onOpenNegotiation = { projectId -> navController.navigateToNegotiation(projectId) },
+            onOpenWorkPlan = { projectId -> navController.navigateToWorkPlan(projectId) },
             onFindOtherProjects = {
                 if (!navController.popBackStack<SearchProjectRoute>(inclusive = false)) {
                     navController.popBackStack<SubmissionRoute>(inclusive = false)
@@ -248,7 +250,9 @@ fun AppNavHost(
         workPlanScreen(
             onBack = { navController.navigateUp() },
             // Simulasi sisi UMKM dari akun freelancer dihapus: persetujuan & pembayaran kini dilakukan akun UMKM sungguhan.
-            onOpenUmkmSimulation = {}
+            onOpenUmkmSimulation = {},
+            onOpenProjectChat = openProjectChat,
+            onOpenWallet = { navController.navigateToWallet() }
         )
         planReviewScreen(
             onBack = { navController.navigateUp() },
@@ -268,12 +272,14 @@ fun AppNavHost(
             },
             onFindProjectsClick = {
                 navController.navigateToTopLevel(SearchProjectRoute)
-            }
+            },
+            onNotificationClick = { navController.navigateToNotifications() }
         )
         chatScreen(
             onConversationClick = { conversationId ->
                 navController.navigateToChatRoom(conversationId)
-            }
+            },
+            onNotificationClick = { navController.navigateToNotifications() }
         )
         chatRoomScreen(
             onBack = { navController.navigateUp() },
@@ -481,7 +487,15 @@ fun AppNavHost(
         )
         umkmFreelancerProfileScreen(
             onBack = { navController.navigateUp() },
-            onSelected = { navController.navigateUp() }
+            onSelected = { navController.navigateUp() },
+            onOpenApplications = { projectId ->
+                // Dibuka dari halaman Pengajuan project yang sama: cukup kembali, jangan menumpuk layar.
+                val previous = navController.previousBackStackEntry
+                val isSameApplicationsBelow = previous?.destination?.hasRoute<FreelancerApplicationsRoute>() == true &&
+                    previous.toRoute<FreelancerApplicationsRoute>().projectId == projectId
+                if (isSameApplicationsBelow) navController.navigateUp()
+                else navController.navigateToFreelancerApplications(projectId)
+            }
         )
         umkmNotificationsScreen(
             onBack = { navController.navigateUp() },
@@ -491,15 +505,7 @@ fun AppNavHost(
         )
         umkmNotificationDetailScreen(
             onBack = { navController.navigateUp() },
-            onOpenTarget = { target ->
-                when (target) {
-                    is NotificationTarget.Applications -> navController.navigateToFreelancerApplications(target.projectId)
-                    is NotificationTarget.ChatRoom -> navController.navigateToUmkmChatRoom(target.conversationId)
-                    is NotificationTarget.Monitoring -> navController.navigateToProjectMonitoring(target.projectId)
-                    NotificationTarget.Transactions -> navController.navigateToTransactionHistory()
-                    NotificationTarget.Projects -> navController.navigateToProjectList()
-                }
-            }
+            onOpenTarget = { target -> navController.openUmkmNotificationTarget(target) }
         )
         umkmBusinessProfileScreen(onBack = { navController.navigateUp() })
         changePasswordScreen(
@@ -537,16 +543,8 @@ fun AppNavHost(
         )
         umkmConversationListScreen(
             onNotificationsClick = { navController.navigateToUmkmNotifications() },
-            onOpenConversation = { conversationId ->
-                val negotiation = UmkmNegotiationStore.negotiation(conversationId)
-                if (negotiation?.status == ProjectStatus.Dibatalkan) {
-                    navController.navigateToUmkmProjectCancelled(conversationId)
-                } else if (negotiation != null) {
-                    navController.navigateToUmkmNegotiation(conversationId)
-                } else {
-                    navController.navigateToUmkmChatRoom(conversationId)
-                }
-            },
+            // Selalu ke ruang chat agar bisa langsung membalas; kesepakatan yang menunggu dibuka dari banner di sana.
+            onOpenConversation = { conversationId -> navController.navigateToUmkmChatRoom(conversationId) },
             onTabSelected = { tab ->
                 when (tab) {
                     UmkmTab.Beranda -> navController.backToUmkmDashboard()
@@ -560,7 +558,14 @@ fun AppNavHost(
         umkmChatRoomScreen(
             onBack = { navController.navigateUp() },
             onOpenProject = { projectId -> navController.navigateToProjectMonitoring(projectId) },
-            onCompareDrafts = { conversationId, draftId -> navController.navigateToUmkmCompareDrafts(conversationId, draftId) }
+            onCompareDrafts = { conversationId, draftId -> navController.navigateToUmkmCompareDrafts(conversationId, draftId) },
+            onOpenNegotiation = { conversationId ->
+                if (UmkmNegotiationStore.negotiation(conversationId)?.status == ProjectStatus.Dibatalkan) {
+                    navController.navigateToUmkmProjectCancelled(conversationId)
+                } else {
+                    navController.navigateToUmkmNegotiation(conversationId)
+                }
+            }
         )
         umkmCompareDraftsScreen(
             onBack = { navController.navigateUp() },

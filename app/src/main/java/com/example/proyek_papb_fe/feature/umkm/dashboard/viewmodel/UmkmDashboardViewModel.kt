@@ -9,6 +9,7 @@ import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.AuthRepository
 import com.example.proyek_papb_fe.core.data.repository.FreelancerRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
+import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.core.domain.model.FreelancerSearchFilter
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
@@ -39,7 +40,8 @@ class UmkmDashboardViewModel(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val workflowRepository: WorkflowRepository,
-    private val freelancerRepository: FreelancerRepository
+    private val freelancerRepository: FreelancerRepository,
+    private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -58,6 +60,7 @@ class UmkmDashboardViewModel(
                     val ownerName = authRepository.currentUser()?.name.orEmpty()
                     val business = profile.await()
                     UmkmAccount.update(ownerName, business)
+                    UmkmAccount.updatePhoto(photoRepository.currentLocalUri())
                     _uiState.value = UmkmDashboardUiState(
                         isLoading = false,
                         ownerFirstName = ownerName.substringBefore(" "),
@@ -71,6 +74,7 @@ class UmkmDashboardViewModel(
                                     title = item.project.title,
                                     statusLabel = item.project.statusLabel,
                                     freelancerName = item.counterpart?.name ?: "Belum ada freelancer",
+                                    freelancerPhotoUrl = item.counterpart?.photoUrl,
                                     budget = rupiah(item.agreement?.agreedPrice ?: item.project.budget),
                                     progress = ((item.progressPercent ?: 0.0) / 100.0).toFloat()
                                 )
@@ -82,10 +86,18 @@ class UmkmDashboardViewModel(
                                 DashboardFreelancer(
                                     id = freelancer.userId,
                                     name = freelancer.name,
+                                    photoUrl = freelancer.photoUrl,
                                     role = freelancer.professionalTitle,
                                     rating = freelancer.averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "-",
                                     reviewLabel = "(${freelancer.reviewCount} ulasan)",
-                                    startingPrice = freelancer.servicePriceMin?.let { rupiah(it) } ?: "Harga menyesuaikan"
+                                    startingPrice = priceText(freelancer.servicePriceMin, freelancer.servicePriceMax),
+                                    priceLabel = if (freelancer.servicePriceMin != null && freelancer.servicePriceMax != null &&
+                                        freelancer.servicePriceMax > freelancer.servicePriceMin
+                                    ) "Kisaran harga" else "Mulai dari",
+                                    city = freelancer.city,
+                                    isAvailable = freelancer.isAvailable,
+                                    skills = freelancer.skills.map { it.name },
+                                    experienceCount = freelancer.experienceCount
                                 )
                             }
                     )
@@ -107,11 +119,20 @@ class UmkmDashboardViewModel(
             authRepository: AuthRepository,
             profileRepository: ProfileRepository,
             workflowRepository: WorkflowRepository,
-            freelancerRepository: FreelancerRepository
+            freelancerRepository: FreelancerRepository,
+            photoRepository: ProfilePhotoRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                UmkmDashboardViewModel(authRepository, profileRepository, workflowRepository, freelancerRepository)
+                UmkmDashboardViewModel(authRepository, profileRepository, workflowRepository, freelancerRepository, photoRepository)
             }
         }
     }
+}
+
+/** Harga layanan freelancer: rentang bila ada maksimum, selain itu harga minimum. */
+private fun priceText(min: Long?, max: Long?): String = when {
+    min != null && max != null && max > min -> "${rupiah(min)} – ${rupiah(max)}"
+    min != null -> rupiah(min)
+    max != null -> rupiah(max)
+    else -> "Harga menyesuaikan"
 }

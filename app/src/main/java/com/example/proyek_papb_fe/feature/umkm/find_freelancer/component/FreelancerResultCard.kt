@@ -45,6 +45,7 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.DirectoryFreelancer
 import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupiah
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
 
 @Composable
 private fun text(weight: FontWeight, size: TextUnit, lineHeight: TextUnit): TextStyle =
@@ -100,7 +101,9 @@ fun FreelancerResultCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    InitialsAvatar(name = freelancer.name, modifier = Modifier.fillMaxSize(), fontSize = 18.sp)
+                    ProfilePhoto(
+                            photoUrl = freelancer.photoUrl,
+                            name = freelancer.name, modifier = Modifier.fillMaxSize(), fontSize = 18.sp)
                 }
                 Box(
                     modifier = Modifier

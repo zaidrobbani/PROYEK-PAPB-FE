@@ -16,7 +16,46 @@ data class Message(
     val type: String,
     val sentAtMillis: Long,
     val readAtMillis: Long?,
-    val attachmentNames: List<String>
+    val attachments: List<MessageAttachment> = emptyList()
+) {
+    val attachmentNames: List<String> get() = attachments.map { it.fileName }
+
+    /** Teks ringkas untuk daftar percakapan/notifikasi: caption, atau label lampiran seperti WhatsApp. */
+    val previewText: String
+        get() {
+            val first = attachments.firstOrNull()
+            return when {
+                text.isNotBlank() -> if (first != null) "${if (first.isImage) "📷" else "📄"} $text" else text
+                first == null -> ""
+                first.isImage -> "📷 Foto"
+                else -> "📄 ${first.fileName}"
+            }
+        }
+}
+
+/** Lampiran pesan chat. Path unduh butuh token; thumbnailPath hanya ada untuk foto. */
+data class MessageAttachment(
+    val id: String,
+    val fileName: String,
+    val mimeType: String,
+    val sizeBytes: Long,
+    val downloadPath: String,
+    val thumbnailPath: String?
+) {
+    val isImage: Boolean get() = mimeType.startsWith("image/")
+}
+
+/** Lampiran yang sedang/akan dikirim dari perangkat (tampil di chat sebelum server menyimpannya). */
+data class OutgoingAttachment(
+    val localId: String,
+    val uri: String,
+    val fileName: String,
+    val mimeType: String?,
+    val sizeBytes: Long?,
+    val isImage: Boolean,
+    val caption: String,
+    val createdAtMillis: Long,
+    val failedMessage: String? = null
 )
 
 data class MessagePage(

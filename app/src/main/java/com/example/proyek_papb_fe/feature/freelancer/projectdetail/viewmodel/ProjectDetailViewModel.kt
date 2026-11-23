@@ -10,6 +10,8 @@ import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.ChatRepository
 import com.example.proyek_papb_fe.core.data.repository.MasterDataRepository
 import com.example.proyek_papb_fe.core.data.repository.ProjectRepository
+import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
+import com.example.proyek_papb_fe.core.domain.model.Project
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.feature.freelancer.data.toFreelancerProject
 import kotlinx.coroutines.CancellationException
@@ -35,7 +37,8 @@ class ProjectDetailViewModel(
     private val projectId: String,
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
@@ -52,7 +55,7 @@ class ProjectDetailViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 coroutineScope {
-                    val project = async { projectRepository.detail(projectId) }
+                    val project = async { projectDetail() }
                     val match = async {
                         runCatching { projectRepository.recommendedProjects(limit = 100) }.getOrDefault(emptyList())
                             .firstOrNull { it.projectId == projectId }
@@ -84,6 +87,33 @@ class ProjectDetailViewModel(
         }
     }
 
+    /**
+     * `GET /projects/{id}` hanya untuk project TERBUKA (atau pemiliknya). Setelah freelancer terpilih dan project
+     * berjalan/selesai, detailnya diambil dari alur project `GET /projects/{id}/workflow` (keputusan BE W11).
+     */
+    private suspend fun projectDetail(): Project = try {
+        projectRepository.detail(projectId)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        val workflow = runCatching { workflowRepository.detail(projectId) }.getOrNull() ?: throw e
+        workflow.project.let {
+            Project(
+                id = it.id,
+                umkmId = workflow.umkm.id,
+                categoryId = it.categoryId,
+                title = it.title,
+                description = it.description,
+                budget = it.budget,
+                deadline = it.deadline,
+                deadlineMillis = it.deadlineMillis,
+                status = it.status,
+                publishedAtMillis = it.publishedAtMillis,
+                createdAtMillis = null
+            )
+        }
+    }
+
     fun openChat() {
         val counterpart = umkmId ?: return
         viewModelScope.launch {
@@ -107,9 +137,12 @@ class ProjectDetailViewModel(
             projectId: String,
             projectRepository: ProjectRepository,
             masterDataRepository: MasterDataRepository,
-            chatRepository: ChatRepository
+            chatRepository: ChatRepository,
+            workflowRepository: WorkflowRepository
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { ProjectDetailViewModel(projectId, projectRepository, masterDataRepository, chatRepository) }
+            initializer {
+                ProjectDetailViewModel(projectId, projectRepository, masterDataRepository, chatRepository, workflowRepository)
+            }
         }
     }
 }

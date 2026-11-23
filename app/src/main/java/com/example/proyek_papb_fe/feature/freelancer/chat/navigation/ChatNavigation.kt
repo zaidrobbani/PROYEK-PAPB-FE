@@ -14,11 +14,12 @@ import kotlinx.serialization.Serializable
 data object ChatRoute
 
 fun NavGraphBuilder.chatScreen(
-    onConversationClick: (conversationId: String) -> Unit
+    onConversationClick: (conversationId: String) -> Unit,
+    onNotificationClick: () -> Unit
 ) {
     composable<ChatRoute> { backStackEntry ->
         KeepSizeWhileLeaving(entry = backStackEntry) {
-            ChatScreen(onConversationClick = onConversationClick)
+            ChatScreen(onConversationClick = onConversationClick, onNotificationClick = onNotificationClick)
         }
     }
 }

@@ -23,7 +23,7 @@ import com.example.proyek_papb_fe.feature.freelancer.data.freelancerStatusOf
 private fun ConversationOverview.matches(query: String): Boolean {
     val q = query.trim()
     if (q.isEmpty()) return true
-    return listOfNotNull(counterpartName, counterpartSubtitle, projectTitle, lastMessage?.text)
+    return listOfNotNull(counterpartName, counterpartSubtitle, projectTitle, lastMessage?.previewText)
         .any { it.contains(q, ignoreCase = true) }
 }
 
@@ -33,16 +33,18 @@ private fun ConversationOverview.toListItem(now: Long, myId: String?) = ChatList
     umkmName = counterpartSubtitle ?: counterpartName,
     projectTitle = projectTitle ?: "Percakapan umum",
     messagePreview = lastMessage?.let { message ->
-        val body = message.text.ifBlank { message.attachmentNames.joinToString() }
+        val body = message.previewText
         if (message.senderUserId == myId) "Anda: $body" else body
     } ?: "Belum ada pesan",
     timeLabel = (lastMessage?.sentAtMillis ?: conversation.lastMessageAtMillis)?.let { formatListTime(it, now) }.orEmpty(),
-    unreadCount = unreadCount
+    unreadCount = unreadCount,
+    photoUrl = counterpartPhotoUrl
 )
 
 @Composable
 fun ChatScreen(
     onConversationClick: (conversationId: String) -> Unit,
+    onNotificationClick: () -> Unit,
     viewModel: ChatListViewModel = viewModel(factory = ChatListViewModel.factory(AppContainer.chatOverviewRepository))
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,6 +71,7 @@ fun ChatScreen(
         selectedFilter = selectedFilter,
         onFilterSelect = { selectedFilter = it },
         conversations = searched.filter { selectedFilter.matches(statusOf(it)) }.map { it.toListItem(now, myId) },
-        onConversationClick = onConversationClick
+        onConversationClick = onConversationClick,
+        onNotificationClick = onNotificationClick
     )
 }

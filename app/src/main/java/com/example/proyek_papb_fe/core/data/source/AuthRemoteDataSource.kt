@@ -7,6 +7,7 @@ import com.example.proyek_papb_fe.core.data.remote.dto.AuthTokenDto
 import com.example.proyek_papb_fe.core.data.remote.dto.EmailRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.LoginRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.RegisterRequest
+import com.example.proyek_papb_fe.core.data.remote.dto.UpdateAccountRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.UserDto
 
 class AuthRemoteDataSource(
@@ -18,6 +19,8 @@ class AuthRemoteDataSource(
         apiCall { api.login(LoginRequest(email, password)) }
 
     suspend fun me(): UserDto = apiCall { api.me() }
+
+    suspend fun updateName(name: String): UserDto = apiCall { api.updateMe(UpdateAccountRequest(name)) }
 
     suspend fun logout(): String = apiCallNoData { api.logout() }
 

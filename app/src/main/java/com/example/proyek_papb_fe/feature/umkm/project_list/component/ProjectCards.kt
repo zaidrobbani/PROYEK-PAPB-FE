@@ -41,6 +41,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
+import com.example.proyek_papb_fe.core.ui.components.LocalImage
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
 import com.example.proyek_papb_fe.core.ui.theme.AgreementChip
 import com.example.proyek_papb_fe.core.ui.theme.OnAgreementChip
 import com.example.proyek_papb_fe.core.ui.theme.OnReviewChip
@@ -277,13 +280,16 @@ private fun InProgressCard(project: UmkmProject, actions: ProjectCardActions, mo
                         .clip(avatarShape)
                         .background(SageBadge)
                 ) {
-                    freelancer.photo?.let {
+                    val photo = freelancer.photo
+                    if (photo != null) {
                         Image(
-                            painter = painterResource(it),
+                            painter = painterResource(photo),
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
+                    } else {
+                        ProfilePhoto(photoUrl = freelancer.photoUrl, name = freelancer.name, modifier = Modifier.fillMaxSize())
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -613,7 +619,16 @@ private fun CompletedCard(project: UmkmProject, actions: ProjectCardActions, mod
                     horizontalArrangement = Arrangement.spacedBy(8.451.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
+                    val photo = rememberServerImageUri(freelancer.photoUrl)
+                    if (photo != null) {
+                        LocalImage(
+                            uri = photo,
+                            fallbackRes = null,
+                            contentDescription = "Foto ${freelancer.name}",
+                            modifier = Modifier.size(33.805.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else Box(
                         modifier = Modifier
                             .size(33.805.dp)
                             .background(SageBadge, CircleShape),

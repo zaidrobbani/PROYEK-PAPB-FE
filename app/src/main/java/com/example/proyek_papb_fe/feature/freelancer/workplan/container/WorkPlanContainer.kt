@@ -1,6 +1,10 @@
 package com.example.proyek_papb_fe.feature.freelancer.workplan.container
 
 import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import com.example.proyek_papb_fe.feature.freelancer.workplan.component.MilestoneProgressItem
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -52,6 +56,8 @@ fun WorkPlanContainer(
     projectId: String,
     onBack: () -> Unit,
     onOpenUmkmSimulation: () -> Unit = {},
+    onOpenProjectChat: () -> Unit = {},
+    onOpenWallet: () -> Unit = {},
     viewModel: WorkPlanViewModel = viewModel(
         factory = WorkPlanViewModel.factory(projectId, AppContainer.workflowRepository)
     )
@@ -100,17 +106,35 @@ fun WorkPlanContainer(
             (agreement?.agreedDeadlineMillis?.let(::formatShortDate) ?: agreement?.agreedDeadline.orEmpty()) +
             " (${agreement?.durationDays ?: 0} hari)"
     )
-    val nextMilestone = plan.items.firstOrNull { !it.isDone }
+    val status = detail.project.status
+    val allDone = plan.items.isNotEmpty() && plan.items.all { it.isDone }
+    val progressPercent = plan.items.filter { it.isDone }.sumOf { it.weightPercent }.toInt().coerceIn(0, 100)
     val statusEntry: Pair<UmkmSimulationEntry, () -> Unit>? = when {
         detail.can(WorkflowActionCode.START_WORK) -> UmkmSimulationEntry(
             message = "$clientName sudah membayar. Dana ditahan TEMUKARYA dan proyek siap dikerjakan.",
             actionLabel = "Mulai Pengerjaan"
         ) to viewModel::startWork
-        detail.can(WorkflowActionCode.COMPLETE_MILESTONE) && nextMilestone != null -> UmkmSimulationEntry(
-            message = "Proyek berjalan. Tandai milestone setelah selesai dikerjakan; progres dihitung otomatis.",
-            actionLabel = "Tandai \"${nextMilestone.name}\" Selesai"
-        ) to viewModel::completeNextMilestone
-        detail.project.status == ProjectStatusCode.MENUNGGU_PEMBAYARAN -> UmkmSimulationEntry(
+        status == ProjectStatusCode.REVISI -> UmkmSimulationEntry(
+            message = "$clientName meminta revisi. Perbaiki hasilnya, lalu kirim ulang lewat chat proyek (+ → Unggah Draf Pekerjaan).",
+            actionLabel = "Kirim Hasil Revisi"
+        ) to onOpenProjectChat
+        detail.can(WorkflowActionCode.SUBMIT_RESULT) && allDone -> UmkmSimulationEntry(
+            message = "Semua milestone selesai. Kirim hasil akhir ke $clientName lewat chat proyek (+ → Unggah Draf Pekerjaan) untuk ditinjau.",
+            actionLabel = "Kirim Hasil Akhir"
+        ) to onOpenProjectChat
+        detail.can(WorkflowActionCode.COMPLETE_MILESTONE) -> UmkmSimulationEntry(
+            message = "Proyek berjalan. Ketuk \"Tandai Selesai\" pada milestone yang sudah dikerjakan. Hasil bisa dikirim lewat chat kapan saja.",
+            actionLabel = "Buka Chat Proyek"
+        ) to onOpenProjectChat
+        status == ProjectStatusCode.MENUNGGU_REVIEW -> UmkmSimulationEntry(
+            message = "Hasil sudah terkirim. Menunggu $clientName menyetujui hasil atau meminta revisi.",
+            actionLabel = "Muat Ulang Status"
+        ) to viewModel::load
+        status == ProjectStatusCode.SELESAI -> UmkmSimulationEntry(
+            message = "Proyek selesai. $clientName menyetujui hasil dan dana sudah diteruskan ke dompetmu.",
+            actionLabel = "Lihat Dompet"
+        ) to onOpenWallet
+        status == ProjectStatusCode.MENUNGGU_PEMBAYARAN -> UmkmSimulationEntry(
             message = "Rencana sudah disepakati. Menunggu $clientName membayar lewat QRIS.",
             actionLabel = "Muat Ulang Status"
         ) to viewModel::load
@@ -124,6 +148,24 @@ fun WorkPlanContainer(
         ) to viewModel::load
         else -> null
     }
+    // Setelah dibayar, rencana terkunci: tampilkan progres & tombol tandai selesai per milestone.
+    val isRunning = status in setOf(
+        ProjectStatusCode.SIAP_DIKERJAKAN,
+        ProjectStatusCode.SEDANG_DIKERJAKAN,
+        ProjectStatusCode.MENUNGGU_REVIEW,
+        ProjectStatusCode.REVISI,
+        ProjectStatusCode.SELESAI
+    )
+    val progressItems = if (isRunning) plan.items.sortedBy { it.sortOrder }.map {
+        MilestoneProgressItem(
+            id = it.id,
+            name = it.name,
+            weightPercent = it.weightPercent.toInt(),
+            isDone = it.isDone,
+            completedLabel = it.completedAtMillis?.let(::formatShortDate) ?: if (it.isDone) "" else null
+        )
+    } else null
+    var confirming by remember(projectId) { mutableStateOf<MilestoneProgressItem?>(null) }
 
     fun update(id: Long, transform: (MilestoneInput) -> MilestoneInput) {
         milestones = milestones.map { if (it.id == id) transform(it) else it }
@@ -156,6 +198,11 @@ fun WorkPlanContainer(
             if (filled.isEmpty()) Toast.makeText(context, "Isi minimal satu milestone", Toast.LENGTH_SHORT).show()
             else viewModel.saveDraft(filled.map { it.toDraft() })
         },
+        progressItems = progressItems,
+        progressPercent = progressPercent,
+        canCompleteMilestone = detail.can(WorkflowActionCode.COMPLETE_MILESTONE),
+        isBusy = uiState.isSaving,
+        onCompleteMilestone = { confirming = it },
         onSubmitClick = {
             val message = milestones.validate().blockingMessage
             if (message != null) {
@@ -167,4 +214,19 @@ fun WorkPlanContainer(
             }
         }
     )
+
+    confirming?.let { item ->
+        AlertDialog(
+            onDismissRequest = { confirming = null },
+            title = { Text("Tandai milestone selesai?") },
+            text = { Text("\"${item.name}\" (bobot ${item.weightPercent}%) akan ditandai selesai dan progres terlihat oleh $clientName. Tindakan ini tidak bisa dibatalkan.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirming = null
+                    viewModel.completeMilestone(item.id)
+                }) { Text("Tandai Selesai") }
+            },
+            dismissButton = { TextButton(onClick = { confirming = null }) { Text("Batal") } }
+        )
+    }
 }

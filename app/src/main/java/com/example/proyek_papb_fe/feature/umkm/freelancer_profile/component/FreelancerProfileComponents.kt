@@ -56,6 +56,9 @@ import com.example.proyek_papb_fe.feature.umkm.data.ClientReview
 import com.example.proyek_papb_fe.feature.umkm.data.FreelancerProfile
 import com.example.proyek_papb_fe.feature.umkm.data.PortfolioItem
 import com.example.proyek_papb_fe.feature.umkm.data.ProfileSkill
+import com.example.proyek_papb_fe.core.ui.components.LocalImage
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 private val CardShape = RoundedCornerShape(16.dp)
 
@@ -103,7 +106,8 @@ fun ProfileHeroCard(profile: FreelancerProfile, priceText: String?, modifier: Mo
                                 .background(colors.surfaceContainer)
                         )
                     } else {
-                        InitialsAvatar(
+                        ProfilePhoto(
+                            photoUrl = profile.photoUrl,
                             name = profile.name,
                             modifier = Modifier
                                 .size(84.513.dp)
@@ -171,7 +175,7 @@ fun ProfileHeroCard(profile: FreelancerProfile, priceText: String?, modifier: Mo
                     value = profile.experienceLabel ?: "-",
                     label = "Pengalaman",
                     iconRes = null,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1.5f)
                 )
             }
             if (priceText != null) {
@@ -343,7 +347,16 @@ private fun PortfolioCard(item: PortfolioItem, onClick: () -> Unit, modifier: Mo
             .clickable(role = Role.Button, onClick = onClick)
     ) {
         Box(Modifier.fillMaxWidth().height(138.654.dp).background(colors.surfaceContainer)) {
-            item.image?.let { image ->
+            val coverUri = rememberServerImageUri(item.imageUrl)
+            if (coverUri != null) {
+                LocalImage(
+                    uri = coverUri,
+                    fallbackRes = null,
+                    contentDescription = item.title,
+                    modifier = Modifier.fillMaxWidth().height(138.654.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else item.image?.let { image ->
                 Image(
                     painter = painterResource(image),
                     contentDescription = item.title,
@@ -385,7 +398,11 @@ private fun PortfolioCard(item: PortfolioItem, onClick: () -> Unit, modifier: Mo
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Lihat Detail", color = colors.onTertiaryContainer, style = text(FontWeight.SemiBold, 11.621.sp, 14.79.sp))
+                Text(
+                    if (item.link.isNullOrBlank()) "Lihat Detail" else "Buka Tautan",
+                    color = colors.onTertiaryContainer,
+                    style = text(FontWeight.SemiBold, 11.621.sp, 14.79.sp)
+                )
                 Image(painterResource(R.drawable.ic_fprofile_arrow), contentDescription = null)
             }
         }

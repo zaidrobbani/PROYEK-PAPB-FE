@@ -20,6 +20,8 @@ import com.example.proyek_papb_fe.core.navigation.navigateToTopLevel
 import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.navigation.AppBottomBar
 import com.example.proyek_papb_fe.navigation.AppNavHost
+import com.example.proyek_papb_fe.navigation.NotificationPermissionPrompt
+import com.example.proyek_papb_fe.navigation.PushNavigationEffect
 import com.example.proyek_papb_fe.navigation.TopLevelDestination
 import com.example.proyek_papb_fe.navigation.isTopLevelDestination
 
@@ -38,6 +40,8 @@ fun App() {
                 navController.logoutToLogin()
             }
         }
+        PushNavigationEffect(navController)
+        NotificationPermissionPrompt(navController)
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = backStackEntry?.destination
 

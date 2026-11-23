@@ -8,6 +8,7 @@ data class DashboardActiveProject(
     val statusLabel: String,
     val freelancerName: String,
     @param:DrawableRes val freelancerPhoto: Int? = null,
+    val freelancerPhotoUrl: String? = null,
     val budget: String,
     val progress: Float
 )
@@ -17,9 +18,16 @@ data class DashboardFreelancer(
     val name: String,
     val role: String,
     @param:DrawableRes val photo: Int? = null,
+    val photoUrl: String? = null,
     val rating: String,
     val reviewLabel: String,
-    val startingPrice: String
+    val startingPrice: String,
+    /** "Mulai dari" bila hanya ada harga minimum, "Kisaran harga" bila ada rentang. */
+    val priceLabel: String = "Mulai dari",
+    val city: String = "",
+    val isAvailable: Boolean = true,
+    val skills: List<String> = emptyList(),
+    val experienceCount: Int = 0
 )
 
 data class UmkmDashboardData(

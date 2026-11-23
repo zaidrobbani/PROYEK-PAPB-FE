@@ -26,3 +26,9 @@ data class NotificationListDto(
 data class UnreadCountDto(val unreadCount: Int)
 
 data class MarkAllReadDto(val updated: Int)
+
+/** Token FCM perangkat untuk push notifikasi (`PUT`/`DELETE /notifications/devices`). */
+data class DeviceTokenRequest(
+    val token: String,
+    val platform: String = "ANDROID"
+)

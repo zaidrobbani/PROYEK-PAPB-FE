@@ -18,14 +18,18 @@ fun NavController.navigateToWorkPlan(projectId: String) {
 
 fun NavGraphBuilder.workPlanScreen(
     onBack: () -> Unit,
-    onOpenUmkmSimulation: (projectId: String) -> Unit
+    onOpenUmkmSimulation: (projectId: String) -> Unit,
+    onOpenProjectChat: (projectId: String) -> Unit = {},
+    onOpenWallet: () -> Unit = {}
 ) {
     composable<WorkPlanRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<WorkPlanRoute>()
         WorkPlanContainer(
             projectId = route.projectId,
             onBack = onBack,
-            onOpenUmkmSimulation = { onOpenUmkmSimulation(route.projectId) }
+            onOpenUmkmSimulation = { onOpenUmkmSimulation(route.projectId) },
+            onOpenProjectChat = { onOpenProjectChat(route.projectId) },
+            onOpenWallet = onOpenWallet
         )
     }
 }

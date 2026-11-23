@@ -39,7 +39,8 @@ data class ChatListItem(
     val projectTitle: String,
     val messagePreview: String,
     val timeLabel: String,
-    val unreadCount: Int
+    val unreadCount: Int,
+    val photoUrl: String? = null
 )
 
 @Composable

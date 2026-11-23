@@ -43,6 +43,7 @@ import com.example.proyek_papb_fe.feature.auth.component.shared.registerInputSha
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
 import com.example.proyek_papb_fe.feature.umkm.project_list.component.formatRupiah
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
 
 enum class ApplicantSelection { Open, Selected, Closed }
 
@@ -91,8 +92,9 @@ fun ApplicantCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                InitialsAvatar(
-                    name = application.freelancerName,
+                ProfilePhoto(
+                            photoUrl = application.photoUrl,
+                            name = application.freelancerName,
                     modifier = Modifier
                         .size(59.159.dp)
                         .registerInputShadow(CircleShape),

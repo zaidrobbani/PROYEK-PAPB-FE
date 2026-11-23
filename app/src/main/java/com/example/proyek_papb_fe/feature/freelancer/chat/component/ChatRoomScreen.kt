@@ -30,6 +30,7 @@ data class ChatRoomUiState(
     val contactName: String,
     val contactInitials: String,
     val umkmName: String,
+    val contactPhotoUrl: String? = null,
     val projectTitle: String,
     val context: ChatProjectContext,
     val items: List<ChatRoomItem>
@@ -56,7 +57,9 @@ fun ChatRoomScreen(
     negotiation: ChatNegotiationUi? = null,
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
-    topBanner: (@Composable () -> Unit)? = null
+    topBanner: (@Composable () -> Unit)? = null,
+    onFileClick: (ChatBubbleUi) -> Unit = {},
+    isOpening: (ChatBubbleUi) -> Boolean = { false }
 ) {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val showNegotiationExtras = negotiation != null && !isImeVisible && !isAttachmentOpen
@@ -70,6 +73,7 @@ fun ChatRoomScreen(
             contactName = state.contactName,
             contactInitials = state.contactInitials,
             umkmName = state.umkmName,
+            contactPhotoUrl = state.contactPhotoUrl,
             onBack = onBack,
             onMoreClick = onMoreClick
         )
@@ -103,7 +107,11 @@ fun ChatRoomScreen(
             items(items = state.items, key = { it.key }) { item ->
                 when (item) {
                     is ChatRoomItem.DateSeparator -> ChatDateSeparator(label = item.label)
-                    is ChatRoomItem.Message -> ChatMessageBubble(bubble = item.bubble)
+                    is ChatRoomItem.Message -> ChatMessageBubble(
+                        bubble = item.bubble,
+                        isOpening = isOpening(item.bubble),
+                        onFileClick = onFileClick
+                    )
                 }
             }
         }

@@ -67,7 +67,8 @@ fun UmkmDashboardScreen(
             AppContainer.authRepository,
             AppContainer.profileRepository,
             AppContainer.workflowRepository,
-            AppContainer.freelancerRepository
+            AppContainer.freelancerRepository,
+            AppContainer.profilePhotoRepository
         )
     ),
     notificationsViewModel: NotificationsViewModel = viewModel(

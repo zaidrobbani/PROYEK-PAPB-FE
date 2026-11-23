@@ -16,6 +16,7 @@ import com.example.proyek_papb_fe.core.domain.model.FreelancerReviews
 import com.example.proyek_papb_fe.core.domain.model.FreelancerSummary
 import com.example.proyek_papb_fe.core.domain.model.LatestSubmission
 import com.example.proyek_papb_fe.core.domain.model.Message
+import com.example.proyek_papb_fe.core.domain.model.MessageAttachment
 import com.example.proyek_papb_fe.core.domain.model.Milestone
 import com.example.proyek_papb_fe.core.domain.model.MilestonePlan
 import com.example.proyek_papb_fe.core.domain.model.MilestoneProgress
@@ -69,7 +70,8 @@ fun FreelancerProfileDto.toDomain() = FreelancerProfessionalProfile(
 
 fun ExperienceDto.toDomain() = Experience(id, jobTitle, organizationName, description, startDate, endDate)
 
-fun PortfolioDto.toDomain() = Portfolio(id, title, description, projectUrl, parseUtcMillis(updatedAt ?: createdAt))
+fun PortfolioDto.toDomain() =
+    Portfolio(id, title, description, projectUrl, parseUtcMillis(updatedAt ?: createdAt), coverImageUrl)
 
 fun PortfolioMediaDto.toDomain() = PortfolioMedia(id, portfolioId, mimeType, fileSizeBytes, sortOrder, isCover)
 
@@ -139,7 +141,8 @@ fun FreelancerSummaryDto.toDomain() = FreelancerSummary(
     skills = skills.orEmpty().map { it.toDomain() },
     experienceCount = experienceCount ?: 0,
     averageRating = averageRating,
-    reviewCount = reviewCount ?: 0
+    reviewCount = reviewCount ?: 0,
+    photoUrl = profileImageUrl
 )
 
 fun FreelancerDetailDto.toDomain() = FreelancerDetail(
@@ -154,7 +157,8 @@ fun FreelancerDetailDto.toDomain() = FreelancerDetail(
         skills = skills.orEmpty().map { it.toDomain() },
         experienceCount = experienceCount ?: 0,
         averageRating = averageRating,
-        reviewCount = reviewCount ?: 0
+        reviewCount = reviewCount ?: 0,
+        photoUrl = profileImageUrl
     ),
     bio = bio,
     experiences = experiences.orEmpty().map { it.toDomain() },
@@ -433,9 +437,18 @@ fun FreelancerReviewsDto.toDomain() = FreelancerReviews(
 
 fun ConversationDto.toDomain() = Conversation(id, umkmId, freelancerId, projectId, parseUtcMillis(lastMessageAt))
 
-fun MessageWithAttachmentsDto.toDomain() = message.toDomain(attachments.orEmpty().map { it.originalFileName })
+fun MessageWithAttachmentsDto.toDomain() = message.toDomain(attachments.orEmpty().map { it.toDomain(message.conversationId) })
 
-fun MessageDto.toDomain(attachmentNames: List<String> = emptyList()) = Message(
+fun MessageAttachmentDto.toDomain(conversationId: String) = MessageAttachment(
+    id = id,
+    fileName = originalFileName,
+    mimeType = mimeType,
+    sizeBytes = fileSizeBytes,
+    downloadPath = downloadPath ?: "/api/v1/conversations/$conversationId/attachments/$id/file",
+    thumbnailPath = thumbnailPath
+)
+
+fun MessageDto.toDomain(attachments: List<MessageAttachment> = emptyList()) = Message(
     id = id,
     conversationId = conversationId,
     senderUserId = senderUserId,
@@ -443,7 +456,7 @@ fun MessageDto.toDomain(attachmentNames: List<String> = emptyList()) = Message(
     type = messageType,
     sentAtMillis = parseUtcMillis(sentAt) ?: 0L,
     readAtMillis = parseUtcMillis(readAt),
-    attachmentNames = attachmentNames
+    attachments = attachments
 )
 
 fun NotificationDto.toDomain() = AppNotification(

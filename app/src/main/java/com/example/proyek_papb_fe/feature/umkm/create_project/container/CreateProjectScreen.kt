@@ -1,4 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.create_project.container
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import android.content.Context
 import android.net.Uri
@@ -95,6 +97,7 @@ fun CreateProjectScreen(
         deadline = localErrors.deadline ?: uiState.fieldErrors["deadline"]
     )
     val context = LocalContext.current
+    val deviceAccess = rememberDeviceAccess()
     val scope = rememberCoroutineScope()
     val requesters = remember { ProjectFormField.entries.associateWith { BringIntoViewRequester() } }
 
@@ -285,7 +288,7 @@ fun CreateProjectScreen(
                     label = "Lampiran & Dokumen Pendukung",
                     spacing = 8.451.dp
                 ) {
-                    AttachmentDropzone(onPickFiles = { filePicker.launch(AttachmentMimeTypes) })
+                    AttachmentDropzone(onPickFiles = { deviceAccess.request(DeviceAccess.Document) { filePicker.launch(AttachmentMimeTypes) } })
                     state.attachments.forEach { attachment ->
                         AttachedFileItem(
                             attachment = attachment,

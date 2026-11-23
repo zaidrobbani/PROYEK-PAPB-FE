@@ -29,10 +29,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.theme.OnSageBadge
+import com.example.proyek_papb_fe.core.ui.theme.SageBadge
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthShadowStyle
 import com.example.proyek_papb_fe.feature.auth.component.shared.authDropShadow
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 import com.example.proyek_papb_fe.feature.umkm.dashboard.container.DashboardFreelancer
+import com.example.proyek_papb_fe.core.ui.components.ProfilePhoto
 
 private fun Modifier.photoRing(color: Color): Modifier = drawBehind {
     val spread = 2.113.dp.toPx()
@@ -78,8 +87,9 @@ fun FreelancerRecommendationCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                InitialsAvatar(
-                    name = freelancer.name,
+                ProfilePhoto(
+                            photoUrl = freelancer.photoUrl,
+                            name = freelancer.name,
                     modifier = Modifier
                         .size(50.708.dp)
                         .photoRing(colors.primary.copy(alpha = 0.2f)),
@@ -87,13 +97,16 @@ fun FreelancerRecommendationCard(
                     fontSize = 16.sp
                 )
             }
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.226.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = freelancer.name,
+                        modifier = Modifier.weight(1f, fill = false),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         color = colors.onSurface,
                         style = typography.titleSmall.withFrameMetrics(
                             fontWeight = FontWeight.SemiBold,
@@ -108,6 +121,8 @@ fun FreelancerRecommendationCard(
                 }
                 Text(
                     text = freelancer.role,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = colors.onSurfaceVariant,
                     style = typography.bodySmall.withFrameMetrics(
                         fontWeight = FontWeight.Normal,
@@ -147,26 +162,160 @@ fun FreelancerRecommendationCard(
                     )
                 }
             }
+            AvailabilityPill(freelancer.isAvailable)
         }
-        Column(modifier = Modifier.padding(top = 12.677.dp + 4.226.dp)) {
-            Text(
-                text = "Mulai dari",
-                color = colors.outline,
-                style = typography.labelSmall.withFrameMetrics(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.621.sp,
-                    lineHeight = 14.79.sp
-                )
+
+        // Lokasi & pengalaman
+        Row(
+            modifier = Modifier.padding(top = 12.677.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.677.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (freelancer.city.isNotBlank()) {
+                InfoItem(R.drawable.ic_find_location, freelancer.city)
+            }
+            InfoItem(
+                R.drawable.ic_find_experience,
+                if (freelancer.experienceCount > 0) "${freelancer.experienceCount} pengalaman" else "Belum ada pengalaman"
             )
-            Text(
-                text = freelancer.startingPrice,
-                color = colors.onTertiaryContainer,
-                style = typography.titleSmall.withFrameMetrics(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.79.sp,
-                    lineHeight = 21.128.sp
+        }
+
+        // Keahlian: maksimal 2 chip + sisa, satu baris agar tinggi kartu seragam.
+        Row(
+            modifier = Modifier.padding(top = 8.451.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.338.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (freelancer.skills.isEmpty()) {
+                SkillChip("Keahlian belum diisi", muted = true)
+            } else {
+                freelancer.skills.take(2).forEach { SkillChip(it, modifier = Modifier.weight(1f, fill = false)) }
+                if (freelancer.skills.size > 2) SkillChip("+${freelancer.skills.size - 2}", muted = true)
+            }
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 12.677.dp),
+            color = colors.outlineVariant.copy(alpha = 0.5f)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 10.564.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = freelancer.priceLabel,
+                    color = colors.outline,
+                    style = typography.labelSmall.withFrameMetrics(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 11.621.sp,
+                        lineHeight = 14.79.sp
+                    )
                 )
-            )
+                Text(
+                    text = freelancer.startingPrice,
+                    color = colors.onTertiaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = typography.titleSmall.withFrameMetrics(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.79.sp,
+                        lineHeight = 21.128.sp
+                    )
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(colors.primary)
+                    .padding(start = 12.677.dp, end = 8.451.dp, top = 6.338.dp, bottom = 6.338.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Lihat Profil",
+                    color = colors.onPrimary,
+                    style = typography.labelSmall.withFrameMetrics(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_right),
+                    contentDescription = null,
+                    tint = colors.onPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun AvailabilityPill(isAvailable: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    val (background, content, label) = if (isAvailable) {
+        Triple(SageBadge, OnSageBadge, "Tersedia")
+    } else {
+        Triple(colors.surfaceVariant, colors.onSurfaceVariant, "Sibuk")
+    }
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(background)
+            .padding(horizontal = 8.451.dp, vertical = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(Modifier.size(6.dp).background(content, CircleShape))
+        Text(
+            text = label,
+            color = content,
+            style = MaterialTheme.typography.labelSmall.withFrameMetrics(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.5.sp,
+                lineHeight = 14.sp
+            )
+        )
+    }
+}
+
+@Composable
+private fun InfoItem(icon: Int, text: String) {
+    val colors = MaterialTheme.colorScheme
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null, tint = colors.outline, modifier = Modifier.size(14.dp))
+        Text(
+            text = text,
+            color = colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall.withFrameMetrics(
+                fontWeight = FontWeight.Normal,
+                fontSize = 11.621.sp,
+                lineHeight = 14.79.sp
+            )
+        )
+    }
+}
+
+@Composable
+private fun SkillChip(text: String, muted: Boolean = false, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Text(
+        text = text,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (muted) colors.surfaceVariant.copy(alpha = 0.6f) else colors.tertiaryContainer)
+            .padding(horizontal = 8.451.dp, vertical = 4.dp),
+        color = if (muted) colors.outline else colors.onTertiaryContainer,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.labelSmall.withFrameMetrics(
+            fontWeight = FontWeight.Medium,
+            fontSize = 11.sp,
+            lineHeight = 15.sp
+        )
+    )
 }

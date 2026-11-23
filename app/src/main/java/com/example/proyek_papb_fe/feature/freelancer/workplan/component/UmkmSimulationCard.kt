@@ -27,7 +27,7 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.PlusJakartaSans
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-data class UmkmSimulationEntry(val message: String, val actionLabel: String)
+data class UmkmSimulationEntry(val message: String, val actionLabel: String, val label: String = "STATUS PROYEK")
 
 private val CardShape = RoundedCornerShape(16.dp)
 
@@ -46,7 +46,7 @@ internal fun UmkmSimulationCard(entry: UmkmSimulationEntry, onClick: () -> Unit,
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text("SIMULASI SISI UMKM", style = label, color = TemuKaryaColors.TextPlaceholder)
+        Text(entry.label, style = label, color = TemuKaryaColors.TextPlaceholder)
         Text(entry.message, style = body, color = TemuKaryaColors.TextBody)
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(entry.actionLabel, style = action, color = TemuKaryaColors.ActionPrimary)

@@ -38,6 +38,8 @@ data class RegisterRequest(
 
 data class EmailRequest(val email: String)
 
+data class UpdateAccountRequest(val name: String)
+
 fun UserDto.toSessionUser(): SessionUser? {
     val accountRole = AccountRole.from(role) ?: return null
     return SessionUser(

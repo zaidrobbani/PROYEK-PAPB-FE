@@ -38,7 +38,9 @@ data class MessageAttachmentDto(
     val originalFileName: String,
     val mimeType: String,
     val fileSizeBytes: Long,
-    val uploadedAt: String?
+    val uploadedAt: String?,
+    val downloadPath: String?,
+    val thumbnailPath: String?
 )
 
 data class MessageWithAttachmentsDto(

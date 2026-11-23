@@ -36,6 +36,8 @@ data class UmkmFreelancerProfileUiState(
     /** Lamaran freelancer ini (bila dibuka dari daftar Pengajuan). */
     val application: ProjectApplication? = null,
     val canSelect: Boolean = false,
+    /** Project tempat freelancer ini melamar; tombol "Pilih & Buat Kesepakatan" membuka Pengajuan project tsb. */
+    val applicationsProjectId: String? = null,
     val isSelecting: Boolean = false,
     val message: String? = null,
     val selected: Boolean = false
@@ -65,7 +67,7 @@ class UmkmFreelancerProfileViewModel(
                 coroutineScope {
                     val detail = async { freelancerRepository.detail(freelancerId) }
                     val reviews = async { runCatching { freelancerRepository.reviews(freelancerId) }.getOrNull() }
-                    val application = async { applicationId?.let { findApplication(it) } }
+                    val application = async { findApplication(applicationId) }
                     val d = detail.await()
                     val summary = d.summary
                     val app = application.await()
@@ -73,6 +75,7 @@ class UmkmFreelancerProfileViewModel(
                         id = summary.userId,
                         name = summary.name,
                         headline = summary.professionalTitle,
+                        photoUrl = summary.photoUrl,
                         verified = true,
                         location = summary.city,
                         rating = summary.averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "-",
@@ -91,7 +94,8 @@ class UmkmFreelancerProfileViewModel(
                                 summary = portfolio.description,
                                 tag = "Portofolio",
                                 tagIsSage = index % 2 == 1,
-                                link = portfolio.projectUrl
+                                link = portfolio.projectUrl,
+                                imageUrl = portfolio.coverImageUrl
                             )
                         },
                         reviews = reviews.await()?.items.orEmpty().map { review ->
@@ -124,7 +128,8 @@ class UmkmFreelancerProfileViewModel(
                                     status = a.status
                                 )
                             },
-                            canSelect = app?.second == true
+                            canSelect = app?.second == true,
+                            applicationsProjectId = applicationProjectId
                         )
                     }
                 }
@@ -136,13 +141,20 @@ class UmkmFreelancerProfileViewModel(
         }
     }
 
-    /** Lamaran dicari dari project UMKM yang masih TERBUKA (BE tidak punya endpoint detail lamaran). */
-    private suspend fun findApplication(id: String): Pair<Application, Boolean>? {
+    /**
+     * Lamaran dicari dari project UMKM (BE tidak punya endpoint detail lamaran): berdasarkan [id] bila profil dibuka
+     * dari daftar Pengajuan, atau lamaran freelancer ini yang masih menunggu bila dibuka dari pencarian/beranda.
+     */
+    private suspend fun findApplication(id: String?): Pair<Application, Boolean>? {
         val projects = workflowRepository.myProjects().items
+            .sortedByDescending { it.project.status == ProjectStatusCode.TERBUKA }
         for (item in projects) {
             if (item.applicationCount == 0) continue
             val match = runCatching { projectRepository.applicants(item.project.id) }.getOrDefault(emptyList())
-                .firstOrNull { it.id == id } ?: continue
+                .firstOrNull {
+                    if (id != null) it.id == id
+                    else it.freelancerId == freelancerId && it.status == ApplicationStatusCode.SUBMITTED
+                } ?: continue
             applicationProjectId = item.project.id
             val selectable = item.project.status == ProjectStatusCode.TERBUKA && match.status == ApplicationStatusCode.SUBMITTED
             return match to selectable

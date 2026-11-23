@@ -9,6 +9,7 @@ import com.example.proyek_papb_fe.core.data.remote.ApiException
 import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.AuthRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
+import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
 import com.example.proyek_papb_fe.core.domain.model.UmkmBusinessProfile
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import kotlinx.coroutines.CancellationException
@@ -27,14 +28,16 @@ data class BusinessProfileUiState(
     val saveError: String? = null,
     /** Bertambah setiap simpan berhasil (memicu snackbar). */
     val savedCount: Int = 0,
-    val fieldErrors: Map<String, String> = emptyMap()
+    val fieldErrors: Map<String, String> = emptyMap(),
+    val isUploadingPhoto: Boolean = false
 ) {
     val isNew: Boolean get() = profile == null
 }
 
 class BusinessProfileViewModel(
     private val profileRepository: ProfileRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BusinessProfileUiState())
@@ -51,6 +54,7 @@ class BusinessProfileViewModel(
                 val profile = profileRepository.umkmProfile()
                 val owner = authRepository.currentUser()?.name.orEmpty()
                 UmkmAccount.update(owner, profile)
+                UmkmAccount.updatePhoto(photoRepository.currentLocalUri())
                 _uiState.update { it.copy(isLoading = false, ownerName = owner, profile = profile) }
             } catch (e: CancellationException) {
                 throw e
@@ -60,11 +64,14 @@ class BusinessProfileViewModel(
         }
     }
 
-    fun save(businessName: String, category: String, city: String) {
+    fun save(ownerName: String, businessName: String, category: String, city: String) {
         if (_uiState.value.isSaving) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, saveError = null, fieldErrors = emptyMap()) }
             try {
+                val owner = ownerName.trim()
+                val savedOwner = if (owner != _uiState.value.ownerName) authRepository.updateName(owner).name else owner
+                _uiState.update { it.copy(ownerName = savedOwner) }
                 // Figma hanya punya field kota di section "Alamat Usaha"; BE mewajibkan business_address.
                 val saved = profileRepository.saveUmkmProfile(
                     businessName = businessName,
@@ -81,6 +88,7 @@ class BusinessProfileViewModel(
                     when (key) {
                         "business_name" -> "businessName"
                         "business_category" -> "category"
+                        "name" -> "ownerName"
                         "city", "business_address" -> "city"
                         else -> key
                     }
@@ -96,12 +104,31 @@ class BusinessProfileViewModel(
         }
     }
 
+    /** Foto langsung diunggah saat dipilih (dikompres ke WebP), terpisah dari tombol Simpan. */
+    fun uploadPhoto(uri: String) {
+        if (_uiState.value.isUploadingPhoto) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingPhoto = true) }
+            try {
+                UmkmAccount.updatePhoto(photoRepository.upload(uri))
+                _uiState.update { it.copy(isUploadingPhoto = false, saveError = "Foto profil diperbarui") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isUploadingPhoto = false, saveError = e.userMessage()) }
+            }
+        }
+    }
+
     fun onSaveErrorShown() = _uiState.update { it.copy(saveError = null) }
 
     companion object {
-        fun factory(profileRepository: ProfileRepository, authRepository: AuthRepository): ViewModelProvider.Factory =
-            viewModelFactory {
-                initializer { BusinessProfileViewModel(profileRepository, authRepository) }
-            }
+        fun factory(
+            profileRepository: ProfileRepository,
+            authRepository: AuthRepository,
+            photoRepository: ProfilePhotoRepository
+        ): ViewModelProvider.Factory = viewModelFactory {
+            initializer { BusinessProfileViewModel(profileRepository, authRepository, photoRepository) }
+        }
     }
 }

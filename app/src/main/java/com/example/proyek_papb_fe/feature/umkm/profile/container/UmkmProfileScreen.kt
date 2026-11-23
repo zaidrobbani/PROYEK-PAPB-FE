@@ -54,7 +54,8 @@ fun UmkmProfileScreen(
             AppContainer.profileRepository,
             AppContainer.workflowRepository,
             AppContainer.paymentRepository,
-            AppContainer.notificationRepository
+            AppContainer.notificationRepository,
+            AppContainer.profilePhotoRepository
         )
     )
 ) {

@@ -17,14 +17,16 @@ fun NavController.navigateToUmkmChatRoom(conversationId: String) {
 fun NavGraphBuilder.umkmChatRoomScreen(
     onBack: () -> Unit,
     onOpenProject: ((projectId: String) -> Unit)?,
-    onCompareDrafts: ((conversationId: String, draftMessageId: String) -> Unit)?
+    onCompareDrafts: ((conversationId: String, draftMessageId: String) -> Unit)?,
+    onOpenNegotiation: (conversationId: String) -> Unit
 ) {
     composable<UmkmChatRoomRoute> { entry ->
         ChatRoomScreen(
             conversationId = entry.toRoute<UmkmChatRoomRoute>().conversationId,
             onBack = onBack,
             onOpenProject = onOpenProject,
-            onCompareDrafts = onCompareDrafts
+            onCompareDrafts = onCompareDrafts,
+            onOpenNegotiation = onOpenNegotiation
         )
     }
 }

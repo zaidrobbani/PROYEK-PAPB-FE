@@ -46,6 +46,7 @@ import com.example.proyek_papb_fe.feature.umkm.review.component.formatFileSize
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ProjectResultViewModel
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ResultStage
 import java.util.Locale
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 private val RevisionAspects = listOf("Tipografi & Teks", "Warna", "Tata Letak", "Ilustrasi & Motif", "Ukuran & Format Berkas")
 
@@ -118,7 +119,7 @@ fun ResultReviewContainer(
         state = ResultReviewUiState(
             projectTitle = detail.project.title,
             freelancerName = freelancerName,
-            freelancerPhotoUri = freelancer?.photoUrl,
+            freelancerPhotoUri = rememberServerImageUri(freelancer?.photoUrl),
             freelancerRating = freelancer?.averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "-",
             projectValue = formatRupiah(amount),
             note = draft.note.orEmpty().ifBlank { draft.resultUrl?.let { "Tautan hasil: $it" }.orEmpty() },
@@ -183,7 +184,7 @@ fun ResultReviewContainer(
                 freelancerName = freelancerName,
                 freelancerFirstName = firstName(freelancerName),
                 freelancerRole = shortRole(freelancer?.subtitle.orEmpty()),
-                freelancerPhotoUri = freelancer?.photoUrl,
+                freelancerPhotoUri = rememberServerImageUri(freelancer?.photoUrl),
                 files = files,
                 total = formatRupiah(amount),
                 feeLabel = "Komisi platform (${detail.agreement?.commissionPercent ?: 5}%)",

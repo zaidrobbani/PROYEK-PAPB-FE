@@ -26,7 +26,8 @@ fun UserSummary.toProjectFreelancer() = ProjectFreelancer(
     name = name,
     specialty = subtitle.orEmpty(),
     photo = null,
-    rating = averageRating?.let { String.format(Locale.US, "%.1f", it) }.orEmpty()
+    rating = averageRating?.let { String.format(Locale.US, "%.1f", it) }.orEmpty(),
+    photoUrl = photoUrl
 )
 
 fun Milestone.toProjectMilestone() = ProjectMilestone(

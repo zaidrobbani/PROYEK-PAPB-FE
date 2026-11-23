@@ -64,7 +64,9 @@ data class PortfolioDto(
     val description: String,
     val projectUrl: String?,
     val createdAt: String?,
-    val updatedAt: String?
+    val updatedAt: String?,
+    /** Hanya dikirim endpoint discovery (detail freelancer); path relatif yang butuh token. */
+    val coverImageUrl: String? = null
 )
 
 data class PortfolioRequest(

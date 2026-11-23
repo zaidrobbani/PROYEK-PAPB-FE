@@ -1,8 +1,13 @@
 package com.example.proyek_papb_fe.core.di
 
+import com.example.proyek_papb_fe.core.push.PushTokenRegistrar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import android.content.Context
 import com.example.proyek_papb_fe.core.data.remote.AuthApiService
 import com.example.proyek_papb_fe.core.data.remote.ChatApiService
+import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeClient
 import com.example.proyek_papb_fe.core.data.remote.FileApiService
 import com.example.proyek_papb_fe.core.data.remote.FreelancerApiService
 import com.example.proyek_papb_fe.core.data.remote.MasterDataApiService
@@ -25,7 +30,14 @@ import com.example.proyek_papb_fe.core.data.repository.DefaultMasterDataReposito
 import com.example.proyek_papb_fe.core.data.repository.DefaultNotificationRepository
 import com.example.proyek_papb_fe.core.data.repository.DefaultPaymentRepository
 import com.example.proyek_papb_fe.core.data.repository.DefaultProfileRepository
+import com.example.proyek_papb_fe.core.data.repository.DefaultProfilePhotoRepository
 import com.example.proyek_papb_fe.core.data.repository.DefaultProjectRepository
+import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
+import com.example.proyek_papb_fe.core.data.repository.DefaultLocationRepository
+import com.example.proyek_papb_fe.core.data.repository.LocationRepository
+import com.example.proyek_papb_fe.core.data.source.ChatAttachmentReader
+import com.example.proyek_papb_fe.core.data.source.DeviceLocationSource
+import com.example.proyek_papb_fe.core.data.source.ImageCompressor
 import com.example.proyek_papb_fe.core.data.repository.DefaultSubmissionRepository
 import com.example.proyek_papb_fe.core.data.repository.DefaultWorkflowRepository
 import com.example.proyek_papb_fe.core.data.repository.FreelancerRepository
@@ -63,11 +75,24 @@ object AppContainer {
 
     val sessionManager: SessionManager by lazy { SessionManager(appContext) }
 
-    private val retrofit by lazy { RetrofitClient.create(sessionManager) }
+    private val okHttpClient by lazy { RetrofitClient.createClient(sessionManager) }
+    private val retrofit by lazy { RetrofitClient.create(okHttpClient) }
+    private val chatRealtimeClient by lazy { ChatRealtimeClient(okHttpClient, RetrofitClient.gson, sessionManager) }
     private val uploadPartFactory by lazy { UploadPartFactory(appContext.contentResolver) }
 
+    /** Scope aplikasi untuk kerja latar yang tidak terikat layar (mis. pendaftaran token push). */
+    val appScope: CoroutineScope by lazy { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
+
+    val pushTokenRegistrar: PushTokenRegistrar by lazy {
+        PushTokenRegistrar(sessionManager, { notificationRepository }, appScope)
+    }
+
     val authRepository: AuthRepository by lazy {
-        DefaultAuthRepository(AuthRemoteDataSource(retrofit.create(AuthApiService::class.java)), sessionManager)
+        DefaultAuthRepository(
+            AuthRemoteDataSource(retrofit.create(AuthApiService::class.java)),
+            sessionManager,
+            beforeLogout = { pushTokenRegistrar.unregister() }
+        )
     }
 
     val masterDataRepository: MasterDataRepository by lazy {
@@ -99,7 +124,11 @@ object AppContainer {
     }
 
     val chatRepository: ChatRepository by lazy {
-        DefaultChatRepository(ChatRemoteDataSource(retrofit.create(ChatApiService::class.java)))
+        DefaultChatRepository(
+            ChatRemoteDataSource(retrofit.create(ChatApiService::class.java)),
+            chatRealtimeClient,
+            ChatAttachmentReader(appContext.contentResolver)
+        )
     }
 
     val notificationRepository: NotificationRepository by lazy {
@@ -112,6 +141,19 @@ object AppContainer {
 
     val fileRepository: FileRepository by lazy {
         DefaultFileRepository(appContext, retrofit.create(FileApiService::class.java))
+    }
+
+    val profilePhotoRepository: ProfilePhotoRepository by lazy {
+        DefaultProfilePhotoRepository(
+            retrofit.create(AuthApiService::class.java),
+            ImageCompressor(appContext.contentResolver),
+            fileRepository,
+            sessionManager
+        )
+    }
+
+    val locationRepository: LocationRepository by lazy {
+        DefaultLocationRepository(DeviceLocationSource(appContext))
     }
 
     /** Id user yang sedang login (dipakai membedakan pesan milik sendiri di chat, dsb.). */

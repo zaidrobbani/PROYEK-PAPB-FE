@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Konfigurasi Firebase per developer (lihat docs/INTEGRASI_API.md › Push notifikasi)
+/app/google-services.json

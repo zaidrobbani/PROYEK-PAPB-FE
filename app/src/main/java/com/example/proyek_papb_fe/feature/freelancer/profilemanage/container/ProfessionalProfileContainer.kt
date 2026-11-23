@@ -1,4 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.profilemanage.container
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -54,7 +56,11 @@ private fun initialsOf(name: String): String =
 private fun validate(form: ProfessionalProfileForm): ProfessionalProfileErrors {
     val headline = form.headline.trim()
     return ProfessionalProfileErrors(
-        fullName = if (form.fullName.isBlank()) "Nama lengkap wajib diisi." else null,
+        fullName = when {
+            form.fullName.isBlank() -> "Nama lengkap wajib diisi."
+            form.fullName.trim().length > 100 -> "Maksimal 100 karakter."
+            else -> null
+        },
         headline = when {
             headline.isEmpty() -> "Headline profesional wajib diisi."
             headline.length > FreelancerProfile.HEADLINE_MAX -> "Maksimal ${FreelancerProfile.HEADLINE_MAX} karakter (saat ini ${headline.length})."
@@ -72,6 +78,7 @@ fun ProfessionalProfileContainer(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val deviceAccess = rememberDeviceAccess()
     val saved = FreelancerProfileStore.profile
     var form by remember { mutableStateOf(saved.toForm()) }
     var formLoaded by rememberSaveable { mutableStateOf(false) }
@@ -94,8 +101,18 @@ fun ProfessionalProfileContainer(
     }
 
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) form = form.copy(photoUri = uri.toString())
+        if (uri != null) viewModel.uploadPhoto(uri.toString())
     }
+
+    LaunchedEffect(uiState.photoMessage) {
+        uiState.photoMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.onPhotoMessageShown()
+        }
+    }
+    // Foto tampil dari cache server; field lain di form tidak ikut tertimpa.
+    val storedPhoto = FreelancerProfileStore.profile.photoUri
+    LaunchedEffect(storedPhoto) { form = form.copy(photoUri = storedPhoto) }
 
     LaunchedEffect(uiState.savedCount) {
         if (uiState.savedCount > 0) {
@@ -111,11 +128,12 @@ fun ProfessionalProfileContainer(
         showErrorBanner = submitted,
         fieldOptions = PrimaryFieldOptions,
         showSavedSnackbar = showSnackbar,
-        onFormChange = { updated ->
-            // Nama mengikuti akun (BE belum punya endpoint ubah nama).
-            form = updated.copy(fullName = saved.fullName.ifBlank { updated.fullName })
+        onFormChange = { form = it },
+        onPickPhoto = {
+            deviceAccess.request(DeviceAccess.Gallery) {
+                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
         },
-        onPickPhoto = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         onSave = {
             if (validate(form).count > 0) {
                 submitted = true
@@ -123,6 +141,7 @@ fun ProfessionalProfileContainer(
             } else if (!uiState.isSaving) {
                 submitted = false
                 viewModel.saveProfile(
+                    fullName = form.fullName,
                     headline = form.headline.trim(),
                     bio = form.bio.trim(),
                     city = form.city.trim(),
@@ -130,8 +149,7 @@ fun ProfessionalProfileContainer(
                     isAvailable = form.isAvailableForWork,
                     skills = form.skills,
                     primaryField = form.primaryField,
-                    acceptsRemote = form.acceptsRemoteWork,
-                    photoUri = form.photoUri
+                    acceptsRemote = form.acceptsRemoteWork
                 )
             }
         },

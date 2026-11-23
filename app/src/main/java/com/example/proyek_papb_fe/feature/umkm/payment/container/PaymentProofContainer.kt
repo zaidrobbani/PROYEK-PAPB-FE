@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 private fun transactionTime(millis: Long): String =
     SimpleDateFormat("d MMM yyyy, HH.mm", Locale.forLanguageTag("id-ID")).apply {
@@ -53,7 +54,7 @@ fun PaymentProofContainer(
             projectTitle = payment.projectTitle,
             freelancerName = payment.freelancer.name,
             freelancerRole = shortRole(payment.freelancer.subtitle.orEmpty()),
-            freelancerPhotoUri = payment.freelancer.photoUrl,
+            freelancerPhotoUri = rememberServerImageUri(payment.freelancer.photoUrl),
             umkmName = payment.umkm.subtitle ?: payment.umkm.name,
             umkmOwner = payment.umkm.name
         ),

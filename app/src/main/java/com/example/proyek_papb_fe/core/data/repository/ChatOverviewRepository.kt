@@ -17,7 +17,11 @@ data class ConversationOverview(
     val projectStatus: String?,
     val messages: List<Message>,
     val unreadCount: Int,
-    val workflow: com.example.proyek_papb_fe.core.domain.model.WorkflowDetail? = null
+    val workflow: com.example.proyek_papb_fe.core.domain.model.WorkflowDetail? = null,
+    /** Id user lawan bicara (freelancer bagi UMKM, UMKM bagi freelancer). */
+    val counterpartId: String = "",
+    /** `profile_image_url` lawan bicara (path ber-versi), null bila belum punya foto. */
+    val counterpartPhotoUrl: String? = null
 ) {
     val lastMessage: Message? get() = messages.lastOrNull()
 }
@@ -40,6 +44,10 @@ class ChatOverviewRepository(
 
     suspend fun overview(conversationId: String): ConversationOverview = overview(chatRepository.conversation(conversationId))
 
+    suspend fun overviews(conversations: List<Conversation>): List<ConversationOverview> = coroutineScope {
+        conversations.map { async { overview(it) } }.awaitAll()
+    }
+
     private suspend fun overview(conversation: Conversation): ConversationOverview = coroutineScope {
         val me = sessionManager.currentUser
         val iAmUmkm = me?.role == AccountRole.UMKM
@@ -61,7 +69,9 @@ class ChatOverviewRepository(
             projectStatus = workflow?.project?.status ?: publicProject?.status,
             messages = list,
             unreadCount = list.count { it.senderUserId != me?.id && it.readAtMillis == null },
-            workflow = workflow
+            workflow = workflow,
+            counterpartId = if (iAmUmkm) conversation.freelancerId else conversation.umkmId,
+            counterpartPhotoUrl = counterpart?.photoUrl ?: freelancerProfile?.photoUrl
         )
     }
 }

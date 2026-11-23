@@ -3,6 +3,7 @@ package com.example.proyek_papb_fe.core.data.remote.dto
 data class FreelancerSummaryDto(
     val userId: String,
     val name: String,
+    val profileImageUrl: String?,
     val professionalTitle: String,
     val city: String,
     val availabilityStatus: String?,
@@ -17,6 +18,7 @@ data class FreelancerSummaryDto(
 data class FreelancerDetailDto(
     val userId: String,
     val name: String,
+    val profileImageUrl: String?,
     val professionalTitle: String,
     val city: String,
     val availabilityStatus: String?,

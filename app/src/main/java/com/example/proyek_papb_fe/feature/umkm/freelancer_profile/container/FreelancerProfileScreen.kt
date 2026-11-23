@@ -1,6 +1,10 @@
 package com.example.proyek_papb_fe.feature.umkm.freelancer_profile.container
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthAppBar
-import com.example.proyek_papb_fe.feature.umkm.freelancer_applications.container.ApproveDialog
 import com.example.proyek_papb_fe.feature.umkm.freelancer_profile.component.PortfolioSection
 import com.example.proyek_papb_fe.feature.umkm.freelancer_profile.component.ProfileActionBar
 import com.example.proyek_papb_fe.feature.umkm.freelancer_profile.component.ProfileGutter
@@ -49,6 +52,7 @@ fun FreelancerProfileScreen(
     applicationId: String?,
     onBack: () -> Unit,
     onSelected: () -> Unit,
+    onOpenApplications: (projectId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: UmkmFreelancerProfileViewModel = viewModel(
         factory = UmkmFreelancerProfileViewModel.factory(
@@ -78,8 +82,6 @@ fun FreelancerProfileScreen(
     }
 
     val profile = uiState.profile
-    val application = uiState.application
-    var confirmSelect by rememberSaveable { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
@@ -105,8 +107,11 @@ fun FreelancerProfileScreen(
                     items = profile.portfolio,
                     onSeeAll = { toast("Daftar lengkap portofolio belum tersedia di versi ini.") },
                     onOpenItem = { item ->
-                        val link = profile.portfolio.firstOrNull { it.id == item.id }?.link
-                        toast(link?.let { "Tautan karya: $it" } ?: "Detail portofolio belum tersedia di versi ini.")
+                        val link = item.link?.trim().orEmpty()
+                        when {
+                            link.isEmpty() -> toast("${profile.name} belum mencantumkan tautan untuk karya ini.")
+                            !openInBrowser(context, link) -> toast("Tidak ada aplikasi browser untuk membuka tautan ini.")
+                        }
                     }
                 )
                 ReviewsSection(rating = profile.rating, reviews = profile.reviews)
@@ -117,29 +122,30 @@ fun FreelancerProfileScreen(
             ProfileActionBar(
                 label = "Pilih & Buat Kesepakatan",
                 onClick = {
+                    // Pemilihan freelancer dilakukan di halaman Pengajuan (bandingkan penawaran lalu "Setujui & Buat").
+                    val projectId = uiState.applicationsProjectId
                     when {
-                        application == null ->
-                            toast("Pilih freelancer melalui daftar Pengajuan pada project Anda.")
-                        application.status == ApplicationStatusCode.ACCEPTED ->
-                            toast("${profile.name} sudah dipilih untuk project ini.")
-                        !uiState.canSelect ->
-                            toast("Project ini sudah memiliki freelancer terpilih.")
-                        else -> confirmSelect = true
+                        uiState.isLoading -> Unit
+                        projectId != null -> onOpenApplications(projectId)
+                        else -> toast("${profile.name} belum mengajukan penawaran ke project kamu yang masih terbuka.")
                     }
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }
+}
 
-    if (confirmSelect && application != null) {
-        ApproveDialog(
-            application = application,
-            onConfirm = {
-                confirmSelect = false
-                viewModel.select()
-            },
-            onDismiss = { confirmSelect = false }
-        )
+/** Buka URL portofolio di browser default HP; false bila tidak ada aplikasi yang bisa membukanya. */
+private fun openInBrowser(context: Context, url: String): Boolean {
+    val withScheme = if (url.startsWith("http://", true) || url.startsWith("https://", true)) url else "https://$url"
+    val intent = Intent(Intent.ACTION_VIEW, withScheme.toUri())
+        .addCategory(Intent.CATEGORY_BROWSABLE)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return try {
+        context.startActivity(intent)
+        true
+    } catch (_: ActivityNotFoundException) {
+        false
     }
 }

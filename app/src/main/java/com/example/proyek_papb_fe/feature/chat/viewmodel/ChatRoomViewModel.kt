@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeEvent
 import com.example.proyek_papb_fe.core.data.remote.userMessage
+import com.example.proyek_papb_fe.core.di.AppContainer
 import com.example.proyek_papb_fe.core.data.repository.ChatOverviewRepository
 import com.example.proyek_papb_fe.core.data.repository.ChatRepository
 import com.example.proyek_papb_fe.core.data.repository.ConversationOverview
 import com.example.proyek_papb_fe.core.data.repository.SubmissionRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
+import com.example.proyek_papb_fe.core.data.source.PickedChatFile
 import com.example.proyek_papb_fe.core.domain.model.Message
+import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
 import com.example.proyek_papb_fe.core.domain.model.SubmissionList
 import com.example.proyek_papb_fe.core.domain.model.UploadFile
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
@@ -41,7 +45,8 @@ data class ChatRoomVmState(
 
 /**
  * Ruang chat: pesan teks (`/conversations/{id}/messages`), konteks project dari detail alur,
- * dan kirim hasil kerja freelancer (`POST /projects/{id}/submissions`). BE belum mendukung lampiran chat.
+ * lampiran foto/dokumen (`POST /conversations/{id}/attachments`), dan kirim hasil kerja freelancer
+ * (`POST /projects/{id}/submissions`). Pesan baru & status dibaca datang lewat WebSocket.
  */
 class ChatRoomViewModel(
     private val conversationId: String,
@@ -54,8 +59,55 @@ class ChatRoomViewModel(
     private val _uiState = MutableStateFlow(ChatRoomVmState())
     val uiState: StateFlow<ChatRoomVmState> = _uiState.asStateFlow()
 
+    private val realtime = chatRepository.realtime(conversationId)
+    /** true saat WebSocket tersambung; layar hanya polling bila false. */
+    val isRealtime: StateFlow<Boolean> = realtime.isConnected
+
+    private val outgoing = OutgoingAttachmentQueue(viewModelScope, { conversationId }, chatRepository, ::addMessage)
+    /** Foto/dokumen yang sedang dikirim atau gagal terkirim (tampil di akhir chat). */
+    val pendingAttachments: StateFlow<List<OutgoingAttachment>> = outgoing.items
+
+    fun sendAttachment(file: PickedChatFile, caption: String, asImage: Boolean) = outgoing.enqueue(file, caption, asImage)
+
+    fun retryAttachment(localId: String) = outgoing.retry(localId)
+
+    fun discardAttachment(localId: String) = outgoing.discard(localId)
+
+    private fun addMessage(message: Message) = _uiState.update { state ->
+        if (state.messages.any { it.id == message.id }) state
+        else state.copy(messages = (state.messages + message).sortedBy { it.sentAtMillis })
+    }
+
     init {
         load()
+        realtime.start(viewModelScope)
+        viewModelScope.launch { realtime.events.collect(::onRealtimeEvent) }
+    }
+
+    private fun onRealtimeEvent(event: ChatRealtimeEvent) {
+        val myId = AppContainer.currentUserId
+        when (event) {
+            is ChatRealtimeEvent.NewMessage -> {
+                val message = event.message
+                addMessage(message)
+                // Layar sedang terbuka: pesan masuk langsung dianggap dibaca.
+                if (message.senderUserId != myId && !realtime.markRead()) {
+                    viewModelScope.launch { runCatching { chatRepository.markRead(conversationId) } }
+                }
+            }
+            is ChatRealtimeEvent.Read -> if (event.readerUserId != myId) {
+                _uiState.update { state ->
+                    state.copy(messages = state.messages.map {
+                        if (it.senderUserId == myId && it.readAtMillis == null) it.copy(readAtMillis = event.readAtMillis) else it
+                    })
+                }
+            }
+            is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
+        }
+    }
+
+    override fun onCleared() {
+        realtime.close()
     }
 
     fun load() {
@@ -86,13 +138,15 @@ class ChatRoomViewModel(
         }
     }
 
-    /** Dipanggil berkala dari layar (BE belum punya websocket/push). */
+    /** Cadangan saat WebSocket terputus: dipanggil berkala dari layar. */
     fun refreshMessages() {
         viewModelScope.launch {
             val latest = runCatching { chatRepository.messages(conversationId).items }.getOrNull() ?: return@launch
-            if (latest.lastOrNull()?.id != _uiState.value.messages.lastOrNull()?.id) {
+            val current = _uiState.value.messages
+            // Bandingkan seluruh isi agar status dibaca ikut ter-update saat WebSocket terputus.
+            if (latest != current) {
                 _uiState.update { it.copy(messages = latest) }
-                runCatching { chatRepository.markRead(conversationId) }
+                if (latest.lastOrNull()?.id != current.lastOrNull()?.id) runCatching { chatRepository.markRead(conversationId) }
             }
         }
     }
@@ -100,11 +154,14 @@ class ChatRoomViewModel(
     fun send(text: String) {
         val body = text.trim()
         if (body.isEmpty() || _uiState.value.isSending) return
+        // Lewat WebSocket: pesan kembali sebagai event `message` (ke pengirim & lawan bicara). REST hanya cadangan.
+        if (realtime.sendMessage(body)) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSending = true) }
             try {
                 val sent = chatRepository.send(conversationId, body)
-                _uiState.update { it.copy(isSending = false, messages = it.messages + sent) }
+                _uiState.update { it.copy(isSending = false) }
+                addMessage(sent)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

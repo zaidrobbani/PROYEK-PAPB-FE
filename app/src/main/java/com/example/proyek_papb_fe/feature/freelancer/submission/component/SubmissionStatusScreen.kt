@@ -51,6 +51,7 @@ fun SubmissionStatusScreen(
     state: SubmissionStatusUiState,
     onBack: () -> Unit,
     onOpenNegotiationClick: () -> Unit,
+    onOpenWorkPlanClick: () -> Unit = {},
     onFindOtherProjectsClick: () -> Unit,
     onViewDetailClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -118,6 +119,16 @@ fun SubmissionStatusScreen(
                     NegotiationInviteBanner(
                         clientName = state.clientName,
                         onOpenClick = onOpenNegotiationClick
+                    )
+                }
+                // Setelah kesepakatan: jalan masuk ke Rencana Pengerjaan (mulai kerja, tandai milestone, status hasil).
+                if (state.isAgreed && !state.isCancelled) {
+                    NegotiationInviteBanner(
+                        clientName = state.clientName,
+                        onOpenClick = onOpenWorkPlanClick,
+                        title = if (state.isCompleted) "Proyek selesai" else "Proyek sudah disepakati",
+                        subtitle = if (state.isCompleted) "Lihat milestone & status dana" else "Mulai kerja & tandai milestone selesai",
+                        buttonLabel = "Rencana"
                     )
                 }
             }

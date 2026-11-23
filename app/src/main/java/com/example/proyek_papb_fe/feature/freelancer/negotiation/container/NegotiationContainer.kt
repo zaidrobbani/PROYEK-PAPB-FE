@@ -105,7 +105,7 @@ fun NegotiationContainer(
             NegotiationMessage(
                 id = message.id,
                 sender = if (message.senderUserId == myId) MessageSender.FREELANCER else MessageSender.CLIENT,
-                text = message.text.ifBlank { message.attachmentNames.joinToString() },
+                text = message.previewText,
                 time = formatTime(message.sentAtMillis)
             )
         }

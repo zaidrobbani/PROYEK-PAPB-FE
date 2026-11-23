@@ -10,6 +10,12 @@ interface NotificationRepository {
     suspend fun unreadCount(): Int
     suspend fun markRead(notificationId: String): AppNotification
     suspend fun markAllRead()
+
+    /** Daftarkan token FCM perangkat ini ke akun yang sedang login. */
+    suspend fun registerDevice(token: String)
+
+    /** Lepas token FCM dari akun (dipanggil sebelum logout). */
+    suspend fun unregisterDevice(token: String)
 }
 
 class DefaultNotificationRepository(
@@ -27,5 +33,13 @@ class DefaultNotificationRepository(
 
     override suspend fun markAllRead() {
         remote.markAllRead()
+    }
+
+    override suspend fun registerDevice(token: String) {
+        remote.registerDevice(token)
+    }
+
+    override suspend fun unregisterDevice(token: String) {
+        remote.unregisterDevice(token)
     }
 }

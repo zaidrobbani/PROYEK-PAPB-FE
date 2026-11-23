@@ -38,7 +38,7 @@ import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmTopBar
 import com.example.proyek_papb_fe.feature.umkm.data.ConversationStage
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.formatConversationTime
-import com.example.proyek_papb_fe.feature.umkm.data.searchConversations
+import com.example.proyek_papb_fe.feature.umkm.data.searchThreads
 import java.time.LocalDate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,8 +62,9 @@ fun ConversationListScreen(
     var stageName by rememberSaveable { mutableStateOf<String?>(null) }
     val stage = stageName?.let { ConversationStage.valueOf(it) }
 
-    val all = UmkmConversationStore.conversations
-    val shown = searchConversations(all, query, stage)
+    // Satu baris per freelancer: percakapan per project digabung (lihat UmkmThread).
+    val all = UmkmConversationStore.threads
+    val shown = searchThreads(all, query, stage)
     val today = LocalDate.now()
 
     Column(
@@ -90,7 +91,7 @@ fun ConversationListScreen(
                 ConversationFilterPills(
                     selected = stage,
                     totalCount = all.size,
-                    countFor = { s -> all.count { it.stage == s } },
+                    countFor = { s -> all.count { it.hasStage(s) } },
                     onSelect = { stageName = it?.name }
                 )
             }
@@ -112,12 +113,12 @@ fun ConversationListScreen(
                     )
                 }
             }
-            items(shown, key = { it.id }) { conversation ->
+            items(shown, key = { it.freelancerId }) { conversation ->
                 ConversationRow(
                     conversation = conversation,
                     time = formatConversationTime(conversation.lastMessageAt, today),
                     onClick = {
-                        onOpenConversation?.invoke(conversation.id)
+                        onOpenConversation?.invoke(conversation.primaryConversationId)
                             ?: Toast.makeText(context, "Ruang Chat belum tersedia di versi ini.", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.padding(horizontal = 16.dp)

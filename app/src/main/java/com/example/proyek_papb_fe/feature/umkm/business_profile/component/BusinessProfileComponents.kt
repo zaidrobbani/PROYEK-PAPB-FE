@@ -168,7 +168,8 @@ fun KelolaFormField(
     error: String? = null,
     singleLine: Boolean = true,
     @DrawableRes trailingIcon: Int? = null,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val colors = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
@@ -210,7 +211,9 @@ fun KelolaFormField(
                         if (value.isEmpty()) Text(placeholder, color = colors.outline, style = text(FontWeight.Normal, 14.8f))
                         inner()
                     }
-                    if (trailingIcon != null) {
+                    if (trailingContent != null) {
+                        trailingContent()
+                    } else if (trailingIcon != null) {
                         Icon(painterResource(trailingIcon), null, tint = colors.outline, modifier = Modifier.size(20.dp))
                     }
                 }

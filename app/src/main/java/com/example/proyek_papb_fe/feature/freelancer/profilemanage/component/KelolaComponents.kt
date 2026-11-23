@@ -183,6 +183,7 @@ private fun FieldBox(
     isError: Boolean,
     modifier: Modifier = Modifier,
     @DrawableRes trailingIconRes: Int? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val (width, color) = when {
@@ -201,7 +202,8 @@ private fun FieldBox(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(modifier = Modifier.weight(1f), content = content)
-        trailingIconRes?.let { Icon(painterResource(it), null, tint = KelolaColors.Muted, modifier = Modifier.size(20.dp)) }
+        if (trailingContent != null) trailingContent()
+        else trailingIconRes?.let { Icon(painterResource(it), null, tint = KelolaColors.Muted, modifier = Modifier.size(20.dp)) }
     }
 }
 
@@ -217,7 +219,8 @@ internal fun KelolaTextField(
     singleLine: Boolean = true,
     @DrawableRes trailingIconRes: Int? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -233,7 +236,7 @@ internal fun KelolaTextField(
             visualTransformation = visualTransformation,
             interactionSource = interaction,
             decorationBox = { inner ->
-                FieldBox(focused = focused, isError = error != null, trailingIconRes = trailingIconRes) {
+                FieldBox(focused = focused, isError = error != null, trailingIconRes = trailingIconRes, trailingContent = trailingContent) {
                     if (value.isEmpty()) Text(placeholder, style = KelolaTypography.FieldValue, color = KelolaColors.Muted)
                     inner()
                 }

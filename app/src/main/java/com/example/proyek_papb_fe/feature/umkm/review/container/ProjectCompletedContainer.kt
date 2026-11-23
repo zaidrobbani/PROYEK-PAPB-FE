@@ -17,6 +17,7 @@ import com.example.proyek_papb_fe.feature.umkm.review.component.ProjectCompleted
 import com.example.proyek_papb_fe.feature.umkm.review.component.formatFileSize
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ProjectResultViewModel
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ResultStage
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 @Composable
 fun ProjectCompletedContainer(
@@ -54,7 +55,7 @@ fun ProjectCompletedContainer(
     ProjectCompletedScreen(
         state = ProjectCompletedUiState(
             freelancerName = detail.freelancer?.name ?: "Freelancer",
-            freelancerPhotoUri = detail.freelancer?.photoUrl,
+            freelancerPhotoUri = rememberServerImageUri(detail.freelancer?.photoUrl),
             files = files,
             totalSize = draft?.files?.takeIf { it.isNotEmpty() }?.let { list -> formatFileSize(list.sumOf { it.sizeBytes }) },
             freelancerNet = formatRupiah(payment?.freelancerAmount ?: detail.agreement?.freelancerAmount ?: 0),

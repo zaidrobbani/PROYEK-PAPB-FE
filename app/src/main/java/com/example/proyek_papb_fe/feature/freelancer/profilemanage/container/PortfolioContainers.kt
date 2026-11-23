@@ -1,4 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.profilemanage.container
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -31,8 +33,13 @@ private val FigmaFilters = listOf(PortfolioCategory.PACKAGING, PortfolioCategory
 
 private fun PortfolioItem.toCardUi() = PortfolioCardUi(id, title, category.label, description, link, coverRes, coverUri)
 
-private fun normalizeLink(link: String): String =
-    link.trim().removePrefix("https://").removePrefix("http://").removeSuffix("/")
+/** BE mewajibkan URL HTTP(S) lengkap; tambahkan `https://` bila pengguna tidak menuliskan skema. */
+private fun normalizeLink(link: String): String {
+    val value = link.trim()
+    if (value.isEmpty()) return value
+    val hasScheme = value.startsWith("http://", ignoreCase = true) || value.startsWith("https://", ignoreCase = true)
+    return if (hasScheme) value else "https://$value"
+}
 
 @Composable
 fun PortfolioListContainer(
@@ -77,6 +84,7 @@ fun PortfolioFormContainer(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val deviceAccess = rememberDeviceAccess()
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -114,7 +122,11 @@ fun PortfolioFormContainer(
         skillOptions = skillOptions,
         showDeleteSheet = showDelete,
         onFormChange = { form = it },
-        onPickCover = { coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+        onPickCover = {
+            deviceAccess.request(DeviceAccess.Gallery) {
+                coverPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+        },
         onSave = {
             val e = validate(form)
             if (e.title != null || e.category != null || e.description != null) {

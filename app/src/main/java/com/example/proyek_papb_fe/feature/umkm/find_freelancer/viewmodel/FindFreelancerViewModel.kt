@@ -43,6 +43,7 @@ class FindFreelancerViewModel(
                     DirectoryFreelancer(
                         id = f.userId,
                         name = f.name,
+                        photoUrl = f.photoUrl,
                         role = f.professionalTitle,
                         category = f.professionalTitle,
                         city = f.city,

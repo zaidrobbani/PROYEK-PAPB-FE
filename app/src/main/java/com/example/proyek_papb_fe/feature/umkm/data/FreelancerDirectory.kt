@@ -10,6 +10,7 @@ data class DirectoryFreelancer(
     val role: String,
     val category: String,
     @param:DrawableRes val photo: Int? = null,
+    val photoUrl: String? = null,
     val city: String,
     /** Terakhir aktif, dalam menit ("Aktif 10 mnt lalu"). */
     /** BE belum mencatat waktu aktif terakhir. */

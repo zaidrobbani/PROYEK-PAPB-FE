@@ -80,6 +80,7 @@ class FreelancerApplicationsViewModel(
                                     freelancerId = application.freelancerId,
                                     freelancerName = profile?.name ?: match?.name ?: "Freelancer",
                                     photo = null,
+                                    photoUrl = profile?.photoUrl,
                                     specialty = profile?.professionalTitle ?: match?.professionalTitle.orEmpty(),
                                     verified = profile != null,
                                     rating = profile?.averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "-",

@@ -1,4 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.chat.container
+import com.example.proyek_papb_fe.core.push.VisibleConversationEffect
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -44,6 +47,11 @@ import com.example.proyek_papb_fe.core.ui.components.DetailTopBar
 import com.example.proyek_papb_fe.core.ui.components.ErrorContent
 import com.example.proyek_papb_fe.core.ui.components.LoadingContent
 import com.example.proyek_papb_fe.core.ui.components.initialsOf
+import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
+import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
+import com.example.proyek_papb_fe.core.ui.components.chat.FailedAttachmentDialog
+import com.example.proyek_papb_fe.core.ui.components.chat.rememberChatAttachmentController
+import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
 import com.example.proyek_papb_fe.core.util.rupiah
 import com.example.proyek_papb_fe.feature.chat.viewmodel.ChatRoomViewModel
 import com.example.proyek_papb_fe.feature.freelancer.chat.component.ChatBubbleUi
@@ -66,7 +74,12 @@ import kotlinx.coroutines.delay
 
 private const val PollIntervalMillis = 5_000L
 
-private fun List<Message>.toRoomItems(myId: String?, contactName: String, umkmName: String): List<ChatRoomItem> {
+private fun List<Message>.toRoomItems(
+    myId: String?,
+    contactName: String,
+    umkmName: String,
+    pending: List<OutgoingAttachment>
+): List<ChatRoomItem> {
     val items = mutableListOf<ChatRoomItem>()
     var previous: Message? = null
     var labelledToday = false
@@ -81,7 +94,6 @@ private fun List<Message>.toRoomItems(myId: String?, contactName: String, umkmNa
         val label = if (!mine && first) {
             (if (labelledToday) contactName else "$contactName · $umkmName").also { labelledToday = true }
         } else null
-        val attachment = message.attachmentNames.firstOrNull()
         items += ChatRoomItem.Message(
             ChatBubbleUi(
                 id = message.id,
@@ -91,11 +103,29 @@ private fun List<Message>.toRoomItems(myId: String?, contactName: String, umkmNa
                 isFirstInGroup = first,
                 topGap = when { newDay -> 0; first -> 12; else -> 4 },
                 senderLabel = label,
-                attachmentName = attachment,
-                attachmentIsImage = attachment?.substringAfterLast('.')?.lowercase() in setOf("jpg", "jpeg", "png", "webp")
+                file = message.attachments.firstOrNull()?.let { ChatFileUi.Remote(it) },
+                status = if (!mine) null else if (message.readAtMillis != null) DeliveryStatus.READ else DeliveryStatus.SENT
             )
         )
         previous = message
+    }
+    // Lampiran yang masih dikirim/gagal tampil di akhir, seperti WhatsApp.
+    pending.forEachIndexed { index, item ->
+        val newDay = previous == null || !isSameDay(previous!!.sentAtMillis, item.createdAtMillis)
+        if (index == 0 && newDay) items += ChatRoomItem.DateSeparator(formatDateSeparator(item.createdAtMillis))
+        val first = index == 0 && (newDay || previous?.senderUserId != myId)
+        items += ChatRoomItem.Message(
+            ChatBubbleUi(
+                id = item.localId,
+                isMine = true,
+                text = item.caption,
+                time = formatBubbleTime(item.createdAtMillis),
+                isFirstInGroup = first,
+                topGap = if (first && !newDay) 12 else if (first) 0 else 4,
+                file = ChatFileUi.Local(item),
+                status = if (item.failedMessage != null) DeliveryStatus.FAILED else DeliveryStatus.SENDING
+            )
+        )
     }
     return items
 }
@@ -176,8 +206,12 @@ fun ChatRoomContainer(
     )
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val pendingAttachments by viewModel.pendingAttachments.collectAsStateWithLifecycle()
+    VisibleConversationEffect(setOf(conversationId))
+    var failedAttachment by remember(conversationId) { mutableStateOf<OutgoingAttachment?>(null) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val deviceAccess = rememberDeviceAccess()
     var draft by rememberSaveable(conversationId) { mutableStateOf("") }
     var isAttachmentOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
     var isUploadDraftOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
@@ -188,7 +222,7 @@ fun ChatRoomContainer(
     LaunchedEffect(Unit) {
         while (true) {
             delay(PollIntervalMillis)
-            viewModel.refreshMessages()
+            if (!viewModel.isRealtime.value) viewModel.refreshMessages()
         }
     }
     LaunchedEffect(uiState.message) {
@@ -224,11 +258,14 @@ fun ChatRoomContainer(
     val detail = uiState.workflow
     val contactName = overview.counterpartName
     val umkmName = overview.counterpartSubtitle ?: contactName
-    val items = remember(uiState.messages) { uiState.messages.toRoomItems(AppContainer.currentUserId, contactName, umkmName) }
+    val items = remember(uiState.messages, pendingAttachments) {
+        uiState.messages.toRoomItems(AppContainer.currentUserId, contactName, umkmName, pendingAttachments)
+    }
     val state = ChatRoomUiState(
         contactName = contactName,
         contactInitials = initialsOf(contactName),
         umkmName = umkmName,
+        contactPhotoUrl = overview.counterpartPhotoUrl,
         projectTitle = overview.projectTitle ?: "Percakapan umum",
         context = contextFor(detail),
         items = items
@@ -241,20 +278,12 @@ fun ChatRoomContainer(
         shownCount = state.items.size
     }
 
-    // BE chat baru mendukung pesan teks; lampiran dikirim lewat "Unggah Draf" (hasil kerja) saat project berjalan.
-    val attachmentUnsupported = { isAttachmentOpen = false; toast("Kirim lampiran di chat belum didukung server") }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) attachmentUnsupported()
+    val attachments = rememberChatAttachmentController(recipientName = contactName) { file, caption, asImage ->
+        viewModel.sendAttachment(file, caption, asImage)
     }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) attachmentUnsupported()
-    }
-    val documentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) attachmentUnsupported()
-    }
-    fun launchSafely(launch: () -> Unit) {
+    fun launchPicker(open: () -> Unit) {
         isAttachmentOpen = false
-        try { launch() } catch (_: ActivityNotFoundException) { toast("Aplikasi untuk aksi ini tidak tersedia") }
+        open()
     }
 
     val agreement = detail?.agreement
@@ -278,6 +307,18 @@ fun ChatRoomContainer(
         }
     }
     val stage = resultStageEntry(detail)
+    // Proyek berjalan: jalan pintas ke Rencana Pengerjaan untuk mulai kerja & menandai milestone.
+    val workEntry = when (detail?.project?.status) {
+        ProjectStatusCode.SIAP_DIKERJAKAN -> UmkmSimulationEntry(
+            "Dana sudah ditahan TEMUKARYA. Mulai pengerjaan di Rencana Pengerjaan.",
+            "Buka Rencana Pengerjaan"
+        )
+        ProjectStatusCode.SEDANG_DIKERJAKAN -> UmkmSimulationEntry(
+            "Proyek berjalan. Tandai milestone selesai di Rencana Pengerjaan; kirim hasil lewat + → Unggah Draf Pekerjaan.",
+            "Buka Rencana Pengerjaan"
+        )
+        else -> null
+    }
 
     ChatRoomScreen(
         state = state,
@@ -294,11 +335,9 @@ fun ChatRoomContainer(
             if (!isAttachmentOpen) focusManager.clearFocus()
             isAttachmentOpen = !isAttachmentOpen
         },
-        onGalleryClick = {
-            launchSafely { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
-        },
-        onCameraClick = { launchSafely { cameraLauncher.launch(null) } },
-        onDocumentClick = { launchSafely { documentLauncher.launch(arrayOf("*/*")) } },
+        onGalleryClick = { launchPicker(attachments.openGallery) },
+        onCameraClick = { launchPicker(attachments.openCamera) },
+        onDocumentClick = { launchPicker(attachments.openDocument) },
         onUploadDraftClick = if (canUploadDraft) {
             {
                 isAttachmentOpen = false
@@ -310,6 +349,14 @@ fun ChatRoomContainer(
         onMoreClick = { toast("Menu lainnya segera hadir") },
         onProjectDetailClick = projectId?.let { id -> { onProjectDetailClick(id) } },
         listState = listState,
+        onFileClick = { bubble ->
+            val file = bubble.file
+            when {
+                file is ChatFileUi.Local && file.outgoing.failedMessage != null -> failedAttachment = file.outgoing
+                file != null -> attachments.open(file)
+            }
+        },
+        isOpening = { bubble -> bubble.file?.let(attachments::isOpening) == true },
         negotiation = negotiation,
         onCancelProjectClick = {
             if (detail?.can(WorkflowActionCode.CANCEL_PROJECT) == true) isCancelSheetVisible = true
@@ -327,8 +374,31 @@ fun ChatRoomContainer(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
+        } ?: workEntry?.let { entry ->
+            {
+                UmkmSimulationCard(
+                    entry,
+                    onClick = { projectId?.let(onContinueProject) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     )
+
+    failedAttachment?.let { item ->
+        FailedAttachmentDialog(
+            item = item,
+            onRetry = {
+                failedAttachment = null
+                viewModel.retryAttachment(item.localId)
+            },
+            onDiscard = {
+                failedAttachment = null
+                viewModel.discardAttachment(item.localId)
+            },
+            onDismiss = { failedAttachment = null }
+        )
+    }
 
     if (isUploadDraftOpen && canUploadDraft) {
         val workDraft = WorkDraftStore.current(conversationId).copy(version = nextVersion)
@@ -336,10 +406,12 @@ fun ChatRoomContainer(
         UploadDraftSheet(
             state = draftUi,
             onPickFiles = {
-                try {
-                    draftFileLauncher.launch(arrayOf("*/*"))
-                } catch (_: ActivityNotFoundException) {
-                    toast("Aplikasi untuk memilih file tidak tersedia")
+                deviceAccess.request(DeviceAccess.Document) {
+                    try {
+                        draftFileLauncher.launch(arrayOf("*/*"))
+                    } catch (_: ActivityNotFoundException) {
+                        toast("Aplikasi untuk memilih file tidak tersedia")
+                    }
                 }
             },
             onRemoveFile = { uri -> WorkDraftStore.removeFile(conversationId, uri) },

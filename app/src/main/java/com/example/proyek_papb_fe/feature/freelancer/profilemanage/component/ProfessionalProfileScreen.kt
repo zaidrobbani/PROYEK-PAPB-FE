@@ -41,6 +41,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.components.rememberCityLocator
+import com.example.proyek_papb_fe.core.ui.components.LocationFillButton
 import com.example.proyek_papb_fe.core.data.model.FreelancerProfile
 import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
@@ -192,7 +194,12 @@ fun ProfessionalProfileScreen(
             onValueChange = { onFormChange(form.copy(city = it)) },
             placeholder = "Contoh: Yogyakarta",
             error = errors.city,
+            helper = "Ketuk ikon lokasi untuk mengisi otomatis.",
             trailingIconRes = R.drawable.ic_profile_location,
+            trailingContent = {
+                val locator = rememberCityLocator { found -> onFormChange(form.copy(city = found.city)) }
+                LocationFillButton(locator, tint = TemuKaryaColors.ActionPrimary, iconRes = R.drawable.ic_profile_location)
+            },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done)
         )
         KelolaCard {

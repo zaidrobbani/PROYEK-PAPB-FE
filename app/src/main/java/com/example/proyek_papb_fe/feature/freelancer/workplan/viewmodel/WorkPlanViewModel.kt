@@ -93,10 +93,10 @@ class WorkPlanViewModel(
         workflowRepository.startWork(projectId)
     }
 
-    fun completeNextMilestone() {
-        val next = _uiState.value.plan?.items?.firstOrNull { !it.isDone } ?: return
-        runAction("Milestone \"${next.name}\" ditandai selesai") {
-            workflowRepository.completeMilestone(projectId, next.id)
+    fun completeMilestone(milestoneId: String) {
+        val milestone = _uiState.value.plan?.items?.firstOrNull { it.id == milestoneId && !it.isDone } ?: return
+        runAction("Milestone \"${milestone.name}\" ditandai selesai") {
+            workflowRepository.completeMilestone(projectId, milestone.id)
         }
     }
 

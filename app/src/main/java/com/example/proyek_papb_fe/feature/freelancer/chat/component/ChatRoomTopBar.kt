@@ -31,6 +31,7 @@ internal fun ChatRoomTopBar(
     contactName: String,
     contactInitials: String,
     umkmName: String,
+    contactPhotoUrl: String? = null,
     onBack: () -> Unit,
     onMoreClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -52,6 +53,7 @@ internal fun ChatRoomTopBar(
         IconAction(R.drawable.ic_arrow_back, "Kembali", onBack)
         InitialsAvatar(
             initials = contactInitials,
+            photoUrl = contactPhotoUrl,
             size = 38,
             background = TemuKaryaColors.SurfaceSand,
             textColor = TemuKaryaColors.ActionPrimary,

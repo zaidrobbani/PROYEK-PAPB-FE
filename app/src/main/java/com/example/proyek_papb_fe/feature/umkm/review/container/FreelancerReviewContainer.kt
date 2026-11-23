@@ -20,6 +20,7 @@ import com.example.proyek_papb_fe.feature.umkm.review.component.FreelancerReview
 import com.example.proyek_papb_fe.feature.umkm.review.component.ReviewHighlightOptions
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ProjectResultViewModel
 import com.example.proyek_papb_fe.feature.umkm.review.viewmodel.ResultStage
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
 
 @Composable
 fun FreelancerReviewContainer(
@@ -74,7 +75,7 @@ fun FreelancerReviewContainer(
         state = FreelancerReviewUiState(
             freelancerName = freelancerName,
             freelancerFirstName = firstName(freelancerName),
-            freelancerPhotoUri = detail.freelancer?.photoUrl,
+            freelancerPhotoUri = rememberServerImageUri(detail.freelancer?.photoUrl),
             projectTitle = detail.project.title,
             completedDate = formatShortDate(detail.project.completedAtMillis ?: System.currentTimeMillis()),
             rating = rating,

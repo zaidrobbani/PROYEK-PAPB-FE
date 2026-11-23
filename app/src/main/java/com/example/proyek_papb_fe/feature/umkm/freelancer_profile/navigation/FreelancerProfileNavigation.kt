@@ -16,7 +16,8 @@ fun NavController.navigateToUmkmFreelancerProfile(freelancerId: String, applicat
 
 fun NavGraphBuilder.umkmFreelancerProfileScreen(
     onBack: () -> Unit,
-    onSelected: () -> Unit
+    onSelected: () -> Unit,
+    onOpenApplications: (projectId: String) -> Unit
 ) {
     composable<UmkmFreelancerProfileRoute> { entry ->
         val route = entry.toRoute<UmkmFreelancerProfileRoute>()
@@ -24,7 +25,8 @@ fun NavGraphBuilder.umkmFreelancerProfileScreen(
             freelancerId = route.freelancerId,
             applicationId = route.applicationId,
             onBack = onBack,
-            onSelected = onSelected
+            onSelected = onSelected,
+            onOpenApplications = onOpenApplications
         )
     }
 }

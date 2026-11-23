@@ -25,7 +25,9 @@ data class ProjectFreelancer(
     val name: String,
     val specialty: String = "",
     @param:DrawableRes val photo: Int? = null,
-    val rating: String = ""
+    val rating: String = "",
+    /** `profile_image_url` dari BE (butuh token), null bila freelancer belum punya foto. */
+    val photoUrl: String? = null
 )
 
 data class ProjectMilestone(
@@ -83,6 +85,7 @@ data class ProjectApplication(
     val freelancerId: String,
     val freelancerName: String,
     @param:DrawableRes val photo: Int? = null,
+    val photoUrl: String? = null,
     val specialty: String,
     val verified: Boolean,
     val rating: String,

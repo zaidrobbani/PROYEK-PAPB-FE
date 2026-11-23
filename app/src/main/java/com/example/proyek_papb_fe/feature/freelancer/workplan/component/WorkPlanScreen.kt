@@ -42,7 +42,13 @@ fun WorkPlanScreen(
     onSubmitClick: () -> Unit,
     modifier: Modifier = Modifier,
     umkmEntry: UmkmSimulationEntry? = null,
-    onOpenUmkmSimulation: () -> Unit = {}
+    onOpenUmkmSimulation: () -> Unit = {},
+    /** Diisi saat proyek sudah berjalan: daftar milestone berubah jadi daftar progres. */
+    progressItems: List<MilestoneProgressItem>? = null,
+    progressPercent: Int = 0,
+    canCompleteMilestone: Boolean = false,
+    isBusy: Boolean = false,
+    onCompleteMilestone: (MilestoneProgressItem) -> Unit = {}
 ) {
     val validation = milestones.validate()
 
@@ -74,6 +80,23 @@ fun WorkPlanScreen(
                 )
                 WorkPlanInfoCard()
                 umkmEntry?.let { UmkmSimulationCard(it, onOpenUmkmSimulation) }
+
+                if (progressItems != null) {
+                    Text("Milestone proyek", style = WorkPlanTypography.SectionTitle, color = TemuKaryaColors.TextHeading)
+                    MilestoneProgressList(
+                        items = progressItems,
+                        progressPercent = progressPercent,
+                        canComplete = canCompleteMilestone,
+                        isBusy = isBusy,
+                        onComplete = onCompleteMilestone
+                    )
+                    Text(
+                        text = "Progres dihitung otomatis dari bobot milestone yang ditandai selesai dan terlihat oleh UMKM.",
+                        style = WorkPlanTypography.Footnote,
+                        color = TemuKaryaColors.TextPlaceholder
+                    )
+                    return@Column
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -129,7 +152,7 @@ fun WorkPlanScreen(
                 )
             }
 
-            WorkPlanActionBar(
+            if (progressItems == null) WorkPlanActionBar(
                 isSubmitted = isSubmitted,
                 onSaveDraftClick = onSaveDraftClick,
                 onSubmitClick = onSubmitClick

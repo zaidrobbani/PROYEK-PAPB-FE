@@ -10,6 +10,7 @@ import com.example.proyek_papb_fe.core.data.repository.AuthRepository
 import com.example.proyek_papb_fe.core.data.repository.NotificationRepository
 import com.example.proyek_papb_fe.core.data.repository.PaymentRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
+import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.core.domain.model.PaymentStatusCode
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
@@ -40,7 +41,8 @@ class UmkmProfileViewModel(
     private val profileRepository: ProfileRepository,
     private val workflowRepository: WorkflowRepository,
     private val paymentRepository: PaymentRepository,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UmkmProfileUiState())
@@ -56,6 +58,7 @@ class UmkmProfileViewModel(
                     val history = async { paymentRepository.history(TransactionGroup.ALL) }
                     val unread = async { notificationRepository.unreadCount() }
                     UmkmAccount.update(authRepository.currentUser()?.name.orEmpty(), profile.await())
+                    UmkmAccount.updatePhoto(photoRepository.currentLocalUri())
                     val items = projects.await().items
                     _uiState.value = UmkmProfileUiState(
                         isLoading = false,
@@ -82,10 +85,11 @@ class UmkmProfileViewModel(
             profileRepository: ProfileRepository,
             workflowRepository: WorkflowRepository,
             paymentRepository: PaymentRepository,
-            notificationRepository: NotificationRepository
+            notificationRepository: NotificationRepository,
+            photoRepository: ProfilePhotoRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                UmkmProfileViewModel(authRepository, profileRepository, workflowRepository, paymentRepository, notificationRepository)
+                UmkmProfileViewModel(authRepository, profileRepository, workflowRepository, paymentRepository, notificationRepository, photoRepository)
             }
         }
     }

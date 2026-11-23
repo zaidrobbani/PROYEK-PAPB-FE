@@ -3,6 +3,7 @@ package com.example.proyek_papb_fe.feature.umkm.data
 import androidx.compose.runtime.mutableStateMapOf
 import com.example.proyek_papb_fe.core.data.repository.ConversationOverview
 import com.example.proyek_papb_fe.core.domain.model.Message
+import com.example.proyek_papb_fe.core.domain.model.MessageAttachment
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import java.time.Instant
 import java.time.ZoneId
@@ -24,6 +25,8 @@ enum class ConversationStage(val label: String) {
 
 data class UmkmConversation(
     val id: String,
+    val freelancerId: String,
+    val photoUrl: String?,
     val freelancerName: String,
     val freelancerRole: String,
     val projectId: String?,
@@ -31,14 +34,46 @@ data class UmkmConversation(
     val stage: ConversationStage,
     val lastMessage: String,
     val lastMessageAt: LocalDateTime,
-    val unreadCount: Int
+    val unreadCount: Int,
+    val projectStatus: String? = null
 ) {
+    /** Project selesai/dibatalkan: tidak dipilih otomatis sebagai tujuan kirim. */
+    val isClosed: Boolean
+        get() = projectStatus == ProjectStatusCode.SELESAI || projectStatus == ProjectStatusCode.DIBATALKAN
+
     val projectTitle: String
         get() = fallbackProjectTitle
 
     val initials: String
         get() = freelancerName.split(" ").filter { it.isNotBlank() }.take(2)
             .joinToString("") { it.first().uppercase() }
+}
+
+/**
+ * Satu baris chat per freelancer (seperti WhatsApp). BE menyimpan percakapan per project,
+ * jadi semua percakapan dengan freelancer yang sama digabung di sini.
+ */
+data class UmkmThread(
+    val freelancerId: String,
+    /** Urut dari aktivitas terbaru. */
+    val conversations: List<UmkmConversation>
+) {
+    private val latest: UmkmConversation get() = conversations.first()
+    val freelancerName: String get() = latest.freelancerName
+    val freelancerRole: String get() = latest.freelancerRole
+    val photoUrl: String? get() = conversations.firstNotNullOfOrNull { it.photoUrl }
+    val initials: String get() = latest.initials
+    val lastMessage: String get() = latest.lastMessage
+    val lastMessageAt: LocalDateTime get() = latest.lastMessageAt
+    val unreadCount: Int get() = conversations.sumOf { it.unreadCount }
+    val projectTitle: String
+        get() = latest.projectTitle + if (conversations.size > 1) " · +${conversations.size - 1} project lain" else ""
+
+    /** Percakapan yang dibuka dari daftar: project aktif dengan pesan terbaru, atau yang terbaru. */
+    val primaryConversationId: String
+        get() = (conversations.firstOrNull { !it.isClosed } ?: latest).id
+
+    fun hasStage(stage: ConversationStage) = conversations.any { it.stage == stage }
 }
 
 data class ChatAttachment(
@@ -61,10 +96,12 @@ data class ChatMessage(
     val text: String,
     val sentAt: LocalDateTime,
     val attachment: ChatAttachment? = null,
-    val readByFreelancer: Boolean = false
+    val readByFreelancer: Boolean = false,
+    /** Foto/dokumen chat dari server (berbeda dengan `attachment` draf hasil kerja). */
+    val file: MessageAttachment? = null
 )
 
-/** Cache percakapan UMKM dari BE (`ChatOverviewRepository`); BE baru mendukung pesan teks. */
+/** Cache percakapan UMKM dari BE (`ChatOverviewRepository`), diperbarui lewat WebSocket saat ruang chat terbuka. */
 object UmkmConversationStore {
     private val items = mutableStateListOf<UmkmConversation>()
     private val messagesById = mutableStateMapOf<String, List<ChatMessage>>()
@@ -75,6 +112,18 @@ object UmkmConversationStore {
 
     fun conversationForProject(projectId: String): UmkmConversation? = items.firstOrNull { it.projectId == projectId }
 
+    val threads: List<UmkmThread>
+        get() = items.groupBy { it.freelancerId }
+            .map { (freelancerId, list) -> UmkmThread(freelancerId, list.sortedByDescending { it.lastMessageAt }) }
+            .sortedByDescending { it.lastMessageAt }
+
+    fun threadOf(conversationId: String): UmkmThread? =
+        conversation(conversationId)?.freelancerId?.let { id -> threads.firstOrNull { it.freelancerId == id } }
+
+    /** Semua pesan dengan satu freelancer dari seluruh project, urut waktu. */
+    fun threadMessages(thread: UmkmThread): List<ChatMessage> =
+        thread.conversations.flatMap { messages(it.id) }.sortedBy { it.sentAt }
+
     fun replace(list: List<ConversationOverview>, myId: String?) {
         items.clear()
         list.forEach { upsert(it, myId) }
@@ -84,6 +133,8 @@ object UmkmConversationStore {
         val status = overview.projectStatus
         val conversation = UmkmConversation(
             id = overview.conversation.id,
+            freelancerId = overview.conversation.freelancerId,
+            photoUrl = overview.counterpartPhotoUrl,
             freelancerName = overview.counterpartName,
             freelancerRole = overview.counterpartSubtitle ?: "Freelancer",
             projectId = overview.conversation.projectId,
@@ -94,9 +145,10 @@ object UmkmConversationStore {
                 ProjectStatusCode.MENUNGGU_REVIEW, ProjectStatusCode.REVISI -> ConversationStage.ProjectBerjalan
                 else -> ConversationStage.Negosiasi
             },
-            lastMessage = overview.lastMessage?.text.orEmpty(),
+            lastMessage = overview.lastMessage?.previewText.orEmpty(),
             lastMessageAt = toLocal(overview.lastMessage?.sentAtMillis ?: overview.conversation.lastMessageAtMillis ?: 0L),
-            unreadCount = overview.unreadCount
+            unreadCount = overview.unreadCount,
+            projectStatus = status
         )
         val index = items.indexOfFirst { it.id == conversation.id }
         if (index >= 0) items[index] = conversation else items.add(conversation)
@@ -108,7 +160,17 @@ object UmkmConversationStore {
     }
 
     fun append(message: Message, myId: String?) {
-        messagesById[message.conversationId] = messages(message.conversationId) + message.toChatMessage(myId)
+        val current = messages(message.conversationId)
+        if (current.any { it.id == message.id }) return
+        messagesById[message.conversationId] = current + message.toChatMessage(myId)
+        val index = items.indexOfFirst { it.id == message.conversationId }
+        if (index >= 0) {
+            items[index] = items[index].copy(lastMessage = message.previewText, lastMessageAt = toLocal(message.sentAtMillis))
+        }
+    }
+
+    fun markReadByFreelancer(conversationId: String) {
+        messagesById[conversationId] = messages(conversationId).map { if (it.fromUmkm) it.copy(readByFreelancer = true) else it }
     }
 
     fun messages(conversationId: String): List<ChatMessage> = messagesById[conversationId].orEmpty()
@@ -130,9 +192,10 @@ object UmkmConversationStore {
         id = id,
         conversationId = conversationId,
         fromUmkm = senderUserId == myId,
-        text = text.ifBlank { attachmentNames.joinToString() },
+        text = text,
         sentAt = toLocal(sentAtMillis),
-        readByFreelancer = readAtMillis != null
+        readByFreelancer = readAtMillis != null,
+        file = attachments.firstOrNull()
     )
 }
 fun formatConversationTime(time: LocalDateTime, today: LocalDate = LocalDate.now()): String = when (time.toLocalDate()) {
@@ -148,6 +211,15 @@ private val ConversationDate = DateTimeFormatter.ofPattern("d MMM", Locale.forLa
  * Pencarian per kata pada nama freelancer dan judul project (placeholder Figma:
  * "Cari nama freelancer atau project"). [stage] null = semua tahap.
  */
+fun searchThreads(source: List<UmkmThread>, query: String, stage: ConversationStage?): List<UmkmThread> {
+    val tokens = query.lowercase().split(" ").filter { it.isNotBlank() }
+    return source.filter { thread ->
+        val haystack = (listOf(thread.freelancerName, thread.lastMessage) + thread.conversations.map { it.projectTitle })
+            .joinToString(" ").lowercase()
+        (stage == null || thread.hasStage(stage)) && tokens.all { it in haystack }
+    }
+}
+
 fun searchConversations(
     source: List<UmkmConversation>,
     query: String,

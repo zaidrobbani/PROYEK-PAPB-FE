@@ -1,4 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.business_profile.container
+import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
+import com.example.proyek_papb_fe.core.permission.DeviceAccess
 
 import android.content.Context
 import android.net.Uri
@@ -39,6 +41,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
+import com.example.proyek_papb_fe.core.ui.components.rememberCityLocator
+import com.example.proyek_papb_fe.core.ui.components.LocationFillButton
 import com.example.proyek_papb_fe.core.ui.theme.PROYEKPAPBFETheme
 import com.example.proyek_papb_fe.feature.auth.component.shared.AuthAppBar
 import com.example.proyek_papb_fe.feature.umkm.business_profile.component.KelolaErrorBanner
@@ -53,8 +57,9 @@ import kotlinx.coroutines.launch
 
 internal const val BusinessNameMaxLength = 60
 
-private const val PhotoMaxBytes = 2L * 1024 * 1024
-private val PhotoMimeTypes = arrayOf("image/jpeg", "image/png")
+// Foto asli boleh besar karena dikompres ke WebP <= 150 KB sebelum diunggah (BE menolak unggahan > 2 MB).
+private const val PhotoMaxBytes = 15L * 1024 * 1024
+private val PhotoMimeTypes = arrayOf("image/jpeg", "image/png", "image/webp")
 
 internal data class BusinessProfileErrors(
     val businessName: String? = null,
@@ -74,7 +79,11 @@ internal fun validateBusinessProfile(businessName: String, category: String, own
             else -> null
         },
         category = "Kategori usaha wajib diisi.".takeIf { category.isBlank() },
-        ownerName = "Nama pemilik wajib diisi.".takeIf { ownerName.isBlank() },
+        ownerName = when {
+            ownerName.isBlank() -> "Nama pemilik wajib diisi."
+            ownerName.trim().length > 100 -> "Maksimal 100 karakter."
+            else -> null
+        },
         city = "Kota atau kabupaten wajib diisi.".takeIf { city.isBlank() }
     )
 
@@ -83,19 +92,26 @@ fun BusinessProfileScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BusinessProfileViewModel = viewModel(
-        factory = BusinessProfileViewModel.factory(AppContainer.profileRepository, AppContainer.authRepository)
+        factory = BusinessProfileViewModel.factory(
+            AppContainer.profileRepository,
+            AppContainer.authRepository,
+            AppContainer.profilePhotoRepository
+        )
     )
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val deviceAccess = rememberDeviceAccess()
     val scope = rememberCoroutineScope()
     val saved = UmkmAccount.profile
     var initialized by rememberSaveable { mutableStateOf(false) }
     var businessName by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf("") }
-    val ownerName = uiState.ownerName
+    var ownerName by rememberSaveable { mutableStateOf("") }
     var city by rememberSaveable { mutableStateOf("") }
-    var photoUri by rememberSaveable { mutableStateOf(saved.photoUri) }
+    // Format "Kota, Provinsi" sesuai contoh isian kolom.
+    val cityLocator = rememberCityLocator { found -> city = listOfNotNull(found.city, found.province).joinToString(", ") }
+    val photoUri = UmkmAccount.profile.photoUri
     var photoError by rememberSaveable { mutableStateOf<String?>(null) }
     var submitted by rememberSaveable { mutableStateOf(false) }
     var showSnackbar by rememberSaveable { mutableStateOf(false) }
@@ -103,6 +119,7 @@ fun BusinessProfileScreen(
 
     LaunchedEffect(uiState.isLoading) {
         if (!uiState.isLoading && !initialized && uiState.loadError == null) {
+            ownerName = uiState.ownerName
             uiState.profile?.let {
                 businessName = it.businessName
                 category = it.businessCategory
@@ -131,7 +148,7 @@ fun BusinessProfileScreen(
     val errors = BusinessProfileErrors(
         businessName = localErrors.businessName ?: uiState.fieldErrors["businessName"],
         category = localErrors.category ?: uiState.fieldErrors["category"],
-        ownerName = localErrors.ownerName,
+        ownerName = localErrors.ownerName ?: uiState.fieldErrors["ownerName"],
         city = localErrors.city ?: uiState.fieldErrors["city"]
     )
     val initials = ownerName.split(" ").filter { it.isNotBlank() }.take(2)
@@ -142,14 +159,11 @@ fun BusinessProfileScreen(
         val type = context.contentResolver.getType(uri)
         val size = fileSize(context, uri)
         photoError = when {
-            type !in PhotoMimeTypes -> "Format foto harus JPG atau PNG."
-            size != null && size > PhotoMaxBytes -> "Ukuran foto melebihi 2 MB."
+            type !in PhotoMimeTypes -> "Format foto harus JPG, PNG, atau WebP."
+            size != null && size > PhotoMaxBytes -> "Ukuran foto melebihi 15 MB."
             else -> null
         }
-        if (photoError == null) {
-            photoUri = uri.toString()
-            UmkmAccount.updatePhoto(photoUri)
-        }
+        if (photoError == null) viewModel.uploadPhoto(uri.toString())
     }
 
     LaunchedEffect(uiState.savedCount) {
@@ -176,8 +190,8 @@ fun BusinessProfileScreen(
                 KelolaPhotoCard(
                     initials = initials,
                     photoUri = photoUri,
-                    description = "Tampil di Profil Saya. JPG atau PNG, maks. 2 MB.",
-                    onPickPhoto = { photoPicker.launch(PhotoMimeTypes) }
+                    description = if (uiState.isUploadingPhoto) "Mengunggah foto..." else "Tampil di Profil Saya. JPG atau PNG, maks. 2 MB.",
+                    onPickPhoto = { deviceAccess.request(DeviceAccess.Gallery) { photoPicker.launch(PhotoMimeTypes) } }
                 )
                 photoError?.let { message ->
                     Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
@@ -204,9 +218,9 @@ fun BusinessProfileScreen(
                 KelolaFormField(
                     label = "Nama pemilik",
                     value = ownerName,
-                    onValueChange = {},
+                    onValueChange = { ownerName = it },
                     placeholder = "Nama pemilik",
-                    helper = "Mengikuti nama akun saat registrasi.",
+                    helper = "Juga mengubah nama akunmu di TEMUKARYA.",
                     error = errors.ownerName,
                     capitalization = KeyboardCapitalization.Words
                 )
@@ -216,10 +230,13 @@ fun BusinessProfileScreen(
                     value = city,
                     onValueChange = { city = it },
                     placeholder = "Contoh: Bandung, Jawa Barat",
-                    helper = "Membantu freelancer mengetahui lokasi usahamu.",
+                    helper = "Membantu freelancer mengetahui lokasi usahamu. Ketuk ikon lokasi untuk mengisi otomatis.",
                     error = errors.city,
                     trailingIcon = R.drawable.ic_symbol_location_on,
-                    capitalization = KeyboardCapitalization.Words
+                    capitalization = KeyboardCapitalization.Words,
+                    trailingContent = {
+                        LocationFillButton(cityLocator, tint = MaterialTheme.colorScheme.primary, iconRes = R.drawable.ic_symbol_location_on)
+                    }
                 )
             }
             KelolaStickyActionBar(
@@ -227,7 +244,7 @@ fun BusinessProfileScreen(
                 onClick = {
                     submitted = true
                     if (validateBusinessProfile(businessName, category, ownerName, city).count == 0) {
-                        viewModel.save(businessName, category, city)
+                        viewModel.save(ownerName, businessName, category, city)
                     } else {
                         scope.launch { scroll.animateScrollTo(0) }
                     }

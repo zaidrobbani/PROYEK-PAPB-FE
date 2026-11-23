@@ -12,7 +12,9 @@ data class PortfolioItem(
     val tag: String,
     val tagIsSage: Boolean,
     @param:DrawableRes val image: Int? = null,
-    val link: String? = null
+    val link: String? = null,
+    /** Path gambar cover dari BE (`cover_image_url`), diunduh dengan token sebelum ditampilkan. */
+    val imageUrl: String? = null
 )
 
 data class ClientReview(
@@ -29,6 +31,7 @@ data class FreelancerProfile(
     val name: String,
     val headline: String,
     @param:DrawableRes val photo: Int? = null,
+    val photoUrl: String? = null,
     val verified: Boolean,
     val location: String?,
     val rating: String,

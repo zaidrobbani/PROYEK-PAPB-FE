@@ -19,6 +19,7 @@ import com.example.proyek_papb_fe.core.data.repository.FileRepository
 import com.example.proyek_papb_fe.core.data.repository.FreelancerRepository
 import com.example.proyek_papb_fe.core.data.repository.MasterDataRepository
 import com.example.proyek_papb_fe.core.data.repository.PaymentRepository
+import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.core.domain.model.AvailabilityStatus
@@ -45,7 +46,9 @@ data class FreelancerProfileUiState(
     /** Bertambah setiap simpan/hapus berhasil (layar menutup form / menampilkan snackbar). */
     val savedCount: Int = 0,
     val availableBalance: Long = 0,
-    val skillOptions: List<String> = emptyList()
+    val skillOptions: List<String> = emptyList(),
+    val isUploadingPhoto: Boolean = false,
+    val photoMessage: String? = null
 )
 
 /** Profil freelancer: profil profesional, skill, portofolio (+ cover), dan pengalaman kerja. */
@@ -56,7 +59,8 @@ class FreelancerProfileViewModel(
     private val freelancerRepository: FreelancerRepository,
     private val workflowRepository: WorkflowRepository,
     private val paymentRepository: PaymentRepository,
-    private val fileRepository: FileRepository
+    private val fileRepository: FileRepository,
+    private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FreelancerProfileUiState())
@@ -75,6 +79,7 @@ class FreelancerProfileViewModel(
                     val wallet = async { runCatching { paymentRepository.wallet() }.getOrNull() }
                     val allSkills = async { runCatching { masterDataRepository.skills() }.getOrDefault(emptyList()) }
                     val me = authRepository.currentUser()
+                    val photo = async { photoRepository.currentLocalUri() }
                     val reviews = async {
                         me?.id?.let { id -> runCatching { freelancerRepository.reviews(id) }.getOrNull() }
                     }
@@ -103,7 +108,7 @@ class FreelancerProfileViewModel(
                             trustPercent = if (completed + cancelled > 0) completed * 100 / (completed + cancelled) else 0,
                             experienceYearsLabel = "${totalYears(exps)} thn",
                             skills = skillNames,
-                            photoUri = FreelancerProfileStore.profile.photoUri
+                            photoUri = photo.await()
                         ),
                         hasProfile = p != null
                     )
@@ -181,6 +186,7 @@ class FreelancerProfileViewModel(
     private fun MonthYear.toDate() = "%04d-%02d-01".format(year, month)
 
     fun saveProfile(
+        fullName: String,
         headline: String,
         bio: String,
         city: String,
@@ -188,9 +194,10 @@ class FreelancerProfileViewModel(
         isAvailable: Boolean,
         skills: List<String>,
         primaryField: String,
-        acceptsRemote: Boolean,
-        photoUri: String?
+        acceptsRemote: Boolean
     ) = runAction("Profil profesional disimpan") {
+        val name = fullName.trim()
+        if (name.isNotEmpty() && name != authRepository.currentUser()?.name) authRepository.updateName(name)
         profileRepository.saveFreelancerProfile(
             title = headline,
             city = city,
@@ -203,10 +210,29 @@ class FreelancerProfileViewModel(
         val ids = skills.mapNotNull { name -> known.firstOrNull { it.name.equals(name, ignoreCase = true) }?.id }
         if (ids.isNotEmpty()) profileRepository.setMySkills(ids.distinct())
         FreelancerProfileStore.replace(
-            FreelancerProfileStore.profile.copy(primaryField = primaryField, acceptsRemoteWork = acceptsRemote, photoUri = photoUri),
+            FreelancerProfileStore.profile.copy(primaryField = primaryField, acceptsRemoteWork = acceptsRemote),
             hasProfile = true
         )
     }
+
+    /** Foto langsung diunggah saat dipilih: dikompres ke WebP (maks 512 px, <= 150 KB) lalu `PUT /users/me/photo`. */
+    fun uploadPhoto(uri: String) {
+        if (_uiState.value.isUploadingPhoto) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingPhoto = true) }
+            try {
+                val local = photoRepository.upload(uri)
+                FreelancerProfileStore.replace(FreelancerProfileStore.profile.copy(photoUri = local), FreelancerProfileStore.hasProfile)
+                _uiState.update { it.copy(isUploadingPhoto = false, photoMessage = "Foto profil diperbarui") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isUploadingPhoto = false, photoMessage = e.userMessage()) }
+            }
+        }
+    }
+
+    fun onPhotoMessageShown() = _uiState.update { it.copy(photoMessage = null) }
 
     fun savePortfolio(existingId: String?, item: PortfolioItem) = runAction("Portofolio disimpan") {
         val saved = profileRepository.savePortfolio(existingId, item.title, item.description, item.link)
@@ -266,12 +292,13 @@ class FreelancerProfileViewModel(
             freelancerRepository: FreelancerRepository,
             workflowRepository: WorkflowRepository,
             paymentRepository: PaymentRepository,
-            fileRepository: FileRepository
+            fileRepository: FileRepository,
+            photoRepository: ProfilePhotoRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 FreelancerProfileViewModel(
                     authRepository, profileRepository, masterDataRepository, freelancerRepository,
-                    workflowRepository, paymentRepository, fileRepository
+                    workflowRepository, paymentRepository, fileRepository, photoRepository
                 )
             }
         }
@@ -283,6 +310,6 @@ fun freelancerProfileViewModelFactory(): ViewModelProvider.Factory {
     val c = com.example.proyek_papb_fe.core.di.AppContainer
     return FreelancerProfileViewModel.factory(
         c.authRepository, c.profileRepository, c.masterDataRepository, c.freelancerRepository,
-        c.workflowRepository, c.paymentRepository, c.fileRepository
+        c.workflowRepository, c.paymentRepository, c.fileRepository, c.profilePhotoRepository
     )
 }

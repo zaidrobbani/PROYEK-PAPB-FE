@@ -20,6 +20,7 @@ import com.example.proyek_papb_fe.feature.freelancer.submission.viewmodel.Propos
 fun SubmissionScreen(
     onProposalClick: (projectId: String) -> Unit,
     onFindProjectsClick: () -> Unit,
+    onNotificationClick: () -> Unit,
     viewModel: ProposalListViewModel = viewModel(
         factory = ProposalListViewModel.factory(AppContainer.projectRepository, AppContainer.workflowRepository)
     )
@@ -43,6 +44,7 @@ fun SubmissionScreen(
         onFilterSelect = { selectedFilter = it },
         proposals = allItems.filter { selectedFilter.matches(it.stage.status) },
         onProposalClick = onProposalClick,
-        onFindProjectsClick = onFindProjectsClick
+        onFindProjectsClick = onFindProjectsClick,
+        onNotificationClick = onNotificationClick
     )
 }

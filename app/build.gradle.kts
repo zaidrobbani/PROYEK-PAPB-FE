@@ -14,6 +14,31 @@ val localProperties = Properties().apply {
 // Default memakai adb reverse (adb reverse tcp:8000 tcp:8000). Emulator: http://10.0.2.2:8000/api/v1/
 val apiBaseUrl: String = localProperties.getProperty("api.base.url") ?: "http://localhost:8000/api/v1/"
 
+/**
+ * Konfigurasi Firebase dari app/google-services.json (Firebase Console → Project settings → Your apps → Android).
+ * Dibaca langsung tanpa plugin google-services; bila file belum ada, build tetap jalan dan push notifikasi nonaktif.
+ */
+data class FirebaseConfig(val appId: String, val apiKey: String, val projectId: String, val senderId: String)
+
+val firebaseConfig: FirebaseConfig? = run {
+    val file = project.file("google-services.json")
+    if (!file.exists()) return@run null
+    @Suppress("UNCHECKED_CAST")
+    val json = groovy.json.JsonSlurper().parse(file) as Map<String, Any?>
+    val projectInfo = json["project_info"] as Map<String, Any?>
+    val clients = json["client"] as List<Map<String, Any?>>
+    val client = clients.firstOrNull {
+        val info = (it["client_info"] as Map<String, Any?>)["android_client_info"] as Map<String, Any?>
+        info["package_name"] == "com.example.proyek_papb_fe"
+    } ?: error("google-services.json tidak berisi app Android dengan package com.example.proyek_papb_fe")
+    FirebaseConfig(
+        appId = (client["client_info"] as Map<String, Any?>)["mobilesdk_app_id"] as String,
+        apiKey = ((client["api_key"] as List<Map<String, Any?>>).first())["current_key"] as String,
+        projectId = projectInfo["project_id"] as String,
+        senderId = projectInfo["project_number"] as String
+    )
+}
+
 android {
     namespace = "com.example.proyek_papb_fe"
     compileSdk {
@@ -29,6 +54,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${firebaseConfig?.appId.orEmpty()}\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${firebaseConfig?.apiKey.orEmpty()}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${firebaseConfig?.projectId.orEmpty()}\"")
+        buildConfigField("String", "FIREBASE_SENDER_ID", "\"${firebaseConfig?.senderId.orEmpty()}\"")
     }
 
     buildTypes {
@@ -67,6 +96,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -74,4 +105,17 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// Debug lewat USB: BE lokal (localhost:8000 di laptop) diteruskan ke HP setiap kali build debug.
+// Gagal diam-diam bila HP tidak tersambung, supaya build tetap jalan.
+val adbReverse by tasks.registering(Exec::class) {
+    val sdkDir = localProperties.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME").orEmpty()
+    executable = "$sdkDir/platform-tools/adb"
+    args("reverse", "tcp:8000", "tcp:8000")
+    isIgnoreExitValue = true
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy(adbReverse)
 }

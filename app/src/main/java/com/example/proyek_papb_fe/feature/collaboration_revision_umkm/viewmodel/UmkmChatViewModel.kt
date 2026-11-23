@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeEvent
 import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.ChatOverviewRepository
 import com.example.proyek_papb_fe.core.data.repository.ChatRepository
 import com.example.proyek_papb_fe.core.data.repository.ConversationOverview
 import com.example.proyek_papb_fe.core.data.repository.MasterDataRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
+import com.example.proyek_papb_fe.core.data.source.PickedChatFile
 import com.example.proyek_papb_fe.core.di.AppContainer
+import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
+import com.example.proyek_papb_fe.feature.chat.viewmodel.OutgoingAttachmentQueue
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowActionCode
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmCancellationReason
@@ -54,8 +58,34 @@ class UmkmChatViewModel(
 
     private val myId: String? get() = AppContainer.currentUserId
 
+    private val realtime = conversationId?.let(chatRepository::realtime)
+    /** true saat WebSocket tersambung; layar hanya polling bila false. */
+    val isRealtime: StateFlow<Boolean> = realtime?.isConnected ?: MutableStateFlow(false)
+
     init {
         load()
+        if (realtime != null && conversationId != null) {
+            realtime.start(viewModelScope)
+            viewModelScope.launch {
+                realtime.events.collect { event ->
+                    when (event) {
+                        is ChatRealtimeEvent.NewMessage -> {
+                            UmkmConversationStore.append(event.message, myId)
+                            if (event.message.senderUserId != myId && !realtime.markRead()) {
+                                runCatching { chatRepository.markRead(conversationId) }
+                            }
+                        }
+                        is ChatRealtimeEvent.Read ->
+                            if (event.readerUserId != myId) UmkmConversationStore.markReadByFreelancer(conversationId)
+                        is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        realtime?.close()
     }
 
     fun load() {
@@ -92,16 +122,18 @@ class UmkmChatViewModel(
         val id = conversationId ?: return
         viewModelScope.launch {
             val messages = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@launch
-            if (messages.lastOrNull()?.id != UmkmConversationStore.messages(id).lastOrNull()?.id) {
-                UmkmConversationStore.replaceMessages(id, messages, myId)
-                runCatching { chatRepository.markRead(id) }
-            }
+            val lastBefore = UmkmConversationStore.messages(id).lastOrNull()?.id
+            // Selalu ganti agar status dibaca ikut ter-update saat WebSocket terputus.
+            UmkmConversationStore.replaceMessages(id, messages, myId)
+            if (messages.lastOrNull()?.id != lastBefore) runCatching { chatRepository.markRead(id) }
         }
     }
 
     fun send(text: String) {
         val id = conversationId ?: return
         if (text.isBlank() || _uiState.value.isBusy) return
+        // Lewat WebSocket bila tersambung; pesan kembali sebagai event `message`. REST hanya cadangan.
+        if (realtime?.sendMessage(text.trim()) == true) return
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
             try {

@@ -23,6 +23,9 @@ interface AuthRepository {
     /** Memastikan token tersimpan masih diterima BE; null bila tidak ada sesi. */
     suspend fun refreshCurrentUser(): SessionUser?
 
+    /** `PATCH /auth/me`: ubah nama akun (Nama Pemilik / Nama Lengkap). Sesi lokal ikut diperbarui. */
+    suspend fun updateName(name: String): SessionUser
+
     suspend fun logout()
 
     suspend fun resendVerification(email: String): String
