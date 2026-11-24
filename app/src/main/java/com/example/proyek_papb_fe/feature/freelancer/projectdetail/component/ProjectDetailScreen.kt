@@ -1,5 +1,17 @@
 package com.example.proyek_papb_fe.feature.freelancer.projectdetail.component
 
+import com.example.proyek_papb_fe.core.ui.components.chat.formatFileSize
+import com.example.proyek_papb_fe.core.domain.model.ProjectFile
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,7 +39,10 @@ fun ProjectDetailScreen(
     onBack: () -> Unit,
     onChatClick: () -> Unit,
     onSubmitOfferClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    attachments: List<ProjectFile> = emptyList(),
+    openingAttachmentId: String? = null,
+    onAttachmentClick: (ProjectFile) -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -85,6 +100,23 @@ fun ProjectDetailScreen(
                     SkillChips(skills = project.skills)
                 }
             }
+
+            if (attachments.isNotEmpty()) {
+                DetailSectionCard(
+                    iconRes = R.drawable.ic_document,
+                    title = "Lampiran Pendukung",
+                    titleStyle = TemuKaryaTypography.SubsectionTitle,
+                    contentSpacing = 8.451.dp
+                ) {
+                    attachments.forEach { file ->
+                        AttachmentRow(
+                            file = file,
+                            isOpening = file.id == openingAttachmentId,
+                            onClick = { onAttachmentClick(file) }
+                        )
+                    }
+                }
+            }
         }
 
         ProjectDetailActionBar(
@@ -93,3 +125,29 @@ fun ProjectDetailScreen(
         )
     }
 }
+
+
+@Composable
+private fun AttachmentRow(file: ProjectFile, isOpening: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(TemuKaryaColors.SurfaceSand)
+            .clickable(enabled = !isOpening, role = Role.Button, onClickLabel = "Buka ${file.fileName}", onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painterResource(R.drawable.ic_document), contentDescription = null, tint = TemuKaryaColors.ActionPrimary, modifier = Modifier.size(22.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(file.fileName, style = TemuKaryaTypography.BodyLarge, color = TemuKaryaColors.TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                if (isOpening) "Membuka…" else listOfNotNull(formatFileSize(file.sizeBytes), "Ketuk untuk membuka").joinToString(" · "),
+                style = TemuKaryaTypography.BodyRegular,
+                color = TemuKaryaColors.TextPlaceholder
+            )
+        }
+    }
+}
+
