@@ -27,19 +27,29 @@ private fun ConversationOverview.matches(query: String): Boolean {
         .any { it.contains(q, ignoreCase = true) }
 }
 
-private fun ConversationOverview.toListItem(now: Long, myId: String?) = ChatListItem(
-    conversationId = conversation.id,
-    initials = initialsOf(counterpartSubtitle ?: counterpartName),
-    umkmName = counterpartSubtitle ?: counterpartName,
-    projectTitle = projectTitle ?: "Percakapan umum",
-    messagePreview = lastMessage?.let { message ->
-        val body = message.previewText
-        if (message.senderUserId == myId) "Anda: $body" else body
-    } ?: "Belum ada pesan",
-    timeLabel = (lastMessage?.sentAtMillis ?: conversation.lastMessageAtMillis)?.let { formatListTime(it, now) }.orEmpty(),
-    unreadCount = unreadCount,
-    photoUrl = counterpartPhotoUrl
-)
+private fun ConversationOverview.lastActivity(): Long = lastMessage?.sentAtMillis ?: conversation.lastMessageAtMillis ?: 0L
+
+/**
+ * Satu baris per UMKM, seperti chat UMKM: semua project dengan UMKM yang sama digabung. Baris membuka percakapan
+ * dengan aktivitas terbaru; di ruang chat freelancer memilih project tujuan lewat "Kirim ke".
+ */
+private fun List<ConversationOverview>.toListItem(now: Long, myId: String?): ChatListItem {
+    val latest = maxBy { it.lastActivity() }
+    val name = latest.counterpartSubtitle ?: latest.counterpartName
+    return ChatListItem(
+        conversationId = latest.conversation.id,
+        initials = initialsOf(name),
+        umkmName = name,
+        projectTitle = if (size > 1) "$size proyek · ${latest.projectTitle ?: "Percakapan umum"}" else latest.projectTitle ?: "Percakapan umum",
+        messagePreview = latest.lastMessage?.let { message ->
+            val body = message.previewText
+            if (message.senderUserId == myId) "Anda: $body" else body
+        } ?: "Belum ada pesan",
+        timeLabel = latest.lastActivity().takeIf { it > 0 }?.let { formatListTime(it, now) }.orEmpty(),
+        unreadCount = sumOf { it.unreadCount },
+        photoUrl = latest.counterpartPhotoUrl
+    )
+}
 
 @Composable
 fun ChatScreen(
@@ -58,10 +68,12 @@ fun ChatScreen(
 
     val now = System.currentTimeMillis()
     val myId = AppContainer.currentUserId
-    val searched = uiState.conversations.filter { it.matches(query) }
     val statusOf = { overview: ConversationOverview -> freelancerStatusOf(null, overview.projectStatus) }
+    val groups = uiState.conversations.groupBy { it.conversation.umkmId }.values
+        .sortedByDescending { group -> group.maxOf { it.lastActivity() } }
+    val searched = groups.filter { group -> group.any { it.matches(query) } }
     val filterOptions = ProjectFilter.entries.map { filter ->
-        ChatFilterOption(filter, searched.count { filter.matches(statusOf(it)) })
+        ChatFilterOption(filter, searched.count { group -> group.any { filter.matches(statusOf(it)) } })
     }
 
     ChatListScreen(
@@ -70,7 +82,7 @@ fun ChatScreen(
         filterOptions = filterOptions,
         selectedFilter = selectedFilter,
         onFilterSelect = { selectedFilter = it },
-        conversations = searched.filter { selectedFilter.matches(statusOf(it)) }.map { it.toListItem(now, myId) },
+        conversations = searched.filter { group -> group.any { selectedFilter.matches(statusOf(it)) } }.map { it.toListItem(now, myId) },
         onConversationClick = onConversationClick,
         onNotificationClick = onNotificationClick
     )

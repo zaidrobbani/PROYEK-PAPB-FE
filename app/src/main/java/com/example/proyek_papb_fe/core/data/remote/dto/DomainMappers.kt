@@ -86,7 +86,19 @@ fun ProjectDto.toDomain() = Project(
     deadlineMillis = parseDateMillis(deadline),
     status = status,
     publishedAtMillis = parseUtcMillis(publishedAt),
-    createdAtMillis = parseUtcMillis(createdAt)
+    createdAtMillis = parseUtcMillis(createdAt),
+    skillIds = skillIds,
+    owner = umkm?.let {
+        UserSummary(
+            id = it.userId,
+            name = it.ownerName,
+            subtitle = it.businessName,
+            photoUrl = it.profileImageUrl,
+            city = it.city,
+            averageRating = null,
+            reviewCount = 0
+        )
+    }
 )
 
 fun ProjectAttachmentDto.toDomain() = ProjectFile(id, originalFileName, mimeType, fileSizeBytes)

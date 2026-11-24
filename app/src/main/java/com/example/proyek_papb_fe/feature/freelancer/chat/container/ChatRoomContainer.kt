@@ -1,4 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.chat.container
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.component.ReplyTargetSelector
+import com.example.proyek_papb_fe.feature.collaboration_revision_umkm.chat_room.component.ReplyTarget
 import com.example.proyek_papb_fe.core.push.VisibleConversationEffect
 import com.example.proyek_papb_fe.core.permission.rememberDeviceAccess
 import com.example.proyek_papb_fe.core.permission.DeviceAccess
@@ -78,7 +80,9 @@ private fun List<Message>.toRoomItems(
     myId: String?,
     contactName: String,
     umkmName: String,
-    pending: List<OutgoingAttachment>
+    pending: List<OutgoingAttachment>,
+    /** Judul project per percakapan; null = hanya satu project, penanda project tidak ditampilkan. */
+    projectTitleOf: ((conversationId: String) -> String)? = null
 ): List<ChatRoomItem> {
     val items = mutableListOf<ChatRoomItem>()
     var previous: Message? = null
@@ -88,6 +92,9 @@ private fun List<Message>.toRoomItems(
         if (newDay) {
             items += ChatRoomItem.DateSeparator(formatDateSeparator(message.sentAtMillis))
             labelledToday = false
+        }
+        if (projectTitleOf != null && previous?.conversationId != message.conversationId) {
+            items += ChatRoomItem.ProjectSeparator(projectTitleOf(message.conversationId), "project-${message.id}")
         }
         val mine = message.senderUserId == myId
         val first = newDay || previous?.senderUserId != message.senderUserId
@@ -207,7 +214,7 @@ fun ChatRoomContainer(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val pendingAttachments by viewModel.pendingAttachments.collectAsStateWithLifecycle()
-    VisibleConversationEffect(setOf(conversationId))
+    VisibleConversationEffect(uiState.threads.map { it.conversationId }.toSet() + conversationId)
     var failedAttachment by remember(conversationId) { mutableStateOf<OutgoingAttachment?>(null) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -234,7 +241,7 @@ fun ChatRoomContainer(
     LaunchedEffect(uiState.resultSubmitted) {
         if (uiState.resultSubmitted) {
             viewModel.onResultSubmittedHandled()
-            WorkDraftStore.markSent(conversationId)
+            WorkDraftStore.markSent(uiState.targetConversationId)
         }
     }
     val projectId = uiState.overview?.conversation?.projectId
@@ -258,8 +265,13 @@ fun ChatRoomContainer(
     val detail = uiState.workflow
     val contactName = overview.counterpartName
     val umkmName = overview.counterpartSubtitle ?: contactName
-    val items = remember(uiState.messages, pendingAttachments) {
-        uiState.messages.toRoomItems(AppContainer.currentUserId, contactName, umkmName, pendingAttachments)
+    val threads = uiState.threads
+    val items = remember(uiState.messages, pendingAttachments, threads) {
+        val titles = threads.associate { it.conversationId to it.projectTitle }
+        uiState.messages.toRoomItems(
+            AppContainer.currentUserId, contactName, umkmName, pendingAttachments,
+            projectTitleOf = if (threads.size > 1) { id -> titles[id] ?: "Percakapan umum" } else null
+        )
     }
     val state = ChatRoomUiState(
         contactName = contactName,
@@ -300,7 +312,7 @@ fun ChatRoomContainer(
     val draftFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) {
             val picked = context.readDraftFiles(uris)
-            WorkDraftStore.addFiles(conversationId, picked.accepted)
+            WorkDraftStore.addFiles(uiState.targetConversationId, picked.accepted)
             if (picked.rejected.isNotEmpty()) {
                 toast("${picked.rejected.joinToString()} tidak didukung. Gunakan AI, PSD, PDF, ZIP, atau PNG (maks. 50 MB).")
             }
@@ -382,7 +394,17 @@ fun ChatRoomContainer(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
-        }
+        },
+        replySelector = if (threads.size > 1) {
+            {
+                ReplyTargetSelector(
+                    selected = threads.firstOrNull { it.conversationId == uiState.targetConversationId }?.projectTitle
+                        ?: state.projectTitle,
+                    options = threads.map { ReplyTarget(it.conversationId, it.projectTitle, it.statusLabel) },
+                    onSelect = viewModel::selectTarget
+                )
+            }
+        } else null
     )
 
     failedAttachment?.let { item ->
@@ -401,7 +423,7 @@ fun ChatRoomContainer(
     }
 
     if (isUploadDraftOpen && canUploadDraft) {
-        val workDraft = WorkDraftStore.current(conversationId).copy(version = nextVersion)
+        val workDraft = WorkDraftStore.current(uiState.targetConversationId).copy(version = nextVersion)
         val draftUi = workDraft.toUiState(state.projectTitle, contactName)
         UploadDraftSheet(
             state = draftUi,
@@ -414,8 +436,8 @@ fun ChatRoomContainer(
                     }
                 }
             },
-            onRemoveFile = { uri -> WorkDraftStore.removeFile(conversationId, uri) },
-            onNoteChange = { WorkDraftStore.updateNote(conversationId, it) },
+            onRemoveFile = { uri -> WorkDraftStore.removeFile(uiState.targetConversationId, uri) },
+            onNoteChange = { WorkDraftStore.updateNote(uiState.targetConversationId, it) },
             onSaveAndClose = {
                 isUploadDraftOpen = false
                 if (workDraft.files.isNotEmpty() || workDraft.note.isNotBlank()) toast("Draf disimpan di perangkat")

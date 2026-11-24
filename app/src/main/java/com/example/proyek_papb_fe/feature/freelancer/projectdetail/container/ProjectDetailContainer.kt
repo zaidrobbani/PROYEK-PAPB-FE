@@ -1,5 +1,10 @@
 package com.example.proyek_papb_fe.feature.freelancer.projectdetail.container
 
+import java.net.URI
+import java.io.File
+import androidx.core.content.FileProvider
+import android.content.Intent
+import android.content.ActivityNotFoundException
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +35,8 @@ fun ProjectDetailContainer(
             AppContainer.projectRepository,
             AppContainer.masterDataRepository,
             AppContainer.chatRepository,
-            AppContainer.workflowRepository
+            AppContainer.workflowRepository,
+            AppContainer.fileRepository
         )
     )
 ) {
@@ -40,6 +46,18 @@ fun ProjectDetailContainer(
         uiState.message?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.onMessageShown()
+        }
+    }
+    LaunchedEffect(uiState.openedAttachment) {
+        val file = uiState.openedAttachment ?: return@LaunchedEffect
+        viewModel.onAttachmentOpened()
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", File(URI(file.uri)))
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, file.mimeType)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(Intent.createChooser(intent, "Buka ${file.fileName}").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(context, "Tidak ada aplikasi untuk membuka ${file.fileName}.", Toast.LENGTH_LONG).show()
         }
     }
     LaunchedEffect(uiState.chatConversationId) {
@@ -62,6 +80,9 @@ fun ProjectDetailContainer(
         project = project,
         onBack = onBack,
         onChatClick = viewModel::openChat,
+        attachments = uiState.attachments,
+        openingAttachmentId = uiState.openingAttachmentId,
+        onAttachmentClick = viewModel::openAttachment,
         onSubmitOfferClick = {
             when {
                 uiState.alreadyApplied -> onViewMyOffer()

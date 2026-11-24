@@ -58,6 +58,8 @@ fun ChatRoomScreen(
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
     topBanner: (@Composable () -> Unit)? = null,
+    /** Pilihan project tujuan ("Kirim ke") bila ada beberapa project dengan UMKM ini. */
+    replySelector: (@Composable () -> Unit)? = null,
     onFileClick: (ChatBubbleUi) -> Unit = {},
     isOpening: (ChatBubbleUi) -> Boolean = { false }
 ) {
@@ -107,6 +109,7 @@ fun ChatRoomScreen(
             items(items = state.items, key = { it.key }) { item ->
                 when (item) {
                     is ChatRoomItem.DateSeparator -> ChatDateSeparator(label = item.label)
+                    is ChatRoomItem.ProjectSeparator -> ChatDateSeparator(label = "Project · ${item.title}")
                     is ChatRoomItem.Message -> ChatMessageBubble(
                         bubble = item.bubble,
                         isOpening = isOpening(item.bubble),
@@ -137,6 +140,7 @@ fun ChatRoomScreen(
                 onUploadDraftClick = onUploadDraftClick
             )
         }
+        replySelector?.invoke()
         MessageComposer(
             draft = draft,
             onDraftChange = onDraftChange,

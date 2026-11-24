@@ -49,6 +49,8 @@ data class ChatBubbleUi(
 sealed interface ChatRoomItem {
     val key: String
     data class DateSeparator(val label: String) : ChatRoomItem { override val key = "date-$label" }
+    /** Penanda pergantian project saat chat menggabungkan beberapa project dengan UMKM yang sama. */
+    data class ProjectSeparator(val title: String, override val key: String) : ChatRoomItem
     data class Message(val bubble: ChatBubbleUi) : ChatRoomItem { override val key = bubble.id }
 }
 

@@ -110,6 +110,7 @@ import com.example.proyek_papb_fe.feature.umkm.create_project.navigation.navigat
 import com.example.proyek_papb_fe.feature.umkm.component.shared.UmkmTab
 import com.example.proyek_papb_fe.feature.umkm.dashboard.navigation.backToUmkmDashboard
 import com.example.proyek_papb_fe.feature.umkm.dashboard.navigation.navigateToUmkmDashboard
+import com.example.proyek_papb_fe.feature.umkm.dashboard.navigation.UmkmDashboardRoute
 import com.example.proyek_papb_fe.feature.umkm.dashboard.navigation.umkmDashboardScreen
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
@@ -320,7 +321,12 @@ fun AppNavHost(
             },
             onGiveReview = { projectId -> navController.navigateToFreelancerReview(projectId) },
             onReviewDone = { navController.navigateUp() },
-            onBackToHome = { navController.popBackStack<DashboardRoute>(inclusive = false) }
+            // Layar ini milik UMKM: kembali ke Beranda UMKM (pop bila ada di tumpukan, selain itu buka sebagai tab).
+            onBackToHome = {
+                if (!navController.popBackStack<UmkmDashboardRoute>(inclusive = false)) {
+                    navController.navigateToTopLevel(UmkmDashboardRoute)
+                }
+            }
         )
         profileScreen(
             onProfessionalProfileClick = { navController.navigateToProfessionalProfile() },

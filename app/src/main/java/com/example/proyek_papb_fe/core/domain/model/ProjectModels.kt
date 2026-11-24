@@ -25,7 +25,11 @@ data class Project(
     val deadlineMillis: Long?,
     val status: String,
     val publishedAtMillis: Long?,
-    val createdAtMillis: Long?
+    val createdAtMillis: Long?,
+    /** null bila endpoint tidak mengirim skill (mis. daftar proyek milik UMKM). */
+    val skillIds: List<String>? = null,
+    /** UMKM pemilik; dikirim BE di detail & pencarian proyek publik. */
+    val owner: UserSummary? = null
 )
 
 data class ProjectInput(

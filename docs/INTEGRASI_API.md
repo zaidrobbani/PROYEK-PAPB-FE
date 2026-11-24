@@ -61,7 +61,7 @@ dana RELEASED, dompet, riwayat, notifikasi, ulasan, dan logout lolos. Uji UI di 
 | 5 | Ubah kata sandi | Tombol menampilkan pesan arahkan ke Lupa Password | BE belum punya endpoint (auth.md #26) |
 | 6 | Login Google | Menampilkan pesan belum tersedia | Butuh Google Sign-In + `GOOGLE_CLIENT_ID` |
 | 7 | Skill project | Saat edit, skill diambil dari hasil matching (bisa kosong bila belum ada freelancer) | `ProjectResponse` BE tidak mengirim `skill_ids` |
-| 8 | Identitas UMKM di project publik | Ditampilkan "UMKM TEMUKARYA" sampai freelancer terpilih | Project publik BE tidak memuat nama/kota UMKM |
+| 8 | Identitas UMKM, skill, dan lampiran di proyek (sisi freelancer) | `GET /projects` dan `GET /projects/{id}` kini mengirim `umkm` (nama usaha, pemilik, kota, foto) dan `skill_ids`. Detail proyek juga boleh dibuka freelancer terpilih walau status bukan TERBUKA. Freelancer boleh membaca lampiran (`GET /projects/{id}/attachments` dan file-nya) untuk proyek TERBUKA yang terbit atau proyeknya sendiri; unggah/hapus tetap khusus UMKM pemilik. Detail Proyek menampilkan bagian Lampiran Pendukung (ketuk untuk membuka) | Sebelumnya tampil "UMKM TEMUKARYA", skill kosong bila proyek tidak masuk rekomendasi, dan lampiran ditolak 403 |
 | 9 | Keahlian custom | Hanya skill dari master BE (26) yang bisa dipilih | BE menolak skill tak terdaftar |
 | 10 | Simpan draf project | Menampilkan pesan belum tersedia | BE tidak punya status draf |
 | 11 | Minta Ubah rencana | Ditambah dialog catatan | BE mewajibkan `note` |
