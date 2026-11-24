@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeEvent
+import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeSession
 import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.di.AppContainer
 import com.example.proyek_papb_fe.core.data.repository.ChatOverviewRepository
@@ -20,20 +21,30 @@ import com.example.proyek_papb_fe.core.domain.model.SubmissionList
 import com.example.proyek_papb_fe.core.domain.model.UploadFile
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Satu project (percakapan) dengan UMKM yang sama, untuk pilihan "Kirim ke". */
+data class ChatThread(val conversationId: String, val projectId: String?, val projectTitle: String, val statusLabel: String)
 
 data class ChatRoomVmState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    /** Percakapan tujuan yang sedang dipilih (konteks project, kirim pesan, unggah draf, batal). */
     val overview: ConversationOverview? = null,
+    val targetConversationId: String = "",
+    /** Semua project dengan UMKM ini; lebih dari satu = tampil penanda project & pilihan "Kirim ke". */
+    val threads: List<ChatThread> = emptyList(),
+    /** Pesan semua percakapan dengan UMKM ini, urut waktu. */
     val messages: List<Message> = emptyList(),
-    /** Detail alur project percakapan (hanya bila user pihak dalam kesepakatan). */
+    /** Detail alur project tujuan (hanya bila user pihak dalam kesepakatan). */
     val workflow: WorkflowDetail? = null,
     val submissions: SubmissionList? = null,
     val isSending: Boolean = false,
@@ -44,26 +55,30 @@ data class ChatRoomVmState(
 )
 
 /**
- * Ruang chat: pesan teks (`/conversations/{id}/messages`), konteks project dari detail alur,
- * lampiran foto/dokumen (`POST /conversations/{id}/attachments`), dan kirim hasil kerja freelancer
- * (`POST /projects/{id}/submissions`). Pesan baru & status dibaca datang lewat WebSocket.
+ * Ruang chat freelancer dengan satu UMKM, seperti chat UMKM: BE menyimpan percakapan per project, jadi semua
+ * percakapan dengan UMKM yang sama digabung (masing-masing WebSocket sendiri). Pesan baru, lampiran, unggah hasil,
+ * dan pembatalan memakai percakapan tujuan yang dipilih (awalnya percakapan yang dibuka).
  */
 class ChatRoomViewModel(
-    private val conversationId: String,
+    private val initialConversationId: String,
     private val chatRepository: ChatRepository,
     private val overviewRepository: ChatOverviewRepository,
     private val workflowRepository: WorkflowRepository,
     private val submissionRepository: SubmissionRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ChatRoomVmState())
+    private val _uiState = MutableStateFlow(ChatRoomVmState(targetConversationId = initialConversationId))
     val uiState: StateFlow<ChatRoomVmState> = _uiState.asStateFlow()
 
-    private val realtime = chatRepository.realtime(conversationId)
-    /** true saat WebSocket tersambung; layar hanya polling bila false. */
-    val isRealtime: StateFlow<Boolean> = realtime.isConnected
+    private val overviews = mutableMapOf<String, ConversationOverview>()
+    private val sessions = mutableMapOf<String, ChatRealtimeSession>()
+    private var connectionJob: Job? = null
 
-    private val outgoing = OutgoingAttachmentQueue(viewModelScope, { conversationId }, chatRepository, ::addMessage)
+    private val _isRealtime = MutableStateFlow(false)
+    /** true saat semua WebSocket percakapan tersambung; layar hanya polling bila false. */
+    val isRealtime: StateFlow<Boolean> = _isRealtime.asStateFlow()
+
+    private val outgoing = OutgoingAttachmentQueue(viewModelScope, { _uiState.value.targetConversationId }, chatRepository, ::addMessage)
     /** Foto/dokumen yang sedang dikirim atau gagal terkirim (tampil di akhir chat). */
     val pendingAttachments: StateFlow<List<OutgoingAttachment>> = outgoing.items
 
@@ -80,25 +95,39 @@ class ChatRoomViewModel(
 
     init {
         load()
-        realtime.start(viewModelScope)
-        viewModelScope.launch { realtime.events.collect(::onRealtimeEvent) }
     }
 
-    private fun onRealtimeEvent(event: ChatRealtimeEvent) {
+    private fun connect(conversationIds: List<String>) {
+        conversationIds.filterNot(sessions::containsKey).forEach { id ->
+            val session = chatRepository.realtime(id)
+            sessions[id] = session
+            session.start(viewModelScope)
+            viewModelScope.launch { session.events.collect { onRealtimeEvent(id, session, it) } }
+        }
+        connectionJob?.cancel()
+        val flows = sessions.values.map { it.isConnected }
+        connectionJob = viewModelScope.launch {
+            combine(flows) { states -> states.all { it } }.collect { _isRealtime.value = it }
+        }
+    }
+
+    private fun onRealtimeEvent(conversationId: String, session: ChatRealtimeSession, event: ChatRealtimeEvent) {
         val myId = AppContainer.currentUserId
         when (event) {
             is ChatRealtimeEvent.NewMessage -> {
                 val message = event.message
                 addMessage(message)
                 // Layar sedang terbuka: pesan masuk langsung dianggap dibaca.
-                if (message.senderUserId != myId && !realtime.markRead()) {
+                if (message.senderUserId != myId && !session.markRead()) {
                     viewModelScope.launch { runCatching { chatRepository.markRead(conversationId) } }
                 }
             }
             is ChatRealtimeEvent.Read -> if (event.readerUserId != myId) {
                 _uiState.update { state ->
                     state.copy(messages = state.messages.map {
-                        if (it.senderUserId == myId && it.readAtMillis == null) it.copy(readAtMillis = event.readAtMillis) else it
+                        if (it.conversationId == conversationId && it.senderUserId == myId && it.readAtMillis == null) {
+                            it.copy(readAtMillis = event.readAtMillis)
+                        } else it
                     })
                 }
             }
@@ -107,29 +136,35 @@ class ChatRoomViewModel(
     }
 
     override fun onCleared() {
-        realtime.close()
+        sessions.values.forEach { it.close() }
     }
 
     fun load() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = it.overview == null, errorMessage = null) }
             try {
-                coroutineScope {
-                    val overview = overviewRepository.overview(conversationId)
-                    val projectId = overview.conversation.projectId
-                    val workflow = async { projectId?.let { runCatching { workflowRepository.detail(it) }.getOrNull() } }
-                    val submissions = async { projectId?.let { runCatching { submissionRepository.submissions(it) }.getOrNull() } }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            overview = overview,
-                            messages = overview.messages,
-                            workflow = workflow.await(),
-                            submissions = submissions.await()
-                        )
-                    }
+                val opened = overviewRepository.overview(initialConversationId)
+                overviews[opened.conversation.id] = opened
+                // Percakapan project lain dengan UMKM yang sama.
+                val others = runCatching {
+                    chatRepository.conversations()
+                        .filter { it.umkmId == opened.conversation.umkmId && it.id != opened.conversation.id }
+                }.getOrDefault(emptyList())
+                overviewRepository.overviews(others).forEach { overviews[it.conversation.id] = it }
+
+                val target = _uiState.value.targetConversationId.takeIf(overviews::containsKey) ?: initialConversationId
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        overview = overviews[target],
+                        targetConversationId = target,
+                        threads = threadsOf(overviews.values),
+                        messages = overviews.values.flatMap { o -> o.messages }.distinctBy { m -> m.id }.sortedBy { m -> m.sentAtMillis }
+                    )
                 }
-                runCatching { chatRepository.markRead(conversationId) }
+                connect(overviews.keys.toList())
+                overviews.keys.forEach { id -> runCatching { chatRepository.markRead(id) } }
+                loadTargetDetails()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -138,15 +173,54 @@ class ChatRoomViewModel(
         }
     }
 
+    private fun threadsOf(items: Collection<ConversationOverview>): List<ChatThread> = items
+        .sortedByDescending { it.lastMessage?.sentAtMillis ?: it.conversation.lastMessageAtMillis ?: 0L }
+        .map {
+            ChatThread(
+                conversationId = it.conversation.id,
+                projectId = it.conversation.projectId,
+                projectTitle = it.projectTitle ?: "Percakapan umum",
+                statusLabel = it.workflow?.project?.statusLabel
+                    ?: it.projectStatus?.lowercase()?.split('_')?.joinToString(" ") { w -> w.replaceFirstChar(Char::uppercase) }
+                    ?: "-"
+            )
+        }
+
+    /** Detail alur & kiriman hasil untuk project tujuan saja. */
+    private suspend fun loadTargetDetails() {
+        val projectId = _uiState.value.overview?.conversation?.projectId
+        val (workflow, submissions) = coroutineScope {
+            val workflow = async { projectId?.let { runCatching { workflowRepository.detail(it) }.getOrNull() } }
+            val submissions = async { projectId?.let { runCatching { submissionRepository.submissions(it) }.getOrNull() } }
+            workflow.await() to submissions.await()
+        }
+        if (_uiState.value.overview?.conversation?.projectId == projectId) {
+            _uiState.update { it.copy(workflow = workflow, submissions = submissions) }
+        }
+    }
+
+    /** Ganti project tujuan; konteks project (status, negosiasi, unggah draf) ikut berganti. */
+    fun selectTarget(conversationId: String) {
+        val overview = overviews[conversationId] ?: return
+        if (conversationId == _uiState.value.targetConversationId) return
+        _uiState.update { it.copy(targetConversationId = conversationId, overview = overview, workflow = null, submissions = null) }
+        viewModelScope.launch { loadTargetDetails() }
+    }
+
     /** Cadangan saat WebSocket terputus: dipanggil berkala dari layar. */
     fun refreshMessages() {
+        val ids = overviews.keys.toList()
         viewModelScope.launch {
-            val latest = runCatching { chatRepository.messages(conversationId).items }.getOrNull() ?: return@launch
-            val current = _uiState.value.messages
-            // Bandingkan seluruh isi agar status dibaca ikut ter-update saat WebSocket terputus.
-            if (latest != current) {
-                _uiState.update { it.copy(messages = latest) }
-                if (latest.lastOrNull()?.id != current.lastOrNull()?.id) runCatching { chatRepository.markRead(conversationId) }
+            ids.forEach { id ->
+                val latest = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@forEach
+                val current = _uiState.value.messages.filter { it.conversationId == id }
+                // Bandingkan seluruh isi agar status dibaca ikut ter-update saat WebSocket terputus.
+                if (latest != current) {
+                    _uiState.update { state ->
+                        state.copy(messages = (state.messages.filterNot { it.conversationId == id } + latest).sortedBy { it.sentAtMillis })
+                    }
+                    if (latest.lastOrNull()?.id != current.lastOrNull()?.id) runCatching { chatRepository.markRead(id) }
+                }
             }
         }
     }
@@ -154,12 +228,13 @@ class ChatRoomViewModel(
     fun send(text: String) {
         val body = text.trim()
         if (body.isEmpty() || _uiState.value.isSending) return
+        val target = _uiState.value.targetConversationId
         // Lewat WebSocket: pesan kembali sebagai event `message` (ke pengirim & lawan bicara). REST hanya cadangan.
-        if (realtime.sendMessage(body)) return
+        if (sessions[target]?.sendMessage(body) == true) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSending = true) }
             try {
-                val sent = chatRepository.send(conversationId, body)
+                val sent = chatRepository.send(target, body)
                 _uiState.update { it.copy(isSending = false) }
                 addMessage(sent)
             } catch (e: CancellationException) {

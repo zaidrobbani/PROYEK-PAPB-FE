@@ -51,8 +51,8 @@ private fun publishedAgo(millis: Long?, now: Long = System.currentTimeMillis()):
 }
 
 /**
- * Model UI kartu/detail project untuk freelancer. BE belum mengirim identitas UMKM pada project publik,
- * jadi nama klien diisi dari [client] bila tersedia (setelah freelancer terpilih), selain itu "UMKM TEMUKARYA".
+ * Model UI kartu/detail project untuk freelancer. Identitas klien diambil dari [client] bila diberikan,
+ * selain itu dari pemilik project yang dikirim BE ([Project.owner]); "UMKM TEMUKARYA" hanya cadangan terakhir.
  */
 fun Project.toFreelancerProject(
     categoryName: String,
@@ -62,7 +62,8 @@ fun Project.toFreelancerProject(
     otherApplicants: Int = 0,
     now: Long = System.currentTimeMillis()
 ): FreelancerProject {
-    val clientName = client?.subtitle?.ifBlank { null } ?: client?.name ?: "UMKM TEMUKARYA"
+    val who = client ?: owner
+    val clientName = who?.subtitle?.ifBlank { null } ?: who?.name ?: "UMKM TEMUKARYA"
     val daysLeft = deadlineMillis?.let { TimeUnit.MILLISECONDS.toDays(it - now).toInt().coerceAtLeast(0) } ?: 0
     return FreelancerProject(
         id = id,
@@ -76,11 +77,12 @@ fun Project.toFreelancerProject(
         clientInitials = initialsOf(clientName),
         avatarTone = if (id.hashCode() % 2 == 0) AvatarTone.GREEN else AvatarTone.SAND,
         isClientVerified = true,
-        clientLocation = client?.city ?: "-",
-        clientLocationFull = client?.city ?: "-",
-        ownerName = client?.name ?: "Pemilik UMKM",
+        clientLocation = who?.city ?: "-",
+        clientLocationFull = who?.city ?: "-",
+        ownerName = who?.name ?: "Pemilik UMKM",
         ownerRole = "Pemilik Usaha",
-        clientRating = client?.averageRating ?: 0.0,
+        clientRating = who?.averageRating ?: 0.0,
+        clientPhotoUrl = who?.photoUrl,
         budgetLabel = "Budget",
         budget = rupiah(budget),
         budgetCompact = compactRupiah(budget),

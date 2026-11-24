@@ -1,5 +1,8 @@
 package com.example.proyek_papb_fe.feature.freelancer.projectdetail.component
 
+import androidx.compose.ui.layout.ContentScale
+import com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri
+import com.example.proyek_papb_fe.core.ui.components.LocalImage
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +48,9 @@ internal fun ClientProfileCard(
         ClientAvatar(
             initials = project.clientInitials,
             tone = project.avatarTone,
-            isVerified = project.isClientVerified
+            isVerified = project.isClientVerified,
+            photoUrl = project.clientPhotoUrl,
+            name = project.clientName
         )
 
         Column(modifier = Modifier.weight(1f)) {
@@ -120,7 +125,9 @@ internal fun ClientProfileCard(
 private fun ClientAvatar(
     initials: String,
     tone: AvatarTone,
-    isVerified: Boolean
+    isVerified: Boolean,
+    photoUrl: String?,
+    name: String
 ) {
     val (background, content) = when (tone) {
         AvatarTone.GREEN -> TemuKaryaColors.ChipGreen to TemuKaryaColors.OnChipGreen
@@ -135,12 +142,23 @@ private fun ClientAvatar(
                 .background(background),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = initials,
-                style = TemuKaryaTypography.AvatarLarge,
-                color = content,
-                maxLines = 1
-            )
+            val localPhoto = rememberServerImageUri(photoUrl)
+            if (localPhoto != null) {
+                LocalImage(
+                    uri = localPhoto,
+                    fallbackRes = null,
+                    contentDescription = "Foto $name",
+                    modifier = Modifier.size(AvatarSize).clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = initials,
+                    style = TemuKaryaTypography.AvatarLarge,
+                    color = content,
+                    maxLines = 1
+                )
+            }
         }
         if (isVerified) {
             Box(

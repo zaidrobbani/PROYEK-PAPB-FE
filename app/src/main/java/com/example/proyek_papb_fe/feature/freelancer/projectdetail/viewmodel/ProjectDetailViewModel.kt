@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.projectdetail.viewmodel
 
+import com.example.proyek_papb_fe.core.domain.model.ProjectFile
+import com.example.proyek_papb_fe.core.data.repository.FileRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -23,7 +25,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** File lampiran yang sudah diunduh ke cache, siap dibuka dengan aplikasi lain. */
+data class OpenedAttachment(val uri: String, val fileName: String, val mimeType: String)
+
 data class ProjectDetailUiState(
+    val attachments: List<ProjectFile> = emptyList(),
+    val openingAttachmentId: String? = null,
+    val openedAttachment: OpenedAttachment? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val project: FreelancerProject? = null,
@@ -38,7 +46,8 @@ class ProjectDetailViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
     private val chatRepository: ChatRepository,
-    private val workflowRepository: WorkflowRepository
+    private val workflowRepository: WorkflowRepository,
+    private val fileRepository: FileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
@@ -61,11 +70,12 @@ class ProjectDetailViewModel(
                             .firstOrNull { it.projectId == projectId }
                     }
                     val mine = async { runCatching { projectRepository.myApplications() }.getOrDefault(emptyList()) }
+                    val files = async { runCatching { projectRepository.attachments(projectId) }.getOrDefault(emptyList()) }
                     val p = project.await()
                     umkmId = p.umkmId
                     val recommendation = match.await()
-                    // BE belum mengirim skill di detail project; skill tersedia dari hasil matching bila ada.
-                    val skillNames = masterDataRepository.skillNames(recommendation?.requiredSkillIds.orEmpty())
+                    // Skill dari detail project BE; hasil matching hanya cadangan bila endpoint tidak mengirimnya.
+                    val skillNames = masterDataRepository.skillNames(p.skillIds ?: recommendation?.requiredSkillIds.orEmpty())
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -75,6 +85,7 @@ class ProjectDetailViewModel(
                                 match = recommendation?.match
                             ),
                             isOpen = p.status == ProjectStatusCode.TERBUKA,
+                            attachments = files.await(),
                             alreadyApplied = mine.await().any { a -> a.projectId == projectId }
                         )
                     }
@@ -109,7 +120,8 @@ class ProjectDetailViewModel(
                 deadlineMillis = it.deadlineMillis,
                 status = it.status,
                 publishedAtMillis = it.publishedAtMillis,
-                createdAtMillis = null
+                createdAtMillis = null,
+                owner = workflow.umkm
             )
         }
     }
@@ -132,16 +144,39 @@ class ProjectDetailViewModel(
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
 
+    /** Unduh lampiran ke cache (dipakai ulang bila sudah ada), lalu container membukanya dengan aplikasi lain. */
+    fun openAttachment(file: ProjectFile) {
+        if (_uiState.value.openingAttachmentId != null) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(openingAttachmentId = file.id) }
+            try {
+                val uri = fileRepository.downloadToCache(
+                    "projects/$projectId/attachments/${file.id}/file", "project_${file.id}", file.fileName
+                )
+                _uiState.update {
+                    it.copy(openingAttachmentId = null, openedAttachment = OpenedAttachment(uri, file.fileName, file.mimeType))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(openingAttachmentId = null, message = e.userMessage()) }
+            }
+        }
+    }
+
+    fun onAttachmentOpened() = _uiState.update { it.copy(openedAttachment = null) }
+
     companion object {
         fun factory(
             projectId: String,
             projectRepository: ProjectRepository,
             masterDataRepository: MasterDataRepository,
             chatRepository: ChatRepository,
-            workflowRepository: WorkflowRepository
+            workflowRepository: WorkflowRepository,
+            fileRepository: FileRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                ProjectDetailViewModel(projectId, projectRepository, masterDataRepository, chatRepository, workflowRepository)
+                ProjectDetailViewModel(projectId, projectRepository, masterDataRepository, chatRepository, workflowRepository, fileRepository)
             }
         }
     }
