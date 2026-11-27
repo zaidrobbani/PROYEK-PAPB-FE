@@ -47,6 +47,7 @@ fun SearchProjectContainer(
     }
 
     SearchProjectScreen(
+        onRefresh = viewModel::refresh,
         query = query,
         onQueryChange = viewModel::onQueryChange,
         categories = categories,

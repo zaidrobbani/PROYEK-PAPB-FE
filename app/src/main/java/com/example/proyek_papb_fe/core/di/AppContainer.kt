@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.core.di
 
+import com.example.proyek_papb_fe.core.data.repository.FreelancerMatchRepository
 import com.example.proyek_papb_fe.core.push.PushTokenRegistrar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -133,6 +134,10 @@ object AppContainer {
 
     val notificationRepository: NotificationRepository by lazy {
         DefaultNotificationRepository(NotificationRemoteDataSource(retrofit.create(NotificationApiService::class.java)))
+    }
+
+    val freelancerMatchRepository: FreelancerMatchRepository by lazy {
+        FreelancerMatchRepository(workflowRepository, projectRepository)
     }
 
     val chatOverviewRepository: ChatOverviewRepository by lazy {

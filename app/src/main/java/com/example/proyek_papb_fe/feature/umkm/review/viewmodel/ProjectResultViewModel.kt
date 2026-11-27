@@ -17,6 +17,7 @@ import com.example.proyek_papb_fe.core.domain.model.RevisionItem
 import com.example.proyek_papb_fe.core.domain.model.Submission
 import com.example.proyek_papb_fe.core.domain.model.SubmissionFile
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -66,8 +67,15 @@ class ProjectResultViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }

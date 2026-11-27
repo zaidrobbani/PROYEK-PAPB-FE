@@ -15,3 +15,7 @@
 local.properties
 # Konfigurasi Firebase per developer (lihat docs/INTEGRASI_API.md › Push notifikasi)
 /app/google-services.json
+# Kunci tanda tangan APK release (lihat docs/BUILD_APK.md)
+/keystore.properties
+*.jks
+*.keystore

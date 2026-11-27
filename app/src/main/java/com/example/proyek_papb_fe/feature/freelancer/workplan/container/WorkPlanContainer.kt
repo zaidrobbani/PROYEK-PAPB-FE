@@ -172,6 +172,7 @@ fun WorkPlanContainer(
     }
 
     WorkPlanScreen(
+        onRefresh = viewModel::refresh,
         header = header,
         milestones = milestones,
         isSubmitted = !uiState.isEditable,

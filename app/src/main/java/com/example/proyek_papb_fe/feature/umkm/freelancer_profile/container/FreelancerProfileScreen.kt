@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.freelancer_profile.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -91,31 +92,32 @@ fun FreelancerProfileScreen(
                 else ErrorContent(uiState.errorMessage ?: "Profil freelancer tidak ditemukan.", onRetry = viewModel::load)
                 return@Column
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = ProfileGutter)
-                    .padding(top = 3.61.dp),
-                verticalArrangement = Arrangement.spacedBy(40.677.dp)
-            ) {
-                ProfileHeroCard(profile = profile, priceText = profile.startingPrice?.let(::formatRupiah))
-                SkillsSection(profile.skills)
-                PortfolioSection(
-                    total = profile.portfolioTotal,
-                    items = profile.portfolio,
-                    onSeeAll = { toast("Daftar lengkap portofolio belum tersedia di versi ini.") },
-                    onOpenItem = { item ->
-                        val link = item.link?.trim().orEmpty()
-                        when {
-                            link.isEmpty() -> toast("${profile.name} belum mencantumkan tautan untuk karya ini.")
-                            !openInBrowser(context, link) -> toast("Tidak ada aplikasi browser untuk membuka tautan ini.")
+            RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = ProfileGutter)
+                        .padding(top = 3.61.dp),
+                    verticalArrangement = Arrangement.spacedBy(40.677.dp)
+                ) {
+                    ProfileHeroCard(profile = profile, priceText = profile.startingPrice?.let(::formatRupiah))
+                    SkillsSection(profile.skills)
+                    PortfolioSection(
+                        total = profile.portfolioTotal,
+                        items = profile.portfolio,
+                        onSeeAll = { toast("Daftar lengkap portofolio belum tersedia di versi ini.") },
+                        onOpenItem = { item ->
+                            val link = item.link?.trim().orEmpty()
+                            when {
+                                link.isEmpty() -> toast("${profile.name} belum mencantumkan tautan untuk karya ini.")
+                                !openInBrowser(context, link) -> toast("Tidak ada aplikasi browser untuk membuka tautan ini.")
+                            }
                         }
-                    }
-                )
-                ReviewsSection(rating = profile.rating, reviews = profile.reviews)
-                Spacer(Modifier.height(80.dp))
+                    )
+                    ReviewsSection(rating = profile.rating, reviews = profile.reviews)
+                    Spacer(Modifier.height(80.dp))
+                }
             }
         }
         if (profile != null) {

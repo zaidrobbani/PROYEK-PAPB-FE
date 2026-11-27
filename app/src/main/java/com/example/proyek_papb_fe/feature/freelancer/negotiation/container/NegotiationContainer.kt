@@ -112,6 +112,7 @@ fun NegotiationContainer(
     )
 
     NegotiationScreen(
+        onRefresh = viewModel::refresh,
         state = state,
         onBack = onBack,
         onCancelClick = {

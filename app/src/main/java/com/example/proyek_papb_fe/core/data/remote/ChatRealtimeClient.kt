@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit
 sealed interface ChatRealtimeEvent {
     data class NewMessage(val message: Message) : ChatRealtimeEvent
     data class Read(val readerUserId: String, val readAtMillis: Long?) : ChatRealtimeEvent
+    /** Lawan bicara (atau perangkat lain) menghapus pesan untuk semua orang. */
+    data class MessagesDeleted(val messageIds: List<String>, val deletedAtMillis: Long) : ChatRealtimeEvent
     data class Error(val message: String) : ChatRealtimeEvent
 }
 
@@ -113,6 +115,13 @@ class ChatRealtimeSession internal constructor(
                     ChatRealtimeEvent.Read(
                         readerUserId = json.get("reader_user_id")?.asString.orEmpty(),
                         readAtMillis = DateTimeParser.parseUtcMillis(json.get("read_at")?.asString)
+                    )
+                )
+                "message_deleted" -> _events.tryEmit(
+                    ChatRealtimeEvent.MessagesDeleted(
+                        messageIds = json.getAsJsonArray("message_ids")?.map { it.asString }.orEmpty(),
+                        deletedAtMillis = DateTimeParser.parseUtcMillis(json.get("deleted_at")?.asString)
+                            ?: System.currentTimeMillis()
                     )
                 )
                 "error" -> _events.tryEmit(ChatRealtimeEvent.Error(json.get("message")?.asString ?: "Pesan gagal dikirim"))

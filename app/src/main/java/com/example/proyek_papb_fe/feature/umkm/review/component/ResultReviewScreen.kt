@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.umkm.review.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,22 +79,25 @@ fun ResultReviewScreen(
     onDownloadFile: (ReviewFileUi) -> Unit,
     onRequestRevision: () -> Unit,
     onApprove: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(modifier = modifier.fillMaxSize().background(TemuKaryaColors.BgCanvas)) {
         DetailTopBar(title = "Review Hasil", onBack = onBack)
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = P17, end = P17, top = 3.61.dp, bottom = 152.dp)
-            ) {
-                StatusChips()
-                ContextCard(state, onChatClick, Modifier.padding(top = P17))
-                NoteCard(state, Modifier.padding(top = P17))
-                PreviewCard(state, onZoomClick, onDownloadFile, Modifier.padding(top = P17))
-                FilesCard(state.files, onDownloadFile, Modifier.padding(top = P17))
+            RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = P17, end = P17, top = 3.61.dp, bottom = 152.dp)
+                ) {
+                    StatusChips()
+                    ContextCard(state, onChatClick, Modifier.padding(top = P17))
+                    NoteCard(state, Modifier.padding(top = P17))
+                    PreviewCard(state, onZoomClick, onDownloadFile, Modifier.padding(top = P17))
+                    FilesCard(state.files, onDownloadFile, Modifier.padding(top = P17))
+                }
             }
             ActionBar(onRequestRevision, onApprove, Modifier.align(Alignment.BottomCenter))
         }

@@ -15,6 +15,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,8 +55,15 @@ class FreelancerApplicationsViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }

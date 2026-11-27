@@ -3,6 +3,7 @@ package com.example.proyek_papb_fe.core.data.repository
 import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeClient
 import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeSession
 import com.example.proyek_papb_fe.core.data.remote.dto.toDomain
+import com.example.proyek_papb_fe.core.util.DateTimeParser.parseUtcMillis
 import com.example.proyek_papb_fe.core.data.source.ChatAttachmentReader
 import com.example.proyek_papb_fe.core.data.source.ChatRemoteDataSource
 import com.example.proyek_papb_fe.core.data.source.PickedChatFile
@@ -24,6 +25,9 @@ interface ChatRepository {
     suspend fun messages(conversationId: String, beforeAt: String? = null, beforeId: String? = null): MessagePage
     suspend fun send(conversationId: String, text: String): Message
     suspend fun markRead(conversationId: String)
+
+    /** Hapus pesan satu percakapan; mengembalikan waktu hapus (epoch millis) dari server. */
+    suspend fun deleteMessages(conversationId: String, messageIds: List<String>, forEveryone: Boolean): Long
 
     /** Kirim foto (dikompres ke WebP) atau dokumen dengan caption opsional. */
     suspend fun sendAttachment(conversationId: String, attachment: OutgoingAttachment): Message
@@ -74,5 +78,10 @@ class DefaultChatRepository(
 
     override suspend fun markRead(conversationId: String) {
         remote.markRead(conversationId)
+    }
+
+    override suspend fun deleteMessages(conversationId: String, messageIds: List<String>, forEveryone: Boolean): Long {
+        val result = remote.deleteMessages(conversationId, messageIds, if (forEveryone) "EVERYONE" else "ME")
+        return parseUtcMillis(result.deletedAt) ?: System.currentTimeMillis()
     }
 }

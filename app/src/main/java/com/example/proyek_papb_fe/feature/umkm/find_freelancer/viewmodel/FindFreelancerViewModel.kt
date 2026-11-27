@@ -6,9 +6,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.proyek_papb_fe.core.data.remote.userMessage
+import com.example.proyek_papb_fe.core.data.repository.FreelancerMatchRepository
 import com.example.proyek_papb_fe.core.data.repository.FreelancerRepository
 import com.example.proyek_papb_fe.core.domain.model.FreelancerSearchFilter
 import com.example.proyek_papb_fe.feature.umkm.data.DirectoryFreelancer
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +28,8 @@ data class FindFreelancerUiState(
 
 /** Cari Freelancer (`GET /freelancers`, freelancer AVAILABLE). Kata kunci & filter cepat diterapkan lokal. */
 class FindFreelancerViewModel(
-    private val freelancerRepository: FreelancerRepository
+    private val freelancerRepository: FreelancerRepository,
+    private val matchRepository: FreelancerMatchRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FindFreelancerUiState())
@@ -35,11 +40,22 @@ class FindFreelancerViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
-                val page = freelancerRepository.search(FreelancerSearchFilter(), limit = 100)
+                val (page, matches) = coroutineScope {
+                    val matches = async { runCatching { matchRepository.bestMatches() }.getOrDefault(emptyMap()) }
+                    freelancerRepository.search(FreelancerSearchFilter(), limit = 100) to matches.await()
+                }
                 val list = page.items.map { f ->
+                    val match = matches[f.userId]
                     DirectoryFreelancer(
                         id = f.userId,
                         name = f.name,
@@ -57,9 +73,11 @@ class FindFreelancerViewModel(
                         experienceYears = null,
                         skills = f.skills.take(3).map { it.name },
                         moreSkillCount = (f.skills.size - 3).coerceAtLeast(0),
-                        startingPrice = f.servicePriceMin ?: 0
+                        startingPrice = f.servicePriceMin ?: 0,
+                        matchPercent = match?.percent,
+                        matchProjectTitle = match?.projectTitle
                     )
-                }
+                }.sortedByDescending { it.matchPercent ?: 0 }
                 _uiState.update { it.copy(isLoading = false, freelancers = list) }
             } catch (e: CancellationException) {
                 throw e
@@ -70,8 +88,11 @@ class FindFreelancerViewModel(
     }
 
     companion object {
-        fun factory(freelancerRepository: FreelancerRepository): ViewModelProvider.Factory = viewModelFactory {
-            initializer { FindFreelancerViewModel(freelancerRepository) }
+        fun factory(
+            freelancerRepository: FreelancerRepository,
+            matchRepository: FreelancerMatchRepository
+        ): ViewModelProvider.Factory = viewModelFactory {
+            initializer { FindFreelancerViewModel(freelancerRepository, matchRepository) }
         }
     }
 }

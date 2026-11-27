@@ -36,6 +36,7 @@ fun RevisionRequestContainer(
         return
     }
     RevisionRequestScreen(
+        onRefresh = viewModel::refresh,
         request = request,
         onBack = onBack,
         onUploadRevisedDraft = { onOpenProjectChat(projectId) },

@@ -80,6 +80,7 @@ fun WalletContainer(
     val state = remember(uiState, showAllTransactions) { uiState.toUiState(showAllTransactions) }
 
     WalletScreen(
+        onRefresh = viewModel::refresh,
         state = state,
         onBack = onBack,
         onWithdrawClick = {

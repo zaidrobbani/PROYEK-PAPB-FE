@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.transaction_history.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -92,76 +93,75 @@ fun TransactionHistoryScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         AuthAppBar(title = "Riwayat Transaksi", onBack = onBack)
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .imePadding(),
-            contentPadding = PaddingValues(start = PageGutter, end = PageGutter, top = 3.61.dp, bottom = 32.dp)
-        ) {
-            item(key = "header") {
-                TransactionHistoryHeader(
-                    onDownload = onDownloadStatement,
-                    onAdvancedFilter = onAdvancedFilter,
-                    modifier = Modifier.padding(bottom = 8.451.dp)
-                )
-            }
-            item(key = "tabs") {
-                TransactionTabs(
-                    selected = tab,
-                    counts = counts,
-                    onSelect = { tab = it },
-                    modifier = Modifier.padding(bottom = 8.451.dp)
-                )
-            }
-            item(key = "search") {
-                TransactionSearchAndPeriod(
-                    query = query,
-                    onQueryChange = { query = it },
-                    months = months,
-                    selectedMonth = month,
-                    onMonthSelect = { month = it },
-                    modifier = Modifier.padding(bottom = 12.677.dp)
-                )
-            }
-            if (groups.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        text = if (tab == TransactionTab.Dibatalkan && query.isBlank()) {
-                            "Belum ada transaksi yang dibatalkan."
-                        } else {
-                            "Tidak ada transaksi yang cocok."
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 33.805.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.79.sp,
-                            lineHeight = 21.128.sp
+        RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().imePadding(),
+                contentPadding = PaddingValues(start = PageGutter, end = PageGutter, top = 3.61.dp, bottom = 32.dp)
+            ) {
+                item(key = "header") {
+                    TransactionHistoryHeader(
+                        onDownload = onDownloadStatement,
+                        onAdvancedFilter = onAdvancedFilter,
+                        modifier = Modifier.padding(bottom = 8.451.dp)
+                    )
+                }
+                item(key = "tabs") {
+                    TransactionTabs(
+                        selected = tab,
+                        counts = counts,
+                        onSelect = { tab = it },
+                        modifier = Modifier.padding(bottom = 8.451.dp)
+                    )
+                }
+                item(key = "search") {
+                    TransactionSearchAndPeriod(
+                        query = query,
+                        onQueryChange = { query = it },
+                        months = months,
+                        selectedMonth = month,
+                        onMonthSelect = { month = it },
+                        modifier = Modifier.padding(bottom = 12.677.dp)
+                    )
+                }
+                if (groups.isEmpty()) {
+                    item(key = "empty") {
+                        Text(
+                            text = if (tab == TransactionTab.Dibatalkan && query.isBlank()) {
+                                "Belum ada transaksi yang dibatalkan."
+                            } else {
+                                "Tidak ada transaksi yang cocok."
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 33.805.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.79.sp,
+                                lineHeight = 21.128.sp
+                            )
                         )
-                    )
+                    }
                 }
-            }
-            groups.forEach { (key, items) ->
-                item(key = "month-$key") {
-                    TransactionMonthHeader(
-                        title = formatMonthLong(items.first().paidAtMillis),
-                        count = items.size,
-                        isLatest = key == latestMonth
-                    )
-                }
-                items(items, key = { it.code }) { transaction ->
-                    TransactionCard(
-                        transaction = transaction,
-                        onClick = { onTransactionClick(transaction.code) },
-                        modifier = Modifier.padding(top = 8.451.dp)
-                    )
-                }
-                item(key = "gap-$key") {
-                    Spacer(Modifier.height(16.903.dp))
+                groups.forEach { (key, items) ->
+                    item(key = "month-$key") {
+                        TransactionMonthHeader(
+                            title = formatMonthLong(items.first().paidAtMillis),
+                            count = items.size,
+                            isLatest = key == latestMonth
+                        )
+                    }
+                    items(items, key = { it.code }) { transaction ->
+                        TransactionCard(
+                            transaction = transaction,
+                            onClick = { onTransactionClick(transaction.code) },
+                            modifier = Modifier.padding(top = 8.451.dp)
+                        )
+                    }
+                    item(key = "gap-$key") {
+                        Spacer(Modifier.height(16.903.dp))
+                    }
                 }
             }
         }

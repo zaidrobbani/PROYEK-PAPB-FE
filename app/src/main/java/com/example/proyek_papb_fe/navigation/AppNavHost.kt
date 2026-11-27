@@ -187,7 +187,8 @@ fun AppNavHost(
             onSeeAllActiveProjectsClick = { navController.navigateToTopLevel(SubmissionRoute) },
             onRecommendedProjectClick = { projectId -> navController.navigateToProjectDetail(projectId) },
             onSeeAllRecommendationsClick = { navController.navigateToTopLevel(SearchProjectRoute) },
-            onNotificationClick = { navController.navigateToNotifications() }
+            onNotificationClick = { navController.navigateToNotifications() },
+            onManageSkillsClick = { navController.navigateToProfessionalProfile() }
         )
 
         searchProjectScreen(

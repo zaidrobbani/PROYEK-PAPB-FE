@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.submission.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -54,7 +56,8 @@ fun SubmissionStatusScreen(
     onOpenWorkPlanClick: () -> Unit = {},
     onFindOtherProjectsClick: () -> Unit,
     onViewDetailClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(
         modifier = modifier
@@ -68,68 +71,70 @@ fun SubmissionStatusScreen(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                SubmissionSummaryCard(
-                    submittedAgo = state.submittedAgo,
-                    projectTitle = state.projectTitle,
-                    clientLine = state.clientLine,
-                    offerAmount = state.offerAmount,
-                    duration = state.duration,
-                    otherApplicants = state.otherApplicants,
-                    isCancelled = state.isCancelled,
-                    isApproved = state.isApproved,
-                    isAgreed = state.isAgreed,
-                    isCompleted = state.isCompleted
-                )
-                Text(
-                    text = "Tahapan Pengajuan",
-                    style = SubmissionStatusTypography.SectionTitle,
-                    color = TemuKaryaColors.TextHeading
-                )
-                SubmissionTimeline(
-                    steps = remember(
-                        state.submittedAtLabel,
-                        state.isApproved,
-                        state.cancellationReason,
-                        state.isAgreed,
-                        state.isCompleted
-                    ) {
-                        submissionSteps(
+            RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    SubmissionSummaryCard(
+                        submittedAgo = state.submittedAgo,
+                        projectTitle = state.projectTitle,
+                        clientLine = state.clientLine,
+                        offerAmount = state.offerAmount,
+                        duration = state.duration,
+                        otherApplicants = state.otherApplicants,
+                        isCancelled = state.isCancelled,
+                        isApproved = state.isApproved,
+                        isAgreed = state.isAgreed,
+                        isCompleted = state.isCompleted
+                    )
+                    Text(
+                        text = "Tahapan Pengajuan",
+                        style = SubmissionStatusTypography.SectionTitle,
+                        color = TemuKaryaColors.TextHeading
+                    )
+                    SubmissionTimeline(
+                        steps = remember(
                             state.submittedAtLabel,
                             state.isApproved,
                             state.cancellationReason,
                             state.isAgreed,
                             state.isCompleted
+                        ) {
+                            submissionSteps(
+                                state.submittedAtLabel,
+                                state.isApproved,
+                                state.cancellationReason,
+                                state.isAgreed,
+                                state.isCompleted
+                            )
+                        }
+                    )
+                    AnimatedVisibility(
+                        visible = state.isApproved && !state.isCancelled && !state.isAgreed,
+                        enter = slideInHorizontally(
+                            animationSpec = tween(durationMillis = 450),
+                            initialOffsetX = { fullWidth -> -fullWidth }
+                        ) + fadeIn(animationSpec = tween(durationMillis = 450))
+                    ) {
+                        NegotiationInviteBanner(
+                            clientName = state.clientName,
+                            onOpenClick = onOpenNegotiationClick
                         )
                     }
-                )
-                AnimatedVisibility(
-                    visible = state.isApproved && !state.isCancelled && !state.isAgreed,
-                    enter = slideInHorizontally(
-                        animationSpec = tween(durationMillis = 450),
-                        initialOffsetX = { fullWidth -> -fullWidth }
-                    ) + fadeIn(animationSpec = tween(durationMillis = 450))
-                ) {
-                    NegotiationInviteBanner(
-                        clientName = state.clientName,
-                        onOpenClick = onOpenNegotiationClick
-                    )
-                }
-                // Setelah kesepakatan: jalan masuk ke Rencana Pengerjaan (mulai kerja, tandai milestone, status hasil).
-                if (state.isAgreed && !state.isCancelled) {
-                    NegotiationInviteBanner(
-                        clientName = state.clientName,
-                        onOpenClick = onOpenWorkPlanClick,
-                        title = if (state.isCompleted) "Proyek selesai" else "Proyek sudah disepakati",
-                        subtitle = if (state.isCompleted) "Lihat milestone & status dana" else "Mulai kerja & tandai milestone selesai",
-                        buttonLabel = "Rencana"
-                    )
+                    // Setelah kesepakatan: jalan masuk ke Rencana Pengerjaan (mulai kerja, tandai milestone, status hasil).
+                    if (state.isAgreed && !state.isCancelled) {
+                        NegotiationInviteBanner(
+                            clientName = state.clientName,
+                            onOpenClick = onOpenWorkPlanClick,
+                            title = if (state.isCompleted) "Proyek selesai" else "Proyek sudah disepakati",
+                            subtitle = if (state.isCompleted) "Lihat milestone & status dana" else "Mulai kerja & tandai milestone selesai",
+                            buttonLabel = "Rencana"
+                        )
+                    }
                 }
             }
 

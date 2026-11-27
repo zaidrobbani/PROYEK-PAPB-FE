@@ -15,7 +15,10 @@ import com.example.proyek_papb_fe.core.data.repository.MasterDataRepository
 import com.example.proyek_papb_fe.core.data.source.PickedChatFile
 import com.example.proyek_papb_fe.core.di.AppContainer
 import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
+import com.example.proyek_papb_fe.core.domain.model.DeleteForEveryoneWindowMillis
+import com.example.proyek_papb_fe.feature.chat.viewmodel.MessageSelection
 import com.example.proyek_papb_fe.feature.chat.viewmodel.OutgoingAttachmentQueue
+import java.time.ZoneId
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
@@ -74,8 +77,8 @@ class UmkmChatThreadViewModel(
         load()
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
             try {
                 val opened = overviewRepository.overview(initialConversationId)
@@ -132,6 +135,8 @@ class UmkmChatThreadViewModel(
             }
             is ChatRealtimeEvent.Read ->
                 if (event.readerUserId != myId) UmkmConversationStore.markReadByFreelancer(conversationId)
+            is ChatRealtimeEvent.MessagesDeleted ->
+                UmkmConversationStore.markDeleted(conversationId, event.messageIds.toSet())
             is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
         }
     }
@@ -149,6 +154,7 @@ class UmkmChatThreadViewModel(
                 val messages = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@forEach
                 val lastBefore = UmkmConversationStore.messages(id).lastOrNull()?.id
                 UmkmConversationStore.replaceMessages(id, messages, myId)
+                selection.retain(visibleMessages().keys)
                 if (messages.lastOrNull()?.id != lastBefore) markRead(id)
             }
         }
@@ -180,6 +186,50 @@ class UmkmChatThreadViewModel(
     fun discardAttachment(localId: String) = outgoing.discard(localId)
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
+
+    private val selection = MessageSelection()
+    /** Pesan yang sedang dipilih untuk dihapus; kosong = mode biasa. */
+    val selectedMessageIds: StateFlow<Set<String>> = selection.selected
+    val isDeletingMessages: StateFlow<Boolean> = selection.isDeleting
+
+    private fun visibleMessages() = _conversationIds.value
+        .flatMap { UmkmConversationStore.messages(it) }
+        .associateBy { it.id }
+
+    fun toggleMessageSelection(messageId: String) {
+        if (messageId in visibleMessages()) selection.toggle(messageId)
+    }
+
+    fun clearMessageSelection() = selection.clear()
+
+    /** Boleh "Hapus untuk semua orang" bila semua pesan terpilih milik sendiri, belum dihapus, dan ≤ 48 jam. */
+    fun canDeleteSelectedForEveryone(): Boolean {
+        val ids = selection.selected.value
+        val messages = visibleMessages()
+        val now = System.currentTimeMillis()
+        return ids.isNotEmpty() && ids.all { id ->
+            val message = messages[id] ?: return@all false
+            val sentAt = message.sentAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            message.fromUmkm && !message.isDeleted && now - sentAt <= DeleteForEveryoneWindowMillis
+        }
+    }
+
+    fun deleteSelectedMessages(forEveryone: Boolean) {
+        val conversationOf = visibleMessages().mapValues { it.value.conversationId }
+        viewModelScope.launch {
+            try {
+                selection.delete(chatRepository, conversationOf, forEveryone) { conversationId, ids, _ ->
+                    if (forEveryone) UmkmConversationStore.markDeleted(conversationId, ids.toSet())
+                    else UmkmConversationStore.removeMessages(conversationId, ids.toSet())
+                }
+                _uiState.update { it.copy(message = if (forEveryone) "Pesan dihapus untuk semua orang" else "Pesan dihapus") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(message = e.userMessage()) }
+            }
+        }
+    }
 
     override fun onCleared() {
         sessions.values.forEach { it.close() }

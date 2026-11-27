@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.notification.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -85,48 +87,50 @@ fun NotificationScreen(
     onItemClick: (String) -> Unit,
     onFindProjectsClick: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(modifier = modifier.fillMaxSize().background(TemuKaryaColors.BgCanvas)) {
         DetailTopBar(title = "Notifikasi", onBack = onBack)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (isEmpty) {
-                EmptyState(onFindProjectsClick)
-                return@Column
-            }
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                filters.forEachIndexed { i, f -> FilterChip(f, onClick = { onFilterClick(i) }) }
-            }
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    if (unreadCount > 0) "$unreadCount belum dibaca" else "Semua sudah dibaca",
-                    style = NotificationTypography.Group,
-                    color = NotificationColors.Muted,
-                    modifier = Modifier.weight(1f)
-                )
-                if (unreadCount > 0) {
-                    Text(
-                        "Tandai semua dibaca",
-                        style = NotificationTypography.Action,
-                        color = TemuKaryaColors.ActionPrimary,
-                        modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable(role = Role.Button, onClick = onMarkAllRead)
-                    )
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (isEmpty) {
+                    EmptyState(onFindProjectsClick)
+                    return@Column
                 }
-            }
-            if (groups.isEmpty()) {
-                Text("Tidak ada notifikasi di kategori ini.", style = NotificationTypography.Body, color = TemuKaryaColors.TextBody)
-            }
-            groups.forEach { group ->
-                Text(group.label, style = NotificationTypography.Group, color = NotificationColors.Muted)
-                Column(modifier = Modifier.fillMaxWidth().background(TemuKaryaColors.SurfaceCard, RoundedCornerShape(16.dp)).padding(6.dp)) {
-                    group.items.forEach { item -> NotificationRow(item, onClick = { onItemClick(item.id) }) }
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    filters.forEachIndexed { i, f -> FilterChip(f, onClick = { onFilterClick(i) }) }
+                }
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (unreadCount > 0) "$unreadCount belum dibaca" else "Semua sudah dibaca",
+                        style = NotificationTypography.Group,
+                        color = NotificationColors.Muted,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (unreadCount > 0) {
+                        Text(
+                            "Tandai semua dibaca",
+                            style = NotificationTypography.Action,
+                            color = TemuKaryaColors.ActionPrimary,
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable(role = Role.Button, onClick = onMarkAllRead)
+                        )
+                    }
+                }
+                if (groups.isEmpty()) {
+                    Text("Tidak ada notifikasi di kategori ini.", style = NotificationTypography.Body, color = TemuKaryaColors.TextBody)
+                }
+                groups.forEach { group ->
+                    Text(group.label, style = NotificationTypography.Group, color = NotificationColors.Muted)
+                    Column(modifier = Modifier.fillMaxWidth().background(TemuKaryaColors.SurfaceCard, RoundedCornerShape(16.dp)).padding(6.dp)) {
+                        group.items.forEach { item -> NotificationRow(item, onClick = { onItemClick(item.id) }) }
+                    }
                 }
             }
         }

@@ -27,6 +27,7 @@ import com.example.proyek_papb_fe.core.domain.model.Experience
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.UploadFile
 import com.example.proyek_papb_fe.core.ui.components.initialsOf
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -67,8 +68,15 @@ class FreelancerProfileViewModel(
     val uiState: StateFlow<FreelancerProfileUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val profile = async { profileRepository.freelancerProfile() }
@@ -206,9 +214,16 @@ class FreelancerProfileViewModel(
             priceMax = null,
             availabilityStatus = if (isAvailable) AvailabilityStatus.AVAILABLE else AvailabilityStatus.BUSY
         )
+        // Selalu disimpan (termasuk kosong) agar menghapus keahlian ikut tersimpan.
         val known = masterDataRepository.skills()
+        val unknown = skills.filter { name -> known.none { it.name.equals(name, ignoreCase = true) } }
+        if (unknown.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "Keahlian ${unknown.joinToString()} tidak tersedia. Hapus lalu pilih dari daftar keahlian."
+            )
+        }
         val ids = skills.mapNotNull { name -> known.firstOrNull { it.name.equals(name, ignoreCase = true) }?.id }
-        if (ids.isNotEmpty()) profileRepository.setMySkills(ids.distinct())
+        profileRepository.setMySkills(ids.distinct())
         FreelancerProfileStore.replace(
             FreelancerProfileStore.profile.copy(primaryField = primaryField, acceptsRemoteWork = acceptsRemote),
             hasProfile = true
@@ -277,7 +292,8 @@ class FreelancerProfileViewModel(
                 throw e
             } catch (e: Exception) {
                 val field = (e as? ApiException)?.fieldErrors?.values?.firstOrNull()
-                _uiState.update { it.copy(isSaving = false, message = field ?: e.userMessage()) }
+                val local = (e as? IllegalArgumentException)?.message
+                _uiState.update { it.copy(isSaving = false, message = field ?: local ?: e.userMessage()) }
             }
         }
     }

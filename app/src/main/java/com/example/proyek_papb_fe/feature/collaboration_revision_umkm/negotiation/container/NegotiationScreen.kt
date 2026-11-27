@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.collaboration_revision_umkm.negotiation.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -118,45 +119,47 @@ fun NegotiationScreen(
         ) {
             AuthAppBar(title = "Negosiasi", onBack = onBack)
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item(key = "header") {
-                        NegotiationHeaderCard(
-                            statusLabel = negotiation.status.label,
-                            statusCancelled = cancelled,
-                            paymentLabel = if (negotiation.isPaid) "Sudah dibayar" else "Belum dibayar",
-                            projectTitle = conversation.projectTitle,
-                            umkm = NegotiationParty(profile.initials, profile.businessName, "${profile.ownerName}, UMKM", isUmkm = true),
-                            freelancer = NegotiationParty(conversation.initials, conversation.freelancerName, "Freelancer", isUmkm = false)
-                        )
-                    }
-                    item(key = "summary") { AgreementSummaryCard(rows) }
-                    messages.forEachIndexed { index, message ->
-                        val day = message.sentAt.toLocalDate()
-                        if (index == 0 || messages[index - 1].sentAt.toLocalDate() != day) {
-                            item(key = "date-$day") {
-                                NegotiationDateChip(
-                                    when (day) {
-                                        today -> "Hari ini"
-                                        today.minusDays(1) -> "Kemarin"
-                                        else -> day.format(OlderDate)
-                                    }
+                RefreshableContent(onRefresh = viewModel::load, modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item(key = "header") {
+                            NegotiationHeaderCard(
+                                statusLabel = negotiation.status.label,
+                                statusCancelled = cancelled,
+                                paymentLabel = if (negotiation.isPaid) "Sudah dibayar" else "Belum dibayar",
+                                projectTitle = conversation.projectTitle,
+                                umkm = NegotiationParty(profile.initials, profile.businessName, "${profile.ownerName}, UMKM", isUmkm = true),
+                                freelancer = NegotiationParty(conversation.initials, conversation.freelancerName, "Freelancer", isUmkm = false)
+                            )
+                        }
+                        item(key = "summary") { AgreementSummaryCard(rows) }
+                        messages.forEachIndexed { index, message ->
+                            val day = message.sentAt.toLocalDate()
+                            if (index == 0 || messages[index - 1].sentAt.toLocalDate() != day) {
+                                item(key = "date-$day") {
+                                    NegotiationDateChip(
+                                        when (day) {
+                                            today -> "Hari ini"
+                                            today.minusDays(1) -> "Kemarin"
+                                            else -> day.format(OlderDate)
+                                        }
+                                    )
+                                }
+                            }
+                            item(key = message.id) {
+                                NegotiationBubble(
+                                    text = message.text,
+                                    time = message.sentAt.format(BubbleTime),
+                                    outgoing = message.fromUmkm,
+                                    freelancerInitials = conversation.initials
                                 )
                             }
                         }
-                        item(key = message.id) {
-                            NegotiationBubble(
-                                text = message.text,
-                                time = message.sentAt.format(BubbleTime),
-                                outgoing = message.fromUmkm,
-                                freelancerInitials = conversation.initials
-                            )
-                        }
+                        item(key = "info") { NegotiationInfoNote() }
                     }
-                    item(key = "info") { NegotiationInfoNote() }
                 }
                 NegotiationActionBar(
                     onCancel = { showCancel = true },

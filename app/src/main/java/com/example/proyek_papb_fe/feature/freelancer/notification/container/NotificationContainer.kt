@@ -115,6 +115,7 @@ fun NotificationContainer(
     val shown = if (selected == 0) all else all.filter { it.freelancerType().group == filters[selected - 1] }
 
     NotificationScreen(
+        onRefresh = viewModel::refresh,
         filters = listOf(NotificationFilterUi("Semua (${all.size})", selected == 0)) +
             filters.mapIndexed { i, f -> NotificationFilterUi(f.label, selected == i + 1) },
         unreadCount = uiState.unreadCount,

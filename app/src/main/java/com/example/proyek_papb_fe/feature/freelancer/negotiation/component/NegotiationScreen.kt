@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.negotiation.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,7 +43,8 @@ fun NegotiationScreen(
     onBack: () -> Unit,
     onCancelClick: () -> Unit,
     onContinueClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(
         modifier = modifier
@@ -55,32 +58,34 @@ fun NegotiationScreen(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                NegotiationHeaderCard(
-                    projectTitle = state.projectTitle,
-                    client = state.client,
-                    freelancer = state.freelancer
-                )
-                AgreementSummaryCard(
-                    projectValue = state.projectValue,
-                    duration = state.duration,
-                    output = state.output,
-                    paymentMethod = state.paymentMethod
-                )
-                DaySeparatorChip(label = state.dayLabel)
-                state.messages.forEach { message ->
-                    NegotiationMessageBubble(
-                        message = message,
-                        clientInitials = state.client.initials
+            RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    NegotiationHeaderCard(
+                        projectTitle = state.projectTitle,
+                        client = state.client,
+                        freelancer = state.freelancer
                     )
+                    AgreementSummaryCard(
+                        projectValue = state.projectValue,
+                        duration = state.duration,
+                        output = state.output,
+                        paymentMethod = state.paymentMethod
+                    )
+                    DaySeparatorChip(label = state.dayLabel)
+                    state.messages.forEach { message ->
+                        NegotiationMessageBubble(
+                            message = message,
+                            clientInitials = state.client.initials
+                        )
+                    }
+                    CancellationInfoCard()
                 }
-                CancellationInfoCard()
             }
 
             NegotiationActionBar(

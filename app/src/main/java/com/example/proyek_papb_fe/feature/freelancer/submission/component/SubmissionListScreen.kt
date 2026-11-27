@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.submission.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,6 +73,7 @@ fun SubmissionListScreen(
     onProposalClick: (projectId: String) -> Unit,
     onFindProjectsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {}
 ) {
@@ -101,32 +104,32 @@ fun SubmissionListScreen(
             modifier = Modifier.padding(top = 16.dp)
         )
 
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(
-                start = SubmissionListHorizontalPadding,
-                end = SubmissionListHorizontalPadding,
-                top = 8.dp,
-                bottom = 20.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            if (proposals.isEmpty()) {
-                item(key = "empty") {
-                    EmptyProposals(
-                        selectedFilter = selectedFilter,
-                        onFindProjectsClick = onFindProjectsClick
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = SubmissionListHorizontalPadding,
+                    end = SubmissionListHorizontalPadding,
+                    top = 8.dp,
+                    bottom = 20.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                if (proposals.isEmpty()) {
+                    item(key = "empty") {
+                        EmptyProposals(
+                            selectedFilter = selectedFilter,
+                            onFindProjectsClick = onFindProjectsClick
+                        )
+                    }
+                }
+                items(items = proposals, key = { it.projectId }) { item ->
+                    ProposalCard(
+                        item = item,
+                        onClick = { onProposalClick(item.projectId) }
                     )
                 }
-            }
-            items(items = proposals, key = { it.projectId }) { item ->
-                ProposalCard(
-                    item = item,
-                    onClick = { onProposalClick(item.projectId) }
-                )
             }
         }
     }

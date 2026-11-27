@@ -57,6 +57,8 @@ import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatDocumentAttachment
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatImageAttachment
+import com.example.proyek_papb_fe.core.ui.components.chat.DeletedMessageText
+import com.example.proyek_papb_fe.core.ui.components.chat.selectableMessage
 import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryIcon
 import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
 import com.example.proyek_papb_fe.core.ui.theme.AppBarBorder
@@ -241,10 +243,18 @@ fun ChatBubble(
     status: DeliveryStatus? = if (!message.fromUmkm) null
     else if (message.readByFreelancer) DeliveryStatus.READ else DeliveryStatus.SENT,
     isOpening: Boolean = false,
-    onFileClick: () -> Unit = {}
+    onFileClick: () -> Unit = {},
+    isSelected: Boolean = false,
+    selectionMode: Boolean = false,
+    /** false untuk lampiran yang masih dikirim (belum punya id server). */
+    selectable: Boolean = false,
+    onToggleSelect: () -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
     val outgoing = message.fromUmkm
+    val longPress: (() -> Unit)? = if (selectable) onToggleSelect else null
+    val fileClick = if (selectionMode && selectable) onToggleSelect else onFileClick
+    val openDraft = onOpenDraft.takeUnless { selectionMode || message.isDeleted }
     val shape = when {
         message.attachment != null -> RoundedCornerShape(18.dp)
         outgoing -> RoundedCornerShape(topStart = 18.dp, topEnd = 6.dp, bottomEnd = 18.dp, bottomStart = 18.dp)
@@ -252,7 +262,11 @@ fun ChatBubble(
     }
     val textColor = if (outgoing) colors.onPrimary else colors.onSurface
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = topPadding),
+        modifier = Modifier
+            .padding(top = topPadding)
+            .fillMaxWidth()
+            .selectableMessage(isSelected, selectionMode, selectable, onToggleSelect)
+            .padding(vertical = 2.dp),
         horizontalAlignment = if (outgoing) Alignment.End else Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -265,26 +279,43 @@ fun ChatBubble(
             .background(if (outgoing) colors.primary else colors.surfaceContainerLowest)
             .then(if (outgoing) Modifier else Modifier.border(1.dp, AppBarBorder, shape))
             .then(
-                if (onOpenDraft != null) {
-                    Modifier.clickable(role = Role.Button, onClickLabel = "Ajukan revisi draf", onClick = onOpenDraft)
+                if (openDraft != null) {
+                    Modifier.clickable(role = Role.Button, onClickLabel = "Ajukan revisi draf", onClick = openDraft)
                 } else Modifier
             )
-        if (file != null) {
+        if (message.isDeleted) {
+            Column(
+                modifier = bubble.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 8.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                DeletedMessageText(mine = outgoing, color = textColor)
+                // Pesan terhapus tidak menampilkan status baca, seperti WhatsApp.
+                BubbleMeta(time, null, mine = outgoing)
+            }
+        } else if (file != null) {
             Column(
                 modifier = bubble.padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (file.isImage) {
-                    ChatImageAttachment(file = file, status = status ?: DeliveryStatus.SENT, width = 264.dp, onClick = onFileClick)
+                    ChatImageAttachment(
+                        file = file,
+                        status = status ?: DeliveryStatus.SENT,
+                        width = 264.dp,
+                        onClick = fileClick,
+                        onLongClick = longPress
+                    )
                 } else {
                     ChatDocumentAttachment(
                         file = file,
                         mine = outgoing,
                         status = status ?: DeliveryStatus.SENT,
                         isOpening = isOpening,
-                        onClick = onFileClick,
-                        modifier = Modifier.width(264.dp)
+                        onClick = fileClick,
+                        modifier = Modifier.width(264.dp),
+                        onLongClick = longPress
                     )
                 }
                 Column(
@@ -343,11 +374,11 @@ fun ChatBubble(
 }
 
 @Composable
-private fun BubbleMeta(time: String, status: DeliveryStatus?) {
+private fun BubbleMeta(time: String, status: DeliveryStatus?, mine: Boolean = status != null) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             time,
-            color = if (status != null) SandContainer else MaterialTheme.colorScheme.outline,
+            color = if (mine) SandContainer else MaterialTheme.colorScheme.outline,
             style = text(FontWeight.Medium, 11.sp, 14.sp)
         )
         if (status != null) DeliveryIcon(status = status, sentTint = SandContainer)

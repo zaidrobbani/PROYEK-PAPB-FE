@@ -39,6 +39,7 @@ fun SubmissionScreen(
     }
 
     SubmissionListScreen(
+        onRefresh = viewModel::refresh,
         filterOptions = filterOptions,
         selectedFilter = selectedFilter,
         onFilterSelect = { selectedFilter = it },

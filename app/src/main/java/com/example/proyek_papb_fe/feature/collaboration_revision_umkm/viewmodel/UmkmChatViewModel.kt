@@ -24,6 +24,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import com.example.proyek_papb_fe.feature.umkm.data.toCode
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -77,6 +78,8 @@ class UmkmChatViewModel(
                         }
                         is ChatRealtimeEvent.Read ->
                             if (event.readerUserId != myId) UmkmConversationStore.markReadByFreelancer(conversationId)
+                        is ChatRealtimeEvent.MessagesDeleted ->
+                            UmkmConversationStore.markDeleted(conversationId, event.messageIds.toSet())
                         is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
                     }
                 }
@@ -88,8 +91,8 @@ class UmkmChatViewModel(
         realtime?.close()
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(isLoading = it.isLoading, errorMessage = null) }
             try {
                 if (conversationId == null) {

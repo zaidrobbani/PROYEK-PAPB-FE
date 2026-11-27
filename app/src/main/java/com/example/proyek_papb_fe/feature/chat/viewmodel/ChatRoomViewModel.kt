@@ -88,6 +88,50 @@ class ChatRoomViewModel(
 
     fun discardAttachment(localId: String) = outgoing.discard(localId)
 
+    private val selection = MessageSelection()
+    /** Pesan yang sedang dipilih untuk dihapus; kosong = mode biasa. */
+    val selectedMessageIds: StateFlow<Set<String>> = selection.selected
+    val isDeletingMessages: StateFlow<Boolean> = selection.isDeleting
+
+    fun toggleMessageSelection(messageId: String) {
+        if (_uiState.value.messages.any { it.id == messageId }) selection.toggle(messageId)
+    }
+
+    fun clearMessageSelection() = selection.clear()
+
+    /** Boleh "Hapus untuk semua orang" bila semua pesan terpilih milik sendiri, belum dihapus, dan ≤ 48 jam. */
+    fun canDeleteSelectedForEveryone(): Boolean {
+        val ids = selection.selected.value
+        val myId = AppContainer.currentUserId
+        return ids.isNotEmpty() && _uiState.value.messages.filter { it.id in ids }.let { picked ->
+            picked.size == ids.size && picked.all { it.canDeleteForEveryone(myId) }
+        }
+    }
+
+    fun deleteSelectedMessages(forEveryone: Boolean) {
+        val conversationOf = _uiState.value.messages.associate { it.id to it.conversationId }
+        viewModelScope.launch {
+            try {
+                selection.delete(chatRepository, conversationOf, forEveryone) { _, ids, deletedAt ->
+                    applyDeletion(ids.toSet(), if (forEveryone) deletedAt else null)
+                }
+                _uiState.update { it.copy(message = if (forEveryone) "Pesan dihapus untuk semua orang" else "Pesan dihapus") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(message = e.userMessage()) }
+            }
+        }
+    }
+
+    /** deletedAtMillis null = hapus untuk saya (pesan hilang); terisi = jadi penanda "Pesan ini telah dihapus". */
+    private fun applyDeletion(ids: Set<String>, deletedAtMillis: Long?) = _uiState.update { state ->
+        state.copy(
+            messages = if (deletedAtMillis == null) state.messages.filterNot { it.id in ids }
+            else state.messages.map { if (it.id in ids && !it.isDeleted) it.asDeleted(deletedAtMillis) else it }
+        )
+    }
+
     private fun addMessage(message: Message) = _uiState.update { state ->
         if (state.messages.any { it.id == message.id }) state
         else state.copy(messages = (state.messages + message).sortedBy { it.sentAtMillis })
@@ -131,6 +175,7 @@ class ChatRoomViewModel(
                     })
                 }
             }
+            is ChatRealtimeEvent.MessagesDeleted -> applyDeletion(event.messageIds.toSet(), event.deletedAtMillis)
             is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
         }
     }
@@ -139,8 +184,8 @@ class ChatRoomViewModel(
         sessions.values.forEach { it.close() }
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(isLoading = it.overview == null, errorMessage = null) }
             try {
                 val opened = overviewRepository.overview(initialConversationId)
@@ -219,6 +264,7 @@ class ChatRoomViewModel(
                     _uiState.update { state ->
                         state.copy(messages = (state.messages.filterNot { it.conversationId == id } + latest).sortedBy { it.sentAtMillis })
                     }
+                    selection.retain(_uiState.value.messages.map { it.id }.toSet())
                     if (latest.lastOrNull()?.id != current.lastOrNull()?.id) runCatching { chatRepository.markRead(id) }
                 }
             }

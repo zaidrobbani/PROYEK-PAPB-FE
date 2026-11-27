@@ -30,7 +30,10 @@ data class DirectoryFreelancer(
     /** Jumlah skill lain yang tidak ditampilkan ("+2 Lainnya"). */
     val moreSkillCount: Int = 0,
     /** Harga mulai, rupiah bulat. */
-    val startingPrice: Long
+    val startingPrice: Long,
+    /** Persentase kecocokan skill (≥ 60%) dengan project TERBUKA milik UMKM; null bila tidak ada. */
+    val matchPercent: Int? = null,
+    val matchProjectTitle: String? = null
 )
 
 /** Kategori di chip Figma. "Semua Kategori" = tanpa filter kategori. */

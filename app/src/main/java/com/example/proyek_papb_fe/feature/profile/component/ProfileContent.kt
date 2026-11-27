@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.profile.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,7 +47,8 @@ fun ProfileContent(
     onNotificationClick: () -> Unit,
     onManageSkillsClick: () -> Unit,
     onMenuClick: (ProfileMenu) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(
         modifier = modifier
@@ -57,35 +60,36 @@ fun ProfileContent(
             hasUnreadNotification = state.hasUnreadNotification,
             onNotificationClick = onNotificationClick
         )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 38.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProfileHeader(
-                initials = state.initials,
-                photoUri = state.photoUri,
-                name = state.name,
-                headline = state.headline,
-                city = state.city,
-                ratingLabel = state.ratingLabel,
-                isAvailableForWork = state.isAvailableForWork
-            )
-            ProfileStatsRow(stats = state.stats)
-            ProfileSectionHeader(title = "Keahlian", actionLabel = "Kelola", onActionClick = onManageSkillsClick)
-            ProfileSkills(skills = state.skills)
-            ProfileSectionHeader(title = "Kelola Akun")
-            ProfileMenu.entries.forEach { menu ->
-                ProfileMenuItem(
-                    iconRes = menu.iconRes,
-                    title = menu.title,
-                    subtitle = state.menuSubtitles[menu].orEmpty(),
-                    isDanger = menu.isDanger,
-                    onClick = { onMenuClick(menu) }
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 38.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ProfileHeader(
+                    initials = state.initials,
+                    photoUri = state.photoUri,
+                    name = state.name,
+                    headline = state.headline,
+                    city = state.city,
+                    ratingLabel = state.ratingLabel,
+                    isAvailableForWork = state.isAvailableForWork
                 )
+                ProfileStatsRow(stats = state.stats)
+                ProfileSectionHeader(title = "Keahlian", actionLabel = "Kelola", onActionClick = onManageSkillsClick)
+                ProfileSkills(skills = state.skills)
+                ProfileSectionHeader(title = "Kelola Akun")
+                ProfileMenu.entries.forEach { menu ->
+                    ProfileMenuItem(
+                        iconRes = menu.iconRes,
+                        title = menu.title,
+                        subtitle = state.menuSubtitles[menu].orEmpty(),
+                        isDanger = menu.isDanger,
+                        onClick = { onMenuClick(menu) }
+                    )
+                }
             }
         }
     }
