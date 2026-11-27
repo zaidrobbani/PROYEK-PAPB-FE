@@ -124,7 +124,6 @@ fun FreelancerProfileScreen(
             ProfileActionBar(
                 label = "Pilih & Buat Kesepakatan",
                 onClick = {
-                    // Pemilihan freelancer dilakukan di halaman Pengajuan (bandingkan penawaran lalu "Setujui & Buat").
                     val projectId = uiState.applicationsProjectId
                     when {
                         uiState.isLoading -> Unit
@@ -138,7 +137,6 @@ fun FreelancerProfileScreen(
     }
 }
 
-/** Buka URL portofolio di browser default HP; false bila tidak ada aplikasi yang bisa membukanya. */
 private fun openInBrowser(context: Context, url: String): Boolean {
     val withScheme = if (url.startsWith("http://", true) || url.startsWith("https://", true)) url else "https://$url"
     val intent = Intent(Intent.ACTION_VIEW, withScheme.toUri())

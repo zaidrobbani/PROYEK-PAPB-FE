@@ -44,7 +44,6 @@ data class FreelancerProfileUiState(
     val errorMessage: String? = null,
     val isSaving: Boolean = false,
     val message: String? = null,
-    /** Bertambah setiap simpan/hapus berhasil (layar menutup form / menampilkan snackbar). */
     val savedCount: Int = 0,
     val availableBalance: Long = 0,
     val skillOptions: List<String> = emptyList(),
@@ -52,7 +51,6 @@ data class FreelancerProfileUiState(
     val photoMessage: String? = null
 )
 
-/** Profil freelancer: profil profesional, skill, portofolio (+ cover), dan pengalaman kerja. */
 class FreelancerProfileViewModel(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
@@ -63,7 +61,6 @@ class FreelancerProfileViewModel(
     private val fileRepository: FileRepository,
     private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerProfileUiState())
     val uiState: StateFlow<FreelancerProfileUiState> = _uiState.asStateFlow()
 
@@ -71,7 +68,6 @@ class FreelancerProfileViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -112,7 +108,6 @@ class FreelancerProfileViewModel(
                             isAvailableForWork = p?.isAvailable ?: true,
                             acceptsRemoteWork = FreelancerProfileStore.profile.acceptsRemoteWork,
                             completedProjects = completed,
-                            // BE belum punya metrik "Amanah"; dipakai rasio project selesai vs dibatalkan.
                             trustPercent = if (completed + cancelled > 0) completed * 100 / (completed + cancelled) else 0,
                             experienceYearsLabel = "${totalYears(exps)} thn",
                             skills = skillNames,
@@ -214,7 +209,6 @@ class FreelancerProfileViewModel(
             priceMax = null,
             availabilityStatus = if (isAvailable) AvailabilityStatus.AVAILABLE else AvailabilityStatus.BUSY
         )
-        // Selalu disimpan (termasuk kosong) agar menghapus keahlian ikut tersimpan.
         val known = masterDataRepository.skills()
         val unknown = skills.filter { name -> known.none { it.name.equals(name, ignoreCase = true) } }
         if (unknown.isNotEmpty()) {
@@ -230,7 +224,6 @@ class FreelancerProfileViewModel(
         )
     }
 
-    /** Foto langsung diunggah saat dipilih: dikompres ke WebP (maks 512 px, <= 150 KB) lalu `PUT /users/me/photo`. */
     fun uploadPhoto(uri: String) {
         if (_uiState.value.isUploadingPhoto) return
         viewModelScope.launch {
@@ -321,7 +314,6 @@ class FreelancerProfileViewModel(
     }
 }
 
-/** Factory bawaan untuk semua layar profil freelancer. */
 fun freelancerProfileViewModelFactory(): ViewModelProvider.Factory {
     val c = com.example.proyek_papb_fe.core.di.AppContainer
     return FreelancerProfileViewModel.factory(

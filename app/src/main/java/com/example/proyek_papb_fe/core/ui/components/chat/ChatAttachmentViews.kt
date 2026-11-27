@@ -77,7 +77,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Lampiran yang ditampilkan di bubble: sudah tersimpan di server, atau masih dikirim dari perangkat. */
 sealed interface ChatFileUi {
     val fileName: String
     val isImage: Boolean
@@ -96,7 +95,6 @@ sealed interface ChatFileUi {
     }
 }
 
-/** Status centang ala WhatsApp: jam = dikirim, satu centang = terkirim, dua centang hijau = dibaca. */
 enum class DeliveryStatus { SENDING, FAILED, SENT, READ }
 
 @Composable
@@ -120,7 +118,6 @@ fun formatFileSize(bytes: Long?): String? = when {
 private fun extensionLabel(fileName: String): String =
     fileName.substringAfterLast('.', "").uppercase().takeIf { it.isNotBlank() && it.length <= 5 } ?: "FILE"
 
-/** Uri lokal (cache) sebuah file chat; null selama diunduh atau bila gagal. */
 @Composable
 fun rememberChatFileUri(file: ChatFileUi, thumbnail: Boolean): String? {
     val key = when (file) {
@@ -141,7 +138,6 @@ fun rememberChatFileUri(file: ChatFileUi, thumbnail: Boolean): String? {
     return uri
 }
 
-/** Foto dalam bubble: thumbnail server (320 px) atau foto lokal yang sedang dikirim. */
 @Composable
 fun ChatImageAttachment(
     file: ChatFileUi,
@@ -185,7 +181,6 @@ fun ChatImageAttachment(
     }
 }
 
-/** Kartu dokumen dalam bubble: ikon jenis, nama, ukuran. */
 @Composable
 fun ChatDocumentAttachment(
     file: ChatFileUi,
@@ -232,10 +227,6 @@ fun ChatDocumentAttachment(
     }
 }
 
-/**
- * Pemilih & penampil lampiran chat: Galeri, Kamera (resolusi penuh lewat FileProvider), Dokumen,
- * dialog pratinjau foto + caption, konfirmasi dokumen, penampil foto layar penuh, dan pembuka dokumen.
- */
 class ChatAttachmentController internal constructor(
     val openGallery: () -> Unit,
     val openCamera: () -> Unit,
@@ -266,7 +257,6 @@ fun rememberChatAttachmentController(
         val picked = runCatching { AppContainer.chatRepository.describeFile(uri.toString()) }.getOrNull()
             ?: return toast("File tidak dapat dibaca, pilih file lain.")
         when {
-            // Foto yang dipilih dari Dokumen tetap dikirim sebagai foto (dikompres), sesuai aturan server.
             picked.isImage -> photo = picked
             preferImage -> toast("Format foto didukung: JPG, PNG, WebP")
             else -> ChatAttachmentRules.rejectDocument(picked)?.let(toast) ?: run { document = picked }
@@ -362,7 +352,6 @@ fun rememberChatAttachmentController(
 private fun cameraUri(context: Context, file: File) =
     FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 
-/** Unduh dokumen ke cache lalu buka dengan aplikasi lain; bila tidak ada, simpan ke folder Download. */
 private suspend fun openDocument(context: Context, attachment: MessageAttachment): String? {
     val files = AppContainer.fileRepository
     return try {
@@ -383,7 +372,6 @@ private suspend fun openDocument(context: Context, attachment: MessageAttachment
     }
 }
 
-/** Pratinjau foto sebelum dikirim, dengan kolom caption (seperti WhatsApp). */
 @Composable
 private fun PhotoSendDialog(
     file: PickedChatFile,
@@ -454,7 +442,6 @@ private fun PhotoSendDialog(
     }
 }
 
-/** Foto layar penuh; foto server diunduh dalam ukuran penuh dan bisa disimpan ke folder Download. */
 @Composable
 private fun ImageViewerDialog(file: ChatFileUi, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -512,7 +499,6 @@ private fun RoundIcon(icon: Int, description: String, background: Color, tint: C
     }
 }
 
-/** Lampiran gagal terkirim: kirim ulang atau hapus (seperti WhatsApp). */
 @Composable
 fun FailedAttachmentDialog(
     item: OutgoingAttachment,

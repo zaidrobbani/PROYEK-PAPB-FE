@@ -18,7 +18,6 @@ import com.example.proyek_papb_fe.core.util.rupiah
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
-/** Kategori BE ke enum UI lama (dipakai untuk ikon/filter). */
 fun categoryOf(categoryId: String): ProjectCategory = when (categoryId) {
     "graphic_design" -> ProjectCategory.BRANDING
     "product_photography" -> ProjectCategory.PRODUCT_PHOTO
@@ -50,10 +49,6 @@ private fun publishedAgo(millis: Long?, now: Long = System.currentTimeMillis()):
     }
 }
 
-/**
- * Model UI kartu/detail project untuk freelancer. Identitas klien diambil dari [client] bila diberikan,
- * selain itu dari pemilik project yang dikirim BE ([Project.owner]); "UMKM TEMUKARYA" hanya cadangan terakhir.
- */
 fun Project.toFreelancerProject(
     categoryName: String,
     skillNames: List<String> = emptyList(),
@@ -96,7 +91,6 @@ fun Project.toFreelancerProject(
     )
 }
 
-/** Status tampilan freelancer (tab Proyek) dari status lamaran + status project BE. */
 fun freelancerStatusOf(application: Application?, projectStatus: String?): ProjectStatus = when {
     projectStatus == ProjectStatusCode.DIBATALKAN -> ProjectStatus.DIBATALKAN
     application?.status == ApplicationStatusCode.NOT_SELECTED || application?.status == ApplicationStatusCode.CANCELLED ->

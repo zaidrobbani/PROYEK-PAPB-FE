@@ -14,16 +14,12 @@ data class RegisterInput(
 )
 
 interface AuthRepository {
-    /** Login lalu menyimpan sesi. */
     suspend fun login(email: String, password: String): SessionUser
 
-    /** Registrasi tidak memberi token: user wajib verifikasi email dulu. */
     suspend fun register(input: RegisterInput)
 
-    /** Memastikan token tersimpan masih diterima BE; null bila tidak ada sesi. */
     suspend fun refreshCurrentUser(): SessionUser?
 
-    /** `PATCH /auth/me`: ubah nama akun (Nama Pemilik / Nama Lengkap). Sesi lokal ikut diperbarui. */
     suspend fun updateName(name: String): SessionUser
 
     suspend fun logout()

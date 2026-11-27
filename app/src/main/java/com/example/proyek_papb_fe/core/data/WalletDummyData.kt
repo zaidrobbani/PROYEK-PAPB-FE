@@ -8,7 +8,6 @@ import java.util.Calendar
 import java.util.TimeZone
 
 object WalletDummyData {
-
     private fun date(year: Int, month: Int, day: Int): Long =
         Calendar.getInstance(TimeZone.getTimeZone("Asia/Jakarta")).apply {
             clear(); set(year, month - 1, day, 10, 0)

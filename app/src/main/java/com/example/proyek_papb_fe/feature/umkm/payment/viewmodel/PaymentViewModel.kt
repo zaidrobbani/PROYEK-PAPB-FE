@@ -27,16 +27,13 @@ data class PaymentVmState(
     val paidProjectId: String? = null
 )
 
-/** F3: bayar simulasi QRIS. Nominal & komisi dihitung BE dari kesepakatan, Android hanya menampilkan. */
 class PaymentViewModel(
     private val projectId: String,
     private val paymentRepository: PaymentRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(PaymentVmState())
     val uiState: StateFlow<PaymentVmState> = _uiState.asStateFlow()
 
-    // Disimpan sampai BE memberi jawaban pasti, supaya retry setelah gangguan jaringan tidak membayar dua kali.
     private var pendingIdempotencyKey: String? = null
 
     init {
@@ -91,7 +88,6 @@ class PaymentViewModel(
                 val api = e as? ApiException
                 if (api?.isNetworkError != true) pendingIdempotencyKey = null
                 _uiState.update { it.copy(isProcessing = false, message = e.userMessage()) }
-                // QRIS kedaluwarsa / perlu dibuat ulang / sudah dibayar: muat ulang agar tampilan sesuai BE.
                 if (api?.code in RefreshCodes) load()
             }
         }

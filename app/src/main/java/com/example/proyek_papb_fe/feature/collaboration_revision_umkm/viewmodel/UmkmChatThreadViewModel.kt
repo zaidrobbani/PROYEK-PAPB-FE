@@ -36,22 +36,15 @@ data class UmkmChatThreadUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val message: String? = null,
-    /** Percakapan (project) tujuan pesan yang dikirim UMKM. */
     val targetConversationId: String
 )
 
-/**
- * Ruang chat UMKM dengan satu freelancer. BE menyimpan percakapan per project, jadi semua percakapan
- * dengan freelancer itu dimuat & digabung, masing-masing dengan WebSocket sendiri. Pesan baru dikirim ke
- * percakapan tujuan (awalnya yang dibuka; bisa diganti bila ada beberapa project).
- */
 class UmkmChatThreadViewModel(
     private val initialConversationId: String,
     private val overviewRepository: ChatOverviewRepository,
     private val chatRepository: ChatRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmChatThreadUiState(targetConversationId = initialConversationId))
     val uiState: StateFlow<UmkmChatThreadUiState> = _uiState.asStateFlow()
 
@@ -59,18 +52,15 @@ class UmkmChatThreadViewModel(
     private val sessions = mutableMapOf<String, ChatRealtimeSession>()
 
     private val _conversationIds = MutableStateFlow(setOf(initialConversationId))
-    /** Semua percakapan (project) dengan freelancer ini yang sedang ditampilkan di ruang chat. */
     val conversationIds: StateFlow<Set<String>> = _conversationIds.asStateFlow()
     private var connectionJob: Job? = null
 
     private val _isRealtime = MutableStateFlow(false)
-    /** true saat semua WebSocket percakapan tersambung; layar hanya polling bila false. */
     val isRealtime: StateFlow<Boolean> = _isRealtime.asStateFlow()
 
     private val outgoing = OutgoingAttachmentQueue(viewModelScope, { _uiState.value.targetConversationId }, chatRepository) {
         UmkmConversationStore.append(it, myId)
     }
-    /** Foto/dokumen yang sedang dikirim atau gagal terkirim (tampil di akhir chat). */
     val pendingAttachments: StateFlow<List<OutgoingAttachment>> = outgoing.items
 
     init {
@@ -87,7 +77,6 @@ class UmkmChatThreadViewModel(
                 connect(listOf(initialConversationId))
                 markRead(initialConversationId)
 
-                // Percakapan project lain dengan freelancer yang sama.
                 val others = chatRepository.conversations()
                     .filter { it.freelancerId == opened.conversation.freelancerId && it.id != initialConversationId }
                 overviewRepository.overviews(others).forEach { store(it) }
@@ -127,7 +116,6 @@ class UmkmChatThreadViewModel(
         when (event) {
             is ChatRealtimeEvent.NewMessage -> {
                 UmkmConversationStore.append(event.message, myId)
-                // Layar sedang terbuka: pesan masuk langsung dianggap dibaca.
                 if (event.message.senderUserId != myId) {
                     if (!session.markRead()) viewModelScope.launch { runCatching { chatRepository.markRead(conversationId) } }
                     UmkmConversationStore.markRead(conversationId)
@@ -146,7 +134,6 @@ class UmkmChatThreadViewModel(
         UmkmConversationStore.markRead(conversationId)
     }
 
-    /** Cadangan saat WebSocket terputus: dipanggil berkala dari layar. */
     fun refreshMessages() {
         val ids = sessions.keys.toList()
         viewModelScope.launch {
@@ -166,7 +153,6 @@ class UmkmChatThreadViewModel(
         val body = text.trim()
         if (body.isEmpty()) return
         val target = _uiState.value.targetConversationId
-        // Lewat WebSocket bila tersambung; pesan kembali sebagai event `message`. REST hanya cadangan.
         if (sessions[target]?.sendMessage(body) == true) return
         viewModelScope.launch {
             try {
@@ -188,7 +174,6 @@ class UmkmChatThreadViewModel(
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
 
     private val selection = MessageSelection()
-    /** Pesan yang sedang dipilih untuk dihapus; kosong = mode biasa. */
     val selectedMessageIds: StateFlow<Set<String>> = selection.selected
     val isDeletingMessages: StateFlow<Boolean> = selection.isDeleting
 
@@ -202,7 +187,6 @@ class UmkmChatThreadViewModel(
 
     fun clearMessageSelection() = selection.clear()
 
-    /** Boleh "Hapus untuk semua orang" bila semua pesan terpilih milik sendiri, belum dihapus, dan ≤ 48 jam. */
     fun canDeleteSelectedForEveryone(): Boolean {
         val ids = selection.selected.value
         val messages = visibleMessages()

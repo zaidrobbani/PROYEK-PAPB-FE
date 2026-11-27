@@ -11,7 +11,7 @@ import com.example.proyek_papb_fe.core.data.remote.ProjectApiService
 import com.example.proyek_papb_fe.core.data.remote.SubmissionApiService
 import com.example.proyek_papb_fe.core.data.remote.WorkflowApiService
 import com.example.proyek_papb_fe.core.data.remote.apiCall
-import com.example.proyek_papb_fe.core.data.remote.apiCallNoData
+import com.example.proyek_papb_fe.core.data.remote.apiCallMessage
 import com.example.proyek_papb_fe.core.data.remote.dto.ApproveAgreementRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.ApproveSubmissionRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.CancelProjectRequest
@@ -35,11 +35,6 @@ import com.example.proyek_papb_fe.core.data.remote.dto.UpdateAgreementRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 
-/*
- * Data source tipis per modul: memanggil Retrofit lewat apiCall (membuka envelope + error BE).
- * Repository yang memetakan DTO ke model domain.
- */
-
 class MasterDataRemoteDataSource(private val api: MasterDataApiService) {
     suspend fun skills() = apiCall { api.skills() }
     suspend fun categories() = apiCall { api.projectCategories() }
@@ -57,15 +52,15 @@ class ProfileRemoteDataSource(private val api: ProfileApiService) {
     suspend fun experiences() = apiCall { api.getExperiences() }
     suspend fun createExperience(body: ExperienceRequest) = apiCall { api.createExperience(body) }
     suspend fun updateExperience(id: String, body: ExperienceRequest) = apiCall { api.updateExperience(id, body) }
-    suspend fun deleteExperience(id: String) = apiCallNoData { api.deleteExperience(id) }
+    suspend fun deleteExperience(id: String) = apiCallMessage { api.deleteExperience(id) }
     suspend fun portfolios() = apiCall { api.getPortfolios() }
     suspend fun createPortfolio(body: PortfolioRequest) = apiCall { api.createPortfolio(body) }
     suspend fun updatePortfolio(id: String, body: PortfolioRequest) = apiCall { api.updatePortfolio(id, body) }
-    suspend fun deletePortfolio(id: String) = apiCallNoData { api.deletePortfolio(id) }
+    suspend fun deletePortfolio(id: String) = apiCallMessage { api.deletePortfolio(id) }
     suspend fun uploadMedia(portfolioId: String, part: MultipartBody.Part) = apiCall { api.uploadPortfolioMedia(portfolioId, part) }
     suspend fun media(portfolioId: String) = apiCall { api.getPortfolioMedia(portfolioId) }
     suspend fun setCover(portfolioId: String, mediaId: String) = apiCall { api.setPortfolioCover(portfolioId, mediaId) }
-    suspend fun deleteMedia(portfolioId: String, mediaId: String) = apiCallNoData { api.deletePortfolioMedia(portfolioId, mediaId) }
+    suspend fun deleteMedia(portfolioId: String, mediaId: String) = apiCallMessage { api.deletePortfolioMedia(portfolioId, mediaId) }
 }
 
 class ProjectRemoteDataSource(private val api: ProjectApiService) {
@@ -75,10 +70,10 @@ class ProjectRemoteDataSource(private val api: ProjectApiService) {
     suspend fun mine() = apiCall { api.mine() }
     suspend fun detail(id: String) = apiCall { api.detail(id) }
     suspend fun update(id: String, body: ProjectRequest) = apiCall { api.update(id, body) }
-    suspend fun delete(id: String) = apiCallNoData { api.delete(id) }
+    suspend fun delete(id: String) = apiCallMessage { api.delete(id) }
     suspend fun uploadAttachment(id: String, part: MultipartBody.Part) = apiCall { api.uploadAttachment(id, part) }
     suspend fun attachments(id: String) = apiCall { api.attachments(id) }
-    suspend fun deleteAttachment(id: String, attachmentId: String) = apiCallNoData { api.deleteAttachment(id, attachmentId) }
+    suspend fun deleteAttachment(id: String, attachmentId: String) = apiCallMessage { api.deleteAttachment(id, attachmentId) }
     suspend fun apply(id: String, body: SubmitApplicationRequest) = apiCall { api.apply(id, body) }
     suspend fun applicants(id: String) = apiCall { api.applicants(id) }
     suspend fun myApplications() = apiCall { api.myApplications() }
@@ -153,6 +148,6 @@ class NotificationRemoteDataSource(private val api: NotificationApiService) {
     suspend fun unreadCount() = apiCall { api.unreadCount() }
     suspend fun markAllRead() = apiCall { api.markAllRead() }
     suspend fun markRead(id: String) = apiCall { api.markRead(id) }
-    suspend fun registerDevice(token: String) = apiCallNoData { api.registerDevice(DeviceTokenRequest(token)) }
-    suspend fun unregisterDevice(token: String) = apiCallNoData { api.unregisterDevice(DeviceTokenRequest(token)) }
+    suspend fun registerDevice(token: String) = apiCallMessage { api.registerDevice(DeviceTokenRequest(token)) }
+    suspend fun unregisterDevice(token: String) = apiCallMessage { api.unregisterDevice(DeviceTokenRequest(token)) }
 }

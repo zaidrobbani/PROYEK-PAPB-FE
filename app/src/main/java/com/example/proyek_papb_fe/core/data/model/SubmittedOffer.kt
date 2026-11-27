@@ -9,17 +9,10 @@ data class SubmittedOffer(
     val message: String,
     val submittedAtMillis: Long,
 
-
-
     val isApproved: Boolean = false,
     val cancellation: ProjectCancellation? = null,
 
-
-
-
     val agreedAtMillis: Long? = null,
-
-
 
     val completedAtMillis: Long? = null
 ) {

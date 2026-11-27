@@ -246,7 +246,6 @@ fun ChatBubble(
     onFileClick: () -> Unit = {},
     isSelected: Boolean = false,
     selectionMode: Boolean = false,
-    /** false untuk lampiran yang masih dikirim (belum punya id server). */
     selectable: Boolean = false,
     onToggleSelect: () -> Unit = {}
 ) {
@@ -290,7 +289,6 @@ fun ChatBubble(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 DeletedMessageText(mine = outgoing, color = textColor)
-                // Pesan terhapus tidak menampilkan status baca, seperti WhatsApp.
                 BubbleMeta(time, null, mine = outgoing)
             }
         } else if (file != null) {
@@ -445,8 +443,6 @@ fun ChatComposer(
     }
 }
 
-
-/** Pengingat kesepakatan yang menunggu tindakan UMKM; dibuka ke layar Negosiasi. */
 @Composable
 fun NegotiationBanner(text: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -470,7 +466,6 @@ fun NegotiationBanner(text: String, onClick: () -> Unit) {
 
 data class ReplyTarget(val conversationId: String, val title: String, val status: String)
 
-/** Pilihan project tujuan pesan saat UMKM punya beberapa project dengan freelancer yang sama. */
 @Composable
 fun ReplyTargetSelector(selected: String, options: List<ReplyTarget>, onSelect: (String) -> Unit) {
     val colors = MaterialTheme.colorScheme

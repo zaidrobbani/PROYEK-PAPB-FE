@@ -6,14 +6,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
-/** Kecocokan terbaik satu freelancer dengan salah satu project TERBUKA milik UMKM. */
 data class FreelancerBestMatch(val percent: Int, val projectId: String, val projectTitle: String)
 
-/**
- * Matching F1 PRD (skill project vs skill freelancer, ambang 60%) dihitung BE per project
- * (`GET /projects/{id}/recommendations/freelancers`, hanya yang lolos ambang). Daftar freelancer UMKM
- * tidak terikat satu project, jadi diambil skor tertinggi tiap freelancer di semua project TERBUKA.
- */
 class FreelancerMatchRepository(
     private val workflowRepository: WorkflowRepository,
     private val projectRepository: ProjectRepository

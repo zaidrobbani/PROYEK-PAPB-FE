@@ -3,7 +3,6 @@ package com.example.proyek_papb_fe.feature.umkm.data
 import androidx.annotation.DrawableRes
 import com.example.proyek_papb_fe.R
 
-/** Data freelancer untuk Cari Freelancer (Blueprint TK-F-U-06/07/08). */
 data class DirectoryFreelancer(
     val id: String,
     val name: String,
@@ -12,33 +11,21 @@ data class DirectoryFreelancer(
     @param:DrawableRes val photo: Int? = null,
     val photoUrl: String? = null,
     val city: String,
-    /** Terakhir aktif, dalam menit ("Aktif 10 mnt lalu"). */
-    /** BE belum mencatat waktu aktif terakhir. */
     val lastActiveMinutes: Int = 0,
     val rating: Double,
     val reviewCount: Int,
-    /** Catatan di bawah rating, misalnya "96% puas". */
     val ratingNote: String,
-    /** Sorotan kedua di kartu, misalnya "3+ Tahun" / "Top Creator". */
     val highlightTitle: String,
     val highlightSubtitle: String,
-    /** Ikon sorotan: pengalaman (tahun) atau lencana. */
     val highlightIsExperience: Boolean,
-    /** Null bila Figma tidak menyebut lama pengalaman. */
     val experienceYears: Int?,
     val skills: List<String>,
-    /** Jumlah skill lain yang tidak ditampilkan ("+2 Lainnya"). */
     val moreSkillCount: Int = 0,
-    /** Harga mulai, rupiah bulat. */
     val startingPrice: Long,
-    /** Persentase kecocokan skill (≥ 60%) dengan project TERBUKA milik UMKM; null bila tidak ada. */
     val matchPercent: Int? = null,
     val matchProjectTitle: String? = null
 )
 
-/** Kategori di chip Figma. "Semua Kategori" = tanpa filter kategori. */
-
-/** Filter cepat yang tampil sebagai chip di Figma. */
 enum class QuickFilter(val label: String) {
     Rating48("Rating 4.8+"),
     Experience2("Pengalaman 2+ Thn"),
@@ -46,16 +33,11 @@ enum class QuickFilter(val label: String) {
 
     fun matches(freelancer: DirectoryFreelancer): Boolean = when (this) {
         Rating48 -> freelancer.rating >= 4.8
-        // Freelancer tanpa data lama pengalaman tidak lolos filter ini.
         Experience2 -> (freelancer.experienceYears ?: 0) >= 2
         BudgetUnder2M -> freelancer.startingPrice < 2_000_000
     }
 }
 
-/**
- * Pencarian per kata (semua kata harus cocok) pada nama, peran, kategori, skill, dan sorotan,
- * sesuai Blueprint TK-F-U-07 (nama, kategori pekerjaan, atau skill).
- */
 fun searchFreelancers(
     source: List<DirectoryFreelancer>,
     query: String,
@@ -80,13 +62,6 @@ fun searchFreelancers(
     }
 }
 
-/**
- * DATA DUMMY dari frame Figma Cari Freelancer. Bukan data dari server;
- * ganti dengan hasil API saat integrasi backend.
- */
-
-
-/** Pilihan "Rating Minimal" pada overlay Filter Talenta. */
 enum class RatingOption(val pill: String, val min: Double) {
     R40("4.0+", 4.0),
     R45("4.5+", 4.5),
@@ -94,23 +69,17 @@ enum class RatingOption(val pill: String, val min: Double) {
     R50("5.0", 5.0)
 }
 
-/** Pilihan "Lokasi Talenta" pada overlay; [city] null berarti tanpa batas lokasi. */
 enum class TalentLocation(val label: String, val city: String?) {
     Bandung("Bandung & Sekitarnya", "Bandung"),
     Yogyakarta("Yogyakarta", "Yogyakarta"),
     SeluruhIndonesia("Seluruh Indonesia", null)
 }
 
-/**
- * Titik slider "Rentang Estimasi Budget". Label Figma: Rp 100 rb di kiri, Rp 2.5 jt di tengah,
- * Rp 10 jt+ di kanan, jadi Rp 2.5 jt diletakkan pada titik tengah. Titik terakhir = tanpa batas atas.
- */
 val BudgetSteps: List<Long> = listOf(
     100_000, 250_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_500_000,
     3_000_000, 4_000_000, 5_000_000, 6_000_000, 7_500_000, 10_000_000
 )
 
-/** "Rp 500rb", "Rp 2.5jt", "Rp 10jt+" seperti teks Figma. */
 fun formatBudgetStep(index: Int): String {
     val value = BudgetSteps[index]
     val text = if (value < 1_000_000) {
@@ -122,11 +91,6 @@ fun formatBudgetStep(index: Int): String {
     return "Rp $text" + if (index == BudgetSteps.lastIndex) "+" else ""
 }
 
-/**
- * Filter lanjutan dari overlay Filter Talenta (Blueprint TK-F-U-08). Nilai bawaan = tanpa filter.
- * "Siap Kerja Kilat" belum punya data khusus di Figma/Blueprint, jadi didekati dengan
- * freelancer yang aktif dalam 60 menit terakhir ("respon di bawah 1 jam").
- */
 data class TalentFilter(
     val minRating: Double? = null,
     val budgetMinIndex: Int = 0,
@@ -137,7 +101,6 @@ data class TalentFilter(
     val budgetActive: Boolean
         get() = budgetMinIndex != 0 || budgetMaxIndex != BudgetSteps.lastIndex
 
-    /** Jumlah filter aktif untuk lencana tombol filter. */
     val activeCount: Int
         get() = listOf(
             minRating != null,

@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/** Pesan yang dipilih (tekan lama untuk mulai, ketuk untuk menambah/membuang), ala WhatsApp. */
 class MessageSelection {
     private val _selected = MutableStateFlow<Set<String>>(emptySet())
     val selected: StateFlow<Set<String>> = _selected.asStateFlow()
@@ -20,14 +19,8 @@ class MessageSelection {
         _selected.value = emptySet()
     }
 
-    /** Buang id yang sudah tidak tampil (mis. dihapus dari perangkat lain). */
     fun retain(visibleIds: Set<String>) = _selected.update { it intersect visibleIds }
 
-    /**
-     * Ruang chat menggabungkan beberapa percakapan (project), jadi penghapusan dikirim per percakapan.
-     * Mengembalikan waktu hapus per percakapan yang berhasil; percakapan yang gagal melempar setelah
-     * yang lain selesai, agar pesan yang sudah terhapus tetap tercermin di layar.
-     */
     suspend fun delete(
         repository: ChatRepository,
         conversationOf: Map<String, String>,

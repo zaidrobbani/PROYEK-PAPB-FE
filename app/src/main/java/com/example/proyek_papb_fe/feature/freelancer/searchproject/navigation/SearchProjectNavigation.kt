@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.searchproject.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.proyek_papb_fe.core.navigation.KeepSizeWhileLeaving
@@ -7,7 +8,7 @@ import com.example.proyek_papb_fe.feature.freelancer.searchproject.container.Sea
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object SearchProjectRoute
+data object SearchProjectRoute : TopLevelRoute
 
 fun NavGraphBuilder.searchProjectScreen(
     onProjectClick: (String) -> Unit = {},

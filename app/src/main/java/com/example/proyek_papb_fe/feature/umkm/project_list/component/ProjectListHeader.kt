@@ -111,7 +111,6 @@ fun ProjectAttentionBanner(
     }
 }
 
-/** Tab Figma mengelompokkan beberapa status BE (mis. TERBUKA & MENUNGGU_PEMBAYARAN masuk "Menunggu Kesepakatan"). */
 enum class ProjectTab(val label: String, val statuses: Set<ProjectStatus>?) {
     Semua("Semua", null),
     MenungguKesepakatan(

@@ -112,7 +112,6 @@ fun ProfessionalProfileScreen(
     onViewProfile: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    /** Nama skill master data (`GET /skills`); hanya ini yang bisa disimpan BE dan dipakai matching. */
     skillOptions: List<String> = emptyList()
 ) {
     var showAddSkill by rememberSaveable { mutableStateOf(false) }
@@ -297,7 +296,6 @@ private fun PhotoCard(initials: String, photoUri: String?, onPickPhoto: () -> Un
     }
 }
 
-/** Pilih dari master skill (bukan ketik bebas): BE menolak skill di luar daftar dan matching butuh id yang sama. */
 @Composable
 private fun AddSkillDialog(options: List<String>, existing: List<String>, onAdd: (String) -> Unit, onDismiss: () -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }

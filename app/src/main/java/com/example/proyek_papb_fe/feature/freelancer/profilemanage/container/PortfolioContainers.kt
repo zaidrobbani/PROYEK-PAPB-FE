@@ -33,7 +33,6 @@ private val FigmaFilters = listOf(PortfolioCategory.PACKAGING, PortfolioCategory
 
 private fun PortfolioItem.toCardUi() = PortfolioCardUi(id, title, category.label, description, link, coverRes, coverUri)
 
-/** BE mewajibkan URL HTTP(S) lengkap; tambahkan `https://` bila pengguna tidak menuliskan skema. */
 private fun normalizeLink(link: String): String {
     val value = link.trim()
     if (value.isEmpty()) return value

@@ -33,13 +33,11 @@ data class RevisionRequestUiState(
     val request: RevisionRequest? = null
 )
 
-/** Permintaan revisi = review `REVISION_REQUESTED` pada kiriman terbaru (`GET /projects/{id}/submissions`). */
 class RevisionRequestViewModel(
     private val projectId: String,
     private val submissionRepository: SubmissionRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(RevisionRequestUiState())
     val uiState: StateFlow<RevisionRequestUiState> = _uiState.asStateFlow()
 
@@ -51,7 +49,6 @@ class RevisionRequestViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

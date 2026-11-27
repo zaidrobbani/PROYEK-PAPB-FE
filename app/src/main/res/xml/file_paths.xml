@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- File yang dibagikan ke aplikasi lain lewat FileProvider: foto kamera chat & dokumen yang diunduh. -->
 <paths>
     <cache-path name="camera" path="camera/" />
     <cache-path name="downloads" path="downloads/" />

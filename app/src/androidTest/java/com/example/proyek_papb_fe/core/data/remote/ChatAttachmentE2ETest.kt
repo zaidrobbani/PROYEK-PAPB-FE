@@ -34,13 +34,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
-/**
- * E2E lampiran chat + status dibaca lewat WebSocket terhadap BE lokal (butuh `adb reverse tcp:8000 tcp:8000`).
- * Sesi login aplikasi di perangkat dicadangkan lalu dipulihkan.
- */
 @RunWith(AndroidJUnit4::class)
 class ChatAttachmentE2ETest {
-
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val http = OkHttpClient()
 
@@ -79,7 +74,6 @@ class ChatAttachmentE2ETest {
             realtime.start(scope)
             withTimeout(10_000) { realtime.isConnected.first { it } }
 
-            // 1. Foto kamera 4000x3000 → dikompres HP → WebP di server, event socket membawa lampiran + thumbnail.
             val photo = repository.describeFile(shared(cameraPhoto()))
             assertTrue("terdeteksi sebagai foto: ${photo.mimeType}", photo.isImage)
             val photoEvent = scope.async {
@@ -98,7 +92,6 @@ class ChatAttachmentE2ETest {
             val thumb = File(java.net.URI(AppContainer.fileRepository.downloadToCache(image.thumbnailPath!!, "uji_${image.id}", "t.webp")))
             assertTrue(thumb.length() in 1..30 * 1024)
 
-            // 2. Dokumen PDF → disimpan apa adanya, tanpa thumbnail.
             val pdf = File(context.cacheDir, "camera/Brief Uji.pdf").apply { writeText("%PDF-1.4\nBrief uji lampiran\n%%EOF") }
             val doc = repository.describeFile(shared(pdf))
             assertNull(ChatAttachmentRules.rejectDocument(doc))
@@ -112,7 +105,6 @@ class ChatAttachmentE2ETest {
             assertNull(file.thumbnailPath)
             assertEquals("📄 Brief Uji.pdf", sentDoc.previewText)
 
-            // 3. UMKM membuka chat → freelancer menerima event `read` lewat socket (centang hijau).
             val readEvent = scope.async { realtime.events.filterIsInstance<ChatRealtimeEvent.Read>().first() }
             call("PATCH", "conversations/$conversationId/read", "{}", umkmToken)
             val read = withTimeout(5_000) { readEvent.await() }

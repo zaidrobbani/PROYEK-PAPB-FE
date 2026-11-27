@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** File lampiran yang sudah diunduh ke cache, siap dibuka dengan aplikasi lain. */
 data class OpenedAttachment(val uri: String, val fileName: String, val mimeType: String)
 
 data class ProjectDetailUiState(
@@ -50,7 +49,6 @@ class ProjectDetailViewModel(
     private val workflowRepository: WorkflowRepository,
     private val fileRepository: FileRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
@@ -64,7 +62,6 @@ class ProjectDetailViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -82,7 +79,6 @@ class ProjectDetailViewModel(
                     val p = project.await()
                     umkmId = p.umkmId
                     val recommendation = match.await()
-                    // Skill dari detail project BE; hasil matching hanya cadangan bila endpoint tidak mengirimnya.
                     val skillNames = masterDataRepository.skillNames(p.skillIds ?: recommendation?.requiredSkillIds.orEmpty())
                     _uiState.update {
                         it.copy(
@@ -106,10 +102,6 @@ class ProjectDetailViewModel(
         }
     }
 
-    /**
-     * `GET /projects/{id}` hanya untuk project TERBUKA (atau pemiliknya). Setelah freelancer terpilih dan project
-     * berjalan/selesai, detailnya diambil dari alur project `GET /projects/{id}/workflow` (keputusan BE W11).
-     */
     private suspend fun projectDetail(): Project = try {
         projectRepository.detail(projectId)
     } catch (e: CancellationException) {
@@ -152,7 +144,6 @@ class ProjectDetailViewModel(
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
 
-    /** Unduh lampiran ke cache (dipakai ulang bila sudah ada), lalu container membukanya dengan aplikasi lain. */
     fun openAttachment(file: ProjectFile) {
         if (_uiState.value.openingAttachmentId != null) return
         viewModelScope.launch {

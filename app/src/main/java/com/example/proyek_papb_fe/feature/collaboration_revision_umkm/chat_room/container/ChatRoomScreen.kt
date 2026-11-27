@@ -73,10 +73,6 @@ private val SeparatorFormat = DateTimeFormatter.ofPattern("EEEE, d MMM yyyy", In
 private val BubbleTime = DateTimeFormatter.ofPattern("HH.mm")
 private const val PollIntervalMillis = 5_000L
 
-/**
- * Ruang chat UMKM dengan satu freelancer: pesan dari semua project dengan freelancer itu digabung
- * (seperti WhatsApp). Bila ada beberapa project, UMKM memilih project tujuan pesan di atas kolom ketik.
- */
 @Composable
 fun ChatRoomScreen(
     conversationId: String,
@@ -148,7 +144,6 @@ fun ChatRoomScreen(
     val multiProject = thread.conversations.size > 1
     val titleOf = thread.conversations.associate { it.id to it.projectTitle }
     val senderLabel = "${thread.freelancerName} · Freelancer"
-    // Kesepakatan yang menunggu tindakan UMKM (setujui atau bayar).
     val pendingAgreement = thread.conversations.firstOrNull { conversation ->
         UmkmNegotiationStore.negotiation(conversation.id)?.status.let {
             it == ProjectStatus.MenungguKesepakatan || it == ProjectStatus.MenungguPembayaran
@@ -218,7 +213,6 @@ fun ChatRoomScreen(
                             ChatDateSeparator(message.sentAt.format(SeparatorFormat))
                         }
                     }
-                    // Penanda project saat pesan berpindah ke percakapan project lain.
                     val projectChanged = multiProject && previous?.conversationId != message.conversationId
                     if (projectChanged) {
                         item(key = "project-${message.id}") {
@@ -251,7 +245,6 @@ fun ChatRoomScreen(
                         )
                     }
                 }
-                // Lampiran yang masih dikirim/gagal tampil di akhir, seperti WhatsApp.
                 pending.forEachIndexed { index, item ->
                     item(key = item.localId) {
                         val sentAt = Instant.ofEpochMilli(item.createdAtMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()

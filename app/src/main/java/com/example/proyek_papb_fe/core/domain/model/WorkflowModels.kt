@@ -16,7 +16,6 @@ object WorkflowActionCode {
     const val CANCEL_PROJECT = "CANCEL_PROJECT"
 }
 
-/** Nilai enum `cancel_reasons` di BE. */
 object CancelReasonCode {
     const val HARGA_TIDAK_SESUAI = "HARGA_TIDAK_SESUAI"
     const val JADWAL_TIDAK_COCOK = "JADWAL_TIDAK_COCOK"

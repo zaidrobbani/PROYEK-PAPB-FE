@@ -36,7 +36,6 @@ data class FreelancerDashboardUiState(
     val availableBalance: Long = 0,
     val activeProject: DashboardProject? = null,
     val recommendations: List<DashboardProject> = emptyList(),
-    /** null = belum diketahui; false = rekomendasi tidak bisa dihitung karena freelancer belum punya skill. */
     val hasSkills: Boolean? = null,
     val hasUnreadNotification: Boolean = false
 )
@@ -50,7 +49,6 @@ class FreelancerDashboardViewModel(
     private val notificationRepository: NotificationRepository,
     private val profileRepository: ProfileRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(
         FreelancerDashboardUiState(userName = authRepository.currentUser()?.name.orEmpty().substringBefore(" "))
     )
@@ -60,7 +58,6 @@ class FreelancerDashboardViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -72,7 +69,6 @@ class FreelancerDashboardViewModel(
                     val projects = async { workflowRepository.myProjects() }
                     val recommended = async { projectRepository.recommendedProjects(limit = RecommendationCount) }
                     val unread = async { runCatching { notificationRepository.unreadCount() }.getOrDefault(0) }
-                    // Matching F1 butuh skill freelancer; gagal (mis. profil belum dibuat) dianggap belum punya skill.
                     val skills = async { runCatching { profileRepository.mySkillIds() }.getOrDefault(emptyList()) }
                     val categories = runCatching { masterDataRepository.categories() }.getOrDefault(emptyList())
                         .associate { it.id to it.name }
@@ -93,7 +89,6 @@ class FreelancerDashboardViewModel(
                                 daysRemaining = deadline?.let { TimeUnit.MILLISECONDS.toDays(it - now).toInt().coerceAtLeast(0) }
                             )
                         }
-                    // Rekomendasi matching hanya berisi ringkasan; budget & deskripsi diambil dari detail project.
                     val recommendations = recommended.await().take(RecommendationCount).map { rec ->
                         async {
                             val project = runCatching { projectRepository.detail(rec.projectId) }.getOrNull()

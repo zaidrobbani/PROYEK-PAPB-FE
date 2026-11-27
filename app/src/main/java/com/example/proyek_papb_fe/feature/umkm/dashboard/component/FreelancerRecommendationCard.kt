@@ -169,7 +169,6 @@ fun FreelancerRecommendationCard(
             AvailabilityPill(freelancer.isAvailable)
         }
 
-        // Lokasi & pengalaman
         Row(
             modifier = Modifier.padding(top = 12.677.dp),
             horizontalArrangement = Arrangement.spacedBy(12.677.dp),
@@ -184,7 +183,6 @@ fun FreelancerRecommendationCard(
             )
         }
 
-        // Keahlian: maksimal 2 chip + sisa, satu baris agar tinggi kartu seragam.
         Row(
             modifier = Modifier.padding(top = 8.451.dp),
             horizontalArrangement = Arrangement.spacedBy(6.338.dp),

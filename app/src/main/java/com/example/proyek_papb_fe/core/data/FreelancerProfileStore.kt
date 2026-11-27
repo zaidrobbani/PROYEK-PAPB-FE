@@ -8,12 +8,7 @@ import com.example.proyek_papb_fe.core.data.model.PortfolioCategory
 import com.example.proyek_papb_fe.core.data.model.PortfolioItem
 import com.example.proyek_papb_fe.core.data.model.WorkExperience
 
-/**
- * Cache tampilan profil freelancer yang sedang login, diisi `FreelancerProfileViewModel` dari BE.
- * Kategori & skill portofolio serta jenis pekerjaan pengalaman belum ada di BE, jadi disimpan lokal per id.
- */
 object FreelancerProfileStore {
-
     private val EmptyProfile = FreelancerProfile(
         fullName = "",
         initials = "",
@@ -32,7 +27,6 @@ object FreelancerProfileStore {
         skills = emptyList()
     )
 
-
     var profile: FreelancerProfile by mutableStateOf(EmptyProfile)
         private set
 
@@ -42,7 +36,6 @@ object FreelancerProfileStore {
     var experiences: List<WorkExperience> by mutableStateOf(emptyList())
         private set
 
-    /** false bila freelancer belum membuat profil profesional (wajib sebelum melamar). */
     var hasProfile: Boolean by mutableStateOf(false)
         private set
 

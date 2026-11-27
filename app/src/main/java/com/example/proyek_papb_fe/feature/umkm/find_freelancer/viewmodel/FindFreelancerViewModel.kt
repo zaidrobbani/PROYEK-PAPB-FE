@@ -26,12 +26,10 @@ data class FindFreelancerUiState(
     val freelancers: List<DirectoryFreelancer> = emptyList()
 )
 
-/** Cari Freelancer (`GET /freelancers`, freelancer AVAILABLE). Kata kunci & filter cepat diterapkan lokal. */
 class FindFreelancerViewModel(
     private val freelancerRepository: FreelancerRepository,
     private val matchRepository: FreelancerMatchRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FindFreelancerUiState())
     val uiState: StateFlow<FindFreelancerUiState> = _uiState.asStateFlow()
 
@@ -43,7 +41,6 @@ class FindFreelancerViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

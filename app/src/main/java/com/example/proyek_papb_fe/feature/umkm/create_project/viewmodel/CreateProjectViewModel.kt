@@ -32,26 +32,19 @@ data class CreateProjectUiState(
     val loadError: String? = null,
     val categories: List<Category> = emptyList(),
     val skills: List<Skill> = emptyList(),
-    /** Project sumber (edit / pesan lagi), sudah dalam bentuk form. */
     val source: UmkmProject? = null,
     val isSubmitting: Boolean = false,
-    /** Error per field form: title, category, description, skills, budget, deadline. */
     val fieldErrors: Map<String, String> = emptyMap(),
     val message: String? = null,
     val savedProjectId: String? = null
 )
 
-/**
- * Lampiran yang sudah ada di server ditandai uri `server:<id>`, sedangkan file baru berupa content:// Uri.
- * Saat simpan: lampiran server yang dihapus user ikut dihapus, file baru diunggah setelah project tersimpan.
- */
 class CreateProjectViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
     private val editProjectId: String?,
     private val copyFromProjectId: String?
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(CreateProjectUiState())
     val uiState: StateFlow<CreateProjectUiState> = _uiState.asStateFlow()
 
@@ -90,13 +83,10 @@ class CreateProjectViewModel(
     private suspend fun loadSource(projectId: String, categories: List<Category>, skills: List<Skill>): UmkmProject =
         coroutineScope {
             val project = projectRepository.detail(projectId)
-            // Lampiran hanya relevan saat edit; "Pesan lagi" membuat project baru tanpa lampiran lama.
             val attachments = async {
                 if (projectId != editProjectId) emptyList()
                 else runCatching { projectRepository.attachments(projectId) }.getOrDefault(emptyList())
             }
-            // BE belum mengirim skill_ids di response project. Skill project = matched + missing pada hasil
-            // rekomendasi freelancer (best-effort; kosong bila belum ada freelancer di sistem).
             val skillIds = runCatching {
                 projectRepository.recommendedFreelancers(projectId).firstOrNull()?.match
                     ?.let { it.matchedSkillIds + it.missingSkillIds }
@@ -117,7 +107,6 @@ class CreateProjectViewModel(
             )
         }
 
-    /** "Tambah keahlian" hanya menerima skill yang ada di master BE (26 skill PRD). */
     fun findSkillName(raw: String): String? =
         _uiState.value.skills.firstOrNull { it.name.equals(raw.trim(), ignoreCase = true) }?.name
 
@@ -177,7 +166,6 @@ class CreateProjectViewModel(
         }
     }
 
-    /** Mengembalikan nama file yang gagal diunggah. */
     private suspend fun syncAttachments(projectId: String, attachments: List<ProjectAttachment>): List<String> {
         val keptServerIds = attachments.filter { it.uri.startsWith(ServerUriPrefix) }
             .map { it.uri.removePrefix(ServerUriPrefix) }.toSet()

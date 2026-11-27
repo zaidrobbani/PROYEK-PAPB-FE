@@ -18,14 +18,12 @@ import kotlinx.coroutines.launch
 data class EmailLinkSentUiState(
     val isResending: Boolean = false,
     val message: String? = null,
-    /** Bertambah tiap kirim ulang berhasil, dipakai layar untuk me-reset hitung mundur. */
     val resentCount: Int = 0
 )
 
 class EmailLinkSentViewModel(
     private val repository: AuthRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(EmailLinkSentUiState())
     val uiState: StateFlow<EmailLinkSentUiState> = _uiState.asStateFlow()
 

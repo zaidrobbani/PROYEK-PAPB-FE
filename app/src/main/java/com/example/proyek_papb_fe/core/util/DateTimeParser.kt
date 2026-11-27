@@ -5,9 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-/** BE mengirim datetime UTC `2026-11-02T01:42:19.441Z` dan tanggal `2026-11-02`. */
 object DateTimeParser {
-
     private val utcPatterns = listOf(
         "yyyy-MM-dd'T'HH:mm:ss.SSSX",
         "yyyy-MM-dd'T'HH:mm:ssX",
@@ -30,7 +28,6 @@ object DateTimeParser {
         return null
     }
 
-    /** Tanggal saja dibaca sebagai tengah malam waktu lokal perangkat (WIB). */
     fun parseDateMillis(value: String?): Long? {
         if (value.isNullOrBlank()) return null
         return try {
@@ -43,7 +40,6 @@ object DateTimeParser {
     fun formatDate(millis: Long): String =
         SimpleDateFormat("yyyy-MM-dd", Locale.US).format(millis)
 
-    /** Untuk DatePicker Material yang memakai millis UTC tengah malam. */
     fun parseDateUtcMillis(value: String?): Long? {
         if (value.isNullOrBlank()) return null
         return try {

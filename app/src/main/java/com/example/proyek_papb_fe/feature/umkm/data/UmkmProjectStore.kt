@@ -26,7 +26,6 @@ data class ProjectFreelancer(
     val specialty: String = "",
     @param:DrawableRes val photo: Int? = null,
     val rating: String = "",
-    /** `profile_image_url` dari BE (butuh token), null bila freelancer belum punya foto. */
     val photoUrl: String? = null
 )
 
@@ -66,11 +65,9 @@ data class UmkmProject(
     val ratingGiven: String? = null,
     val fundsReleased: Boolean = false,
     val selectedApplicationId: String? = null,
-    /** Progres dari BE (`progress_percent`, 0..100) saat milestone belum dimuat. */
     val progressPercent: Float? = null,
     val isPaid: Boolean = false
 ) {
-    /** BE hanya mengizinkan ubah/hapus saat project masih TERBUKA. */
     val canEditOrDelete: Boolean
         get() = status == ProjectStatus.Terbuka
 
@@ -96,11 +93,9 @@ data class ProjectApplication(
     val workingDays: Int,
     val note: String? = null,
     val isTopRecommendation: Boolean = false,
-    /** Status lamaran BE: SUBMITTED, ACCEPTED, NOT_SELECTED, CANCELLED. */
     val status: String = "SUBMITTED"
 )
 
-/** Cache project UMKM terakhir yang dimuat dari BE (dipakai layar chat untuk judul/status/deadline). */
 object UmkmProjectStore {
     val projects: SnapshotStateList<UmkmProject> = mutableStateListOf()
 

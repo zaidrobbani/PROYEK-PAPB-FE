@@ -21,7 +21,6 @@ class RegisterViewModel(
     private val repository: AuthRepository,
     private val role: AccountRole
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
@@ -56,7 +55,6 @@ class RegisterViewModel(
                 val fieldErrors = apiError?.fieldErrors.orEmpty()
                     .mapKeys { (field, _) -> ServerFieldToForm[field] ?: field }
                     .toMutableMap()
-                // 409: email sudah terdaftar, tampilkan di field email.
                 if (apiError?.httpStatus == 409) fieldErrors["email"] = e.userMessage()
                 _uiState.update {
                     it.copy(

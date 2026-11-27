@@ -42,7 +42,6 @@ private fun message(id: String, sender: String = "me", sentAt: Long = 0L) =
     Message(id, "c1", sender, "Halo", "TEXT", sentAt, null)
 
 class MessageDeletionTest {
-
     @Test
     fun selection_toggles_and_retains_visible_ids() {
         val selection = MessageSelection()
@@ -86,7 +85,6 @@ class MessageDeletionTest {
         } catch (e: IllegalStateException) {
             assertEquals("Pesan tidak ditemukan", e.message)
         }
-        // c1 tetap terhapus, x1 masih terpilih agar bisa dicoba lagi.
         assertEquals(setOf("x1"), selection.selected.value)
         assertFalse(selection.isDeleting.value)
     }

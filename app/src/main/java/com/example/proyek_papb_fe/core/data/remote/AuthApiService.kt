@@ -17,7 +17,6 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 
 interface AuthApiService {
-
     @POST("auth/register")
     suspend fun register(@Body body: RegisterRequest): ApiResponse<UserDto>
 
@@ -38,11 +37,11 @@ interface AuthApiService {
     suspend fun removePhoto(): ApiResponse<UserDto>
 
     @POST("auth/logout")
-    suspend fun logout(): ApiResponse<Any?>
+    suspend fun logout(): ApiResponse<Nothing>
 
     @POST("auth/email/resend")
-    suspend fun resendVerification(@Body body: EmailRequest): ApiResponse<Any?>
+    suspend fun resendVerification(@Body body: EmailRequest): ApiResponse<Nothing>
 
     @POST("auth/password/forgot")
-    suspend fun forgotPassword(@Body body: EmailRequest): ApiResponse<Any?>
+    suspend fun forgotPassword(@Body body: EmailRequest): ApiResponse<Nothing>
 }

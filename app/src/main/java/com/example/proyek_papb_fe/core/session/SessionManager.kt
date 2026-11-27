@@ -30,16 +30,13 @@ data class UserSession(
     val user: SessionUser
 )
 
-/** Menyimpan token + data akun di SharedPreferences. Token BE berlaku 24 jam tanpa refresh token. */
 class SessionManager(context: Context) {
-
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _session = MutableStateFlow(load())
     val session: StateFlow<UserSession?> = _session.asStateFlow()
 
     private val _expiredEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    /** Dipancarkan saat BE menolak token (401); App mengarahkan user ke Login. */
     val expiredEvents: SharedFlow<Unit> = _expiredEvents.asSharedFlow()
 
     val accessToken: String? get() = _session.value?.accessToken
@@ -70,7 +67,6 @@ class SessionManager(context: Context) {
         _session.value = null
     }
 
-    /** Hanya mengakhiri sesi bila token yang ditolak masih token aktif (hindari race dengan login baru). */
     fun expire(rejectedToken: String) {
         if (_session.value?.accessToken != rejectedToken) return
         clear()

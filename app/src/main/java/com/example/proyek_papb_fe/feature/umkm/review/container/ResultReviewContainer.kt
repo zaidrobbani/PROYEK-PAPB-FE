@@ -156,7 +156,6 @@ fun ResultReviewContainer(
             },
             onRemovePoint = { index -> if (points.size > 1) points = points.filterIndexed { i, _ -> i != index } },
             onSaveDraft = {
-                // BE tidak menyimpan draf revisi; isian tetap tersimpan selama layar ini terbuka.
                 sheet = ReviewSheet.NONE
                 toast("Draf revisi disimpan sementara di perangkat")
             },

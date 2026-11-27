@@ -6,7 +6,6 @@ import com.example.proyek_papb_fe.core.data.model.RevisionPoint
 import com.example.proyek_papb_fe.core.data.model.RevisionRequest
 
 object RevisionRequestDummyData {
-
     private val requests = listOf(
         RevisionRequest(
             projectId = "101",

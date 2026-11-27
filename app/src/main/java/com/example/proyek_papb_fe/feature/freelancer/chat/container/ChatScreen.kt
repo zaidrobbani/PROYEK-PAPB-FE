@@ -29,10 +29,6 @@ private fun ConversationOverview.matches(query: String): Boolean {
 
 private fun ConversationOverview.lastActivity(): Long = lastMessage?.sentAtMillis ?: conversation.lastMessageAtMillis ?: 0L
 
-/**
- * Satu baris per UMKM, seperti chat UMKM: semua project dengan UMKM yang sama digabung. Baris membuka percakapan
- * dengan aktivitas terbaru; di ruang chat freelancer memilih project tujuan lewat "Kirim ke".
- */
 private fun List<ConversationOverview>.toListItem(now: Long, myId: String?): ChatListItem {
     val latest = maxBy { it.lastActivity() }
     val name = latest.counterpartSubtitle ?: latest.counterpartName

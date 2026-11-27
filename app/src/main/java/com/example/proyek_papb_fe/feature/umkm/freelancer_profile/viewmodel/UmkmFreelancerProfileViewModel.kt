@@ -34,10 +34,8 @@ data class UmkmFreelancerProfileUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val profile: FreelancerProfile? = null,
-    /** Lamaran freelancer ini (bila dibuka dari daftar Pengajuan). */
     val application: ProjectApplication? = null,
     val canSelect: Boolean = false,
-    /** Project tempat freelancer ini melamar; tombol "Pilih & Buat Kesepakatan" membuka Pengajuan project tsb. */
     val applicationsProjectId: String? = null,
     val isSelecting: Boolean = false,
     val message: String? = null,
@@ -51,7 +49,6 @@ class UmkmFreelancerProfileViewModel(
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmFreelancerProfileUiState())
     val uiState: StateFlow<UmkmFreelancerProfileUiState> = _uiState.asStateFlow()
 
@@ -65,7 +62,6 @@ class UmkmFreelancerProfileViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -149,10 +145,6 @@ class UmkmFreelancerProfileViewModel(
         }
     }
 
-    /**
-     * Lamaran dicari dari project UMKM (BE tidak punya endpoint detail lamaran): berdasarkan [id] bila profil dibuka
-     * dari daftar Pengajuan, atau lamaran freelancer ini yang masih menunggu bila dibuka dari pencarian/beranda.
-     */
     private suspend fun findApplication(id: String?): Pair<Application, Boolean>? {
         val projects = workflowRepository.myProjects().items
             .sortedByDescending { it.project.status == ProjectStatusCode.TERBUKA }

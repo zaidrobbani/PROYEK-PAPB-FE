@@ -26,16 +26,12 @@ interface ChatRepository {
     suspend fun send(conversationId: String, text: String): Message
     suspend fun markRead(conversationId: String)
 
-    /** Hapus pesan satu percakapan; mengembalikan waktu hapus (epoch millis) dari server. */
     suspend fun deleteMessages(conversationId: String, messageIds: List<String>, forEveryone: Boolean): Long
 
-    /** Kirim foto (dikompres ke WebP) atau dokumen dengan caption opsional. */
     suspend fun sendAttachment(conversationId: String, attachment: OutgoingAttachment): Message
 
-    /** Nama, ukuran, dan jenis file pilihan user (untuk pratinjau sebelum kirim). */
     fun describeFile(uri: String): PickedChatFile
 
-    /** Koneksi WebSocket ruang chat; panggil `start(scope)` dan `close()` mengikuti umur layar. */
     fun realtime(conversationId: String): ChatRealtimeSession
 }
 
@@ -44,7 +40,6 @@ class DefaultChatRepository(
     private val realtimeClient: ChatRealtimeClient,
     private val attachmentReader: ChatAttachmentReader
 ) : ChatRepository {
-
     override fun describeFile(uri: String): PickedChatFile = attachmentReader.describe(uri)
 
     override suspend fun sendAttachment(conversationId: String, attachment: OutgoingAttachment): Message {

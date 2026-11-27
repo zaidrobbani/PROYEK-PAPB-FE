@@ -32,12 +32,10 @@ data class ProposalListUiState(
     val items: List<ProposalListItem> = emptyList()
 )
 
-/** Tab "Proyek" freelancer: lamaran saya (`/applications/mine`) digabung status alur project (`/workflow/projects`). */
 class ProposalListViewModel(
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProposalListUiState())
     val uiState: StateFlow<ProposalListUiState> = _uiState.asStateFlow()
 
@@ -45,7 +43,6 @@ class ProposalListViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -61,7 +58,6 @@ class ProposalListViewModel(
                         .map { application ->
                             async {
                                 val workflow = byProject[application.projectId]
-                                // Project yang tidak lagi TERBUKA hanya bisa dibaca freelancer terpilih (lewat workflow).
                                 val publicProject = if (workflow == null) {
                                     runCatching { projectRepository.detail(application.projectId) }.getOrNull()
                                 } else null

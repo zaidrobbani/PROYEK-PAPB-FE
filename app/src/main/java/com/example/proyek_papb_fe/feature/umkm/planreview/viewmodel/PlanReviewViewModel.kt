@@ -28,19 +28,16 @@ data class PlanReviewVmState(
     val plan: MilestonePlan? = null,
     val isSubmitting: Boolean = false,
     val message: String? = null,
-    /** true saat kesepakatan final (MENUNGGU_PEMBAYARAN): layar lanjut ke pembayaran. */
     val readyToPay: Boolean = false
 ) {
     val canApprove: Boolean get() = detail?.can(WorkflowActionCode.APPROVE_AGREEMENT) == true
     val canRequestChanges: Boolean get() = detail?.can(WorkflowActionCode.REQUEST_AGREEMENT_CHANGES) == true
 }
 
-/** Tinjau Rencana Pengerjaan (UMKM): Setujui Rencana = approve agreement, Minta Ubah = request-changes. */
 class PlanReviewViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(PlanReviewVmState())
     val uiState: StateFlow<PlanReviewVmState> = _uiState.asStateFlow()
 
@@ -52,7 +49,6 @@ class PlanReviewViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -86,7 +82,6 @@ class PlanReviewViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true) }
             try {
-                // agreement_version mencegah menyetujui versi lama bila freelancer baru saja mengubah rencana.
                 val updated = workflowRepository.approveAgreement(projectId, detail.agreement?.version)
                 val finalized = updated.project.status == ProjectStatusCode.MENUNGGU_PEMBAYARAN
                 _uiState.update {

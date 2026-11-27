@@ -23,11 +23,9 @@ data class NotificationsUiState(
     val unreadCount: Int = 0
 )
 
-/** Notifikasi (UMKM & freelancer). Filter kategori dilakukan lokal agar hitungan tiap tab tetap lengkap. */
 class NotificationsViewModel(
     private val repository: NotificationRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
 
@@ -35,7 +33,6 @@ class NotificationsViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

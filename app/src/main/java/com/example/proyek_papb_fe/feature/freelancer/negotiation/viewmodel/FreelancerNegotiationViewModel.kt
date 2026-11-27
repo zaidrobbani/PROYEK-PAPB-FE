@@ -45,7 +45,6 @@ class FreelancerNegotiationViewModel(
     private val workflowRepository: WorkflowRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerNegotiationUiState())
     val uiState: StateFlow<FreelancerNegotiationUiState> = _uiState.asStateFlow()
 
@@ -57,7 +56,6 @@ class FreelancerNegotiationViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -65,7 +63,6 @@ class FreelancerNegotiationViewModel(
             _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val detail = workflowRepository.detail(projectId)
-                // Pesan negosiasi = percakapan project dengan UMKM (dibuat bila belum ada).
                 val messages = runCatching {
                     val conversation = chatRepository.openConversation(detail.umkm.id, projectId)
                     chatRepository.messages(conversation.id).items
@@ -84,7 +81,6 @@ class FreelancerNegotiationViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isCancelling = true) }
             try {
-                // BE mewajibkan catatan bila alasan LAINNYA; sheet Figma tidak punya kolom catatan.
                 val note = if (reason == CancellationReason.OTHER) reason.label else null
                 workflowRepository.cancel(projectId, reason.toCode(), note)
                 _uiState.update { it.copy(isCancelling = false, cancelled = true) }

@@ -61,7 +61,6 @@ fun applyUmkmCancel(
     return current.copy(status = ProjectStatus.Dibatalkan, cancellationReason = reason, cancelledAt = now)
 }
 
-/** Cache kesepakatan per percakapan, dipetakan dari detail alur BE. */
 object UmkmNegotiationStore {
     private val items = mutableStateListOf<UmkmNegotiation>()
 

@@ -15,7 +15,6 @@ import com.example.proyek_papb_fe.MainActivity
 import com.example.proyek_papb_fe.R
 import java.util.concurrent.ConcurrentHashMap
 
-/** Isi data message FCM dari BE (lihat `notification_data` di modul notifications BE). */
 data class PushMessage(
     val notificationId: String,
     val type: String,
@@ -50,7 +49,6 @@ data class PushMessage(
             )
         }
 
-        /** Intent dari ketukan notifikasi HP; null untuk intent biasa (mis. dibuka dari launcher). */
         fun fromIntent(intent: Intent?): PushMessage? {
             val id = intent?.getStringExtra(ExtraNotificationId) ?: return null
             return PushMessage(
@@ -66,12 +64,10 @@ data class PushMessage(
     }
 }
 
-/** Menampilkan notifikasi di panel HP. Dua channel supaya pengguna bisa mengatur pesan chat terpisah. */
 object PushNotifier {
     private const val ChannelMessages = "temukarya_pesan"
     private const val ChannelUpdates = "temukarya_aktivitas"
 
-    /** Percakapan yang sedang dibuka di layar; pesan dari percakapan itu tidak dimunculkan sebagai notifikasi. */
     private val visibleConversations = ConcurrentHashMap.newKeySet<String>()
 
     fun setConversationVisible(conversationId: String, visible: Boolean) {
@@ -125,16 +121,13 @@ object PushNotifier {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
-        // Pesan dari percakapan yang sama menggantikan notifikasi sebelumnya agar panel tidak menumpuk.
         val tag = if (isChat) "chat:${message.referenceId}" else message.notificationId
         try {
             NotificationManagerCompat.from(context).notify(tag, 0, notification)
         } catch (_: SecurityException) {
-            // Izin dicabut tepat sebelum notify; abaikan.
         }
     }
 
-    /** Hapus notifikasi chat dari panel ketika percakapannya dibuka. */
     fun clearConversation(context: Context, conversationId: String) {
         NotificationManagerCompat.from(context).cancel("chat:$conversationId", 0)
     }

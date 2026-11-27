@@ -130,7 +130,6 @@ fun ProjectDetailScreen(
     }
 }
 
-
 @Composable
 private fun AttachmentRow(file: ProjectFile, isOpening: Boolean, onClick: () -> Unit) {
     Row(
@@ -154,4 +153,3 @@ private fun AttachmentRow(file: ProjectFile, isOpening: Boolean, onClick: () -> 
         }
     }
 }
-

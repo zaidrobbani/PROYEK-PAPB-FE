@@ -3,10 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Kamera: memotret foto untuk chat. Lokasi perkiraan: mengisi kota otomatis. Keduanya diminta saat dipakai. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- Notifikasi HP (Android 13+ wajib minta izin). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />

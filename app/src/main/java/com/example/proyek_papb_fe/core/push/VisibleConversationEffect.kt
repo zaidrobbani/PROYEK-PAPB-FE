@@ -7,10 +7,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
-/**
- * Selama ruang chat tampil di layar (RESUMED), pesan dari [conversationIds] tidak dimunculkan sebagai
- * notifikasi HP, dan notifikasi chat yang sudah ada di panel untuk percakapan itu dihapus.
- */
 @Composable
 fun VisibleConversationEffect(conversationIds: Set<String>) {
     val context = LocalContext.current

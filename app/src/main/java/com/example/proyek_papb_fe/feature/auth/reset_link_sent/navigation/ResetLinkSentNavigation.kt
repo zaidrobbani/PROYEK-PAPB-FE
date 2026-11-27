@@ -9,7 +9,6 @@ import com.example.proyek_papb_fe.feature.auth.reset_link_sent.container.ResetLi
 import com.example.proyek_papb_fe.feature.auth.role_selection.navigation.RoleSelectionRoute
 import kotlinx.serialization.Serializable
 
-/** Layar "Cek email kamu" dipakai untuk tautan reset sandi dan tautan verifikasi akun baru. */
 @Serializable
 enum class EmailLinkPurpose { RESET_PASSWORD, VERIFY_EMAIL }
 

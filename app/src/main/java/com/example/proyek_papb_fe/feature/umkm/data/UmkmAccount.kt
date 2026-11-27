@@ -20,11 +20,6 @@ data class UmkmProfile(
             .joinToString("") { it.first().uppercase() }
 }
 
-/**
- * Cache tampilan profil UMKM yang sedang login. Diisi ViewModel dari BE
- * (`GET /profiles/umkm/me` + nama akun), supaya header beberapa layar tidak memanggil ulang API.
- * Foto hanya lokal: BE belum punya endpoint unggah foto profil.
- */
 object UmkmAccount {
     var profile by mutableStateOf(
         UmkmProfile(
@@ -37,7 +32,6 @@ object UmkmAccount {
     )
         private set
 
-    /** false bila UMKM belum mengisi profil bisnis (wajib sebelum membuat project). */
     var hasBusinessProfile by mutableStateOf(false)
         private set
 

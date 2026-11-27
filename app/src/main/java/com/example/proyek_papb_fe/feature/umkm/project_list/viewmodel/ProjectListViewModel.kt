@@ -24,7 +24,6 @@ data class ProjectListUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val projects: List<UmkmProject> = emptyList(),
-    /** Id project yang menunggu tindakan UMKM (review hasil / pilih pelamar). */
     val actionProjectIds: Set<String> = emptySet(),
     val isDeleting: Boolean = false,
     val message: String? = null
@@ -35,7 +34,6 @@ class ProjectListViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectListUiState())
     val uiState: StateFlow<ProjectListUiState> = _uiState.asStateFlow()
 
@@ -43,7 +41,6 @@ class ProjectListViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

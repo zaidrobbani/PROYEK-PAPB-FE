@@ -29,11 +29,9 @@ data class TransactionHistoryUiState(
     val transactions: List<UmkmTransaction> = emptyList()
 )
 
-/** Riwayat Transaksi UMKM (`GET /payments/history`). Tab & pencarian difilter lokal dari daftar lengkap. */
 class TransactionHistoryViewModel(
     private val paymentRepository: PaymentRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(TransactionHistoryUiState())
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
@@ -45,7 +43,6 @@ class TransactionHistoryViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

@@ -19,7 +19,6 @@ data class NotificationListDto(
     val offset: Int,
     val hasMore: Boolean,
     val unreadCount: Int,
-    /** Key huruf besar: ALL, PROJECT, PAYMENT, MESSAGE. */
     val counts: Map<String, Int>?
 )
 
@@ -27,7 +26,6 @@ data class UnreadCountDto(val unreadCount: Int)
 
 data class MarkAllReadDto(val updated: Int)
 
-/** Token FCM perangkat untuk push notifikasi (`PUT`/`DELETE /notifications/devices`). */
 data class DeviceTokenRequest(
     val token: String,
     val platform: String = "ANDROID"

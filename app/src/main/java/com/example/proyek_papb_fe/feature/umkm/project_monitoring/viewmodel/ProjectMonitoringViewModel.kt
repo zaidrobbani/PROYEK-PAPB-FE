@@ -39,14 +39,12 @@ data class ProjectMonitoringUiState(
     val message: String? = null
 )
 
-/** F4: progres dari milestone SELESAI dan risiko keterlambatan dihitung BE (`/milestones/delay-risk`). */
 class ProjectMonitoringViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository,
     private val chatRepository: ChatRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectMonitoringUiState())
     val uiState: StateFlow<ProjectMonitoringUiState> = _uiState.asStateFlow()
 
@@ -60,7 +58,6 @@ class ProjectMonitoringViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -121,7 +118,6 @@ class ProjectMonitoringViewModel(
         )
     }
 
-    /** Membuka (atau membuat) percakapan dengan freelancer terpilih untuk project ini. */
     fun openChat() {
         val counterpart = freelancerId
         if (counterpart == null) {

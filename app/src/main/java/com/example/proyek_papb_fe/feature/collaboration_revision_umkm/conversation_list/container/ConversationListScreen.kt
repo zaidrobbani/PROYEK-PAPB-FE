@@ -63,7 +63,6 @@ fun ConversationListScreen(
     var stageName by rememberSaveable { mutableStateOf<String?>(null) }
     val stage = stageName?.let { ConversationStage.valueOf(it) }
 
-    // Satu baris per freelancer: percakapan per project digabung (lihat UmkmThread).
     val all = UmkmConversationStore.threads
     val shown = searchThreads(all, query, stage)
     val today = LocalDate.now()
@@ -132,4 +131,3 @@ fun ConversationListScreen(
         )
     }
 }
-

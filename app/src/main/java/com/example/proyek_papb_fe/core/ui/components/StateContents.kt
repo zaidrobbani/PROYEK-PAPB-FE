@@ -46,7 +46,6 @@ fun ErrorContent(
     }
 }
 
-/** Versi ringkas untuk dipakai di dalam daftar/section (bukan satu layar penuh). */
 @Composable
 fun InlineErrorContent(
     message: String,

@@ -30,7 +30,6 @@ data class MessageDto(
     val sentAt: String,
     val createdAt: String?,
     val readAt: String?,
-    /** Terisi bila dihapus untuk semua orang (teks null, tanpa lampiran). */
     val deletedAt: String? = null
 )
 
@@ -63,7 +62,6 @@ data class SendMessageRequest(val messageText: String)
 
 data class MarkReadDto(val conversationId: String, val markedCount: Int)
 
-/** `scope`: `ME` (hapus untuk saya) atau `EVERYONE` (hapus untuk semua orang). */
 data class DeleteMessagesRequest(val messageIds: List<String>, val scope: String)
 
 data class DeleteMessagesDto(

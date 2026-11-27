@@ -16,10 +16,8 @@ import java.io.File
 import java.io.IOException
 
 interface FileRepository {
-    /** Mengunduh ke cache aplikasi (dipakai ulang bila sudah ada). Mengembalikan Uri `file://`. */
     suspend fun downloadToCache(path: String, cacheKey: String, fileName: String): String
 
-    /** Menyalin file cache ke folder Download publik. Mengembalikan lokasi untuk ditampilkan. */
     suspend fun saveToDownloads(cachedUri: String, fileName: String, mimeType: String): String
 }
 
@@ -27,7 +25,6 @@ class DefaultFileRepository(
     private val context: Context,
     private val api: FileApiService
 ) : FileRepository {
-
     override suspend fun downloadToCache(path: String, cacheKey: String, fileName: String): String =
         withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "downloads").apply { mkdirs() }
@@ -65,7 +62,6 @@ class DefaultFileRepository(
                 context.contentResolver.openOutputStream(uri)?.use { out -> source.inputStream().use { it.copyTo(out) } }
                 "Download/TEMUKARYA/$fileName"
             } else {
-                // Android < 10: simpan di folder Download milik aplikasi (tanpa izin penyimpanan).
                 val dir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
                 val target = File(dir, fileName)
                 source.copyTo(target, overwrite = true)

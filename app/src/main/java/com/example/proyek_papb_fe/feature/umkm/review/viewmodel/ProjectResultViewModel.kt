@@ -35,7 +35,6 @@ data class ProjectResultUiState(
     val detail: WorkflowDetail? = null,
     val latest: Submission? = null,
     val review: Review? = null,
-    /** id file → Uri `file://` hasil unduhan (untuk pratinjau gambar). */
     val localUris: Map<String, String> = emptyMap(),
     val isSubmitting: Boolean = false,
     val message: String? = null,
@@ -51,14 +50,12 @@ data class ProjectResultUiState(
         }
 }
 
-/** Review hasil (UMKM): minta revisi, setujui hasil (project SELESAI + dana RELEASED dalam satu transaksi BE), ulasan. */
 class ProjectResultViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository,
     private val submissionRepository: SubmissionRepository,
     private val fileRepository: FileRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectResultUiState())
     val uiState: StateFlow<ProjectResultUiState> = _uiState.asStateFlow()
 
@@ -70,7 +67,6 @@ class ProjectResultViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -140,7 +136,6 @@ class ProjectResultViewModel(
         }
     }
 
-    /** Ulasan opsional ikut dikirim bersama persetujuan bila rating diisi. */
     fun approve(rating: Int, reviewText: String) {
         val submission = _uiState.value.latest ?: return
         if (_uiState.value.isSubmitting) return
@@ -161,7 +156,6 @@ class ProjectResultViewModel(
 
     fun submitReview(rating: Int, highlightLabels: Set<String>, text: String, highlightOptions: List<String>) {
         if (_uiState.value.isSubmitting || rating !in 1..5) return
-        // Urutan opsi Figma sama dengan enum BE review_highlights.
         val codes = highlightLabels.mapNotNull { label ->
             when (highlightOptions.indexOf(label)) {
                 0 -> ReviewHighlightCode.RESPONSIF_KOMUNIKATIF

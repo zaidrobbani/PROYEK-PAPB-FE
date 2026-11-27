@@ -12,11 +12,6 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/**
- * Mengompres foto sebelum diunggah: orientasi EXIF diterapkan, sisi terpanjang dibatasi, lalu WebP dengan
- * kualitas turun bertahap sampai di bawah batas ukuran. Default untuk foto profil (512 px, <= 150 KB);
- * foto chat memakai 1600 px, <= 400 KB. BE tetap mengompres ulang dengan aturan yang sama.
- */
 class ImageCompressor(
     private val contentResolver: ContentResolver,
     private val maxDimension: Int = MaxDimension,
@@ -28,7 +23,6 @@ class ImageCompressor(
         contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw ApiException("Foto tidak dapat dibaca, pilih foto lain.")
 
-        // Decode dengan inSampleSize agar foto kamera besar tidak menghabiskan memori.
         var sample = 1
         while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxDimension) sample *= 2
         val decoded = contentResolver.openInputStream(uri)?.use {
@@ -92,7 +86,6 @@ class ImageCompressor(
         const val MaxDimension = 512
         const val MaxBytes = 150 * 1024
 
-        /** Foto chat: sama dengan aturan BE (sisi terpanjang 1600 px, <= 400 KB). */
         const val ChatMaxDimension = 1600
         const val ChatMaxBytes = 400 * 1024
         private val QualitySteps = listOf(80, 70, 60, 50, 40)

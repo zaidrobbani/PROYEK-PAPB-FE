@@ -57,7 +57,6 @@ import kotlinx.coroutines.launch
 
 internal const val BusinessNameMaxLength = 60
 
-// Foto asli boleh besar karena dikompres ke WebP <= 150 KB sebelum diunggah (BE menolak unggahan > 2 MB).
 private const val PhotoMaxBytes = 15L * 1024 * 1024
 private val PhotoMimeTypes = arrayOf("image/jpeg", "image/png", "image/webp")
 
@@ -109,7 +108,6 @@ fun BusinessProfileScreen(
     var category by rememberSaveable { mutableStateOf("") }
     var ownerName by rememberSaveable { mutableStateOf("") }
     var city by rememberSaveable { mutableStateOf("") }
-    // Format "Kota, Provinsi" sesuai contoh isian kolom.
     val cityLocator = rememberCityLocator { found -> city = listOfNotNull(found.city, found.province).joinToString(", ") }
     val photoUri = UmkmAccount.profile.photoUri
     var photoError by rememberSaveable { mutableStateOf<String?>(null) }

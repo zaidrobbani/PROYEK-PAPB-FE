@@ -34,12 +34,7 @@ data class SubmissionStatusUiState(
     val otherApplicants: String,
     val submittedAtLabel: String,
 
-
-
-
     val isApproved: Boolean,
-
-
 
     val cancellationReason: String? = null,
     val isAgreed: Boolean = false,
@@ -125,7 +120,6 @@ fun SubmissionStatusScreen(
                             onOpenClick = onOpenNegotiationClick
                         )
                     }
-                    // Setelah kesepakatan: jalan masuk ke Rencana Pengerjaan (mulai kerja, tandai milestone, status hasil).
                     if (state.isAgreed && !state.isCancelled) {
                         NegotiationInviteBanner(
                             clientName = state.clientName,

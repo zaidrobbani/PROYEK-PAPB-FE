@@ -10,7 +10,6 @@ data class SubmissionFile(
     val fileName: String,
     val mimeType: String,
     val sizeBytes: Long,
-    /** Path unduh dari BE (`download_path`), butuh token. */
     val downloadPath: String
 )
 
@@ -44,13 +43,11 @@ data class SubmissionList(
     val projectStatusLabel: String,
     val freelancer: UserSummary?,
     val revisionCount: Int,
-    /** Urutan dari BE; [latest] selalu versi tertinggi. */
     val items: List<Submission>
 ) {
     val latest: Submission? get() = items.maxByOrNull { it.versionNumber }
 }
 
-/** Enum `review_highlights` di BE. */
 object ReviewHighlightCode {
     const val RESPONSIF_KOMUNIKATIF = "RESPONSIF_KOMUNIKATIF"
     const val HASIL_BERKUALITAS = "HASIL_BERKUALITAS"

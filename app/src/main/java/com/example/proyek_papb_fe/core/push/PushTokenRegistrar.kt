@@ -9,12 +9,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/**
- * Menjaga token FCM perangkat terdaftar ke akun yang sedang login:
- * - setiap kali sesi berganti (login / buka aplikasi dengan sesi tersimpan) → `PUT /notifications/devices`
- * - token baru dari FCM ([onNewToken]) → daftar ulang
- * - sebelum logout ([unregister]) → `DELETE /notifications/devices`, supaya HP tidak menerima notifikasi akun lama.
- */
 class PushTokenRegistrar(
     private val sessionManager: SessionManager,
     private val repository: () -> NotificationRepository,
@@ -54,7 +48,6 @@ class PushTokenRegistrar(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // Dicoba lagi saat aplikasi dibuka berikutnya atau token berganti.
             Log.w(Tag, "Token FCM gagal didaftarkan", e)
         }
     }

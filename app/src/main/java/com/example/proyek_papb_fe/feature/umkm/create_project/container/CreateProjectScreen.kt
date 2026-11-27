@@ -300,7 +300,6 @@ fun CreateProjectScreen(
             }
             CreateProjectBottomBar(
                 onSaveDraft = {
-                    // BE belum punya status draf: project langsung TERBUKA saat dipublikasikan.
                     viewModel.showMessage("Simpan draf belum tersedia. Lengkapi form lalu publikasikan project.")
                     onSaveDraft()
                 },
@@ -326,4 +325,3 @@ private fun readAttachment(context: Context, uri: Uri): ProjectAttachment? =
             val size = if (cursor.isNull(sizeIndex)) 0L else cursor.getLong(sizeIndex)
             ProjectAttachment(uri = uri.toString(), name = name ?: "file", sizeBytes = size)
         }
-

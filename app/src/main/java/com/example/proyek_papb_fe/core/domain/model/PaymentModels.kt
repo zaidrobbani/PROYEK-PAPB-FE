@@ -49,7 +49,6 @@ data class PaymentDetail(
     val isPaid: Boolean get() = status == PaymentStatusCode.BERHASIL
 }
 
-/** Filter tab Riwayat Transaksi (enum `transaction_groups`). */
 enum class TransactionGroup { ALL, PENDING, HELD, COMPLETED, CANCELLED }
 
 data class PaymentHistoryItem(

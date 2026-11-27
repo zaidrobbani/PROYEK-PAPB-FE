@@ -22,11 +22,9 @@ data class ChatListUiState(
     val conversations: List<ConversationOverview> = emptyList()
 )
 
-/** Daftar percakapan (UMKM & freelancer). */
 class ChatListViewModel(
     private val overviewRepository: ChatOverviewRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ChatListUiState())
     val uiState: StateFlow<ChatListUiState> = _uiState.asStateFlow()
 
@@ -34,7 +32,6 @@ class ChatListViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

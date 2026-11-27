@@ -47,7 +47,6 @@ private fun freelancerNotificationType(backendType: String): NotificationType = 
     else -> NotificationType.SYSTEM
 }
 
-/** Halaman tujuan notifikasi freelancer; dipakai daftar notifikasi dan ketukan notifikasi HP (push). */
 sealed interface FreelancerNotificationDestination {
     data class Chat(val conversationId: String) : FreelancerNotificationDestination
     data class RevisionRequest(val projectId: String) : FreelancerNotificationDestination

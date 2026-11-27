@@ -45,7 +45,6 @@ class UmkmProfileViewModel(
     private val notificationRepository: NotificationRepository,
     private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmProfileUiState())
     val uiState: StateFlow<UmkmProfileUiState> = _uiState.asStateFlow()
 
@@ -53,7 +52,6 @@ class UmkmProfileViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

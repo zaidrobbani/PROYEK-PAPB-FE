@@ -49,7 +49,6 @@ class UmkmDashboardViewModel(
     private val photoRepository: ProfilePhotoRepository,
     private val matchRepository: FreelancerMatchRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(
         UmkmDashboardUiState(ownerFirstName = authRepository.currentUser()?.name.orEmpty().substringBefore(" "))
     )
@@ -59,7 +58,6 @@ class UmkmDashboardViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -124,10 +122,6 @@ class UmkmDashboardViewModel(
         }
     }
 
-    /**
-     * Rekomendasi = freelancer paling cocok (matching F1, ≥ 60%) dengan project TERBUKA, lalu sisanya
-     * menurut rating. Freelancer cocok yang tidak ada di halaman pencarian diambil dari profil publiknya.
-     */
     private suspend fun recommended(
         searched: List<FreelancerSummary>,
         matches: Map<String, FreelancerBestMatch>
@@ -166,7 +160,6 @@ class UmkmDashboardViewModel(
     }
 }
 
-/** Harga layanan freelancer: rentang bila ada maksimum, selain itu harga minimum. */
 private fun priceText(min: Long?, max: Long?): String = when {
     min != null && max != null && max > min -> "${rupiah(min)} – ${rupiah(max)}"
     min != null -> rupiah(min)

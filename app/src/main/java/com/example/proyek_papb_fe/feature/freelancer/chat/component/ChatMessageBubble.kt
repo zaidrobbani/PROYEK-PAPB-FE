@@ -44,18 +44,14 @@ data class ChatBubbleUi(
     val topGap: Int,
     val senderLabel: String? = null,
     val file: ChatFileUi? = null,
-    /** null untuk pesan masuk. */
     val status: DeliveryStatus? = if (isMine) DeliveryStatus.SENT else null,
-    /** Dihapus untuk semua orang. */
     val isDeleted: Boolean = false,
-    /** false untuk lampiran yang masih dikirim (belum punya id server). */
     val isSelectable: Boolean = true
 )
 
 sealed interface ChatRoomItem {
     val key: String
     data class DateSeparator(val label: String) : ChatRoomItem { override val key = "date-$label" }
-    /** Penanda pergantian project saat chat menggabungkan beberapa project dengan UMKM yang sama. */
     data class ProjectSeparator(val title: String, override val key: String) : ChatRoomItem
     data class Message(val bubble: ChatBubbleUi) : ChatRoomItem { override val key = bubble.id }
 }
@@ -152,7 +148,6 @@ internal fun ChatMessageBubble(
                 } else if (bubble.text.isNotBlank()) {
                     Text(text = bubble.text, style = TemuKaryaTypography.BodyLarge, color = textColor)
                 }
-                // Pesan terhapus tidak menampilkan status baca, seperti WhatsApp.
                 MessageMeta(time = bubble.time, status = bubble.status.takeUnless { bubble.isDeleted }, mine = mine)
             }
         }

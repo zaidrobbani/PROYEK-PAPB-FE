@@ -70,7 +70,6 @@ fun notificationGroupLabel(day: LocalDate, today: LocalDate = LocalDate.now()): 
 private val TimeFormatter = DateTimeFormatter.ofPattern("HH.mm")
 private val DateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("id-ID"))
 
-/** Cache notifikasi UMKM (dipakai titik merah di top bar), diisi dari `GET /notifications`. */
 object UmkmNotificationStore {
     private val items = mutableStateListOf<UmkmNotification>()
 
@@ -102,7 +101,6 @@ private fun umkmNotificationTypeOf(backendType: String): NotificationType = when
     else -> NotificationType.KesepakatanDibuat
 }
 
-/** Halaman tujuan notifikasi UMKM; dipakai detail notifikasi dan ketukan notifikasi HP (push). */
 fun umkmNotificationTarget(backendType: String, referenceType: String?, referenceId: String?): NotificationTarget {
     val type = umkmNotificationTypeOf(backendType)
     return when {

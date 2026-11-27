@@ -5,7 +5,6 @@ import retrofit2.http.GET
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-/** Unduhan biner yang butuh token (file hasil kerja, lampiran). Path relatif base URL atau absolut `/api/v1/...`. */
 interface FileApiService {
     @Streaming
     @GET

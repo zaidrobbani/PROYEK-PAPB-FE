@@ -84,7 +84,6 @@ fun UmkmDashboardScreen(
         viewModel.load()
         notificationsViewModel.load()
     }
-    // Isi cache notifikasi agar titik merah di top bar sesuai data BE.
     LaunchedEffect(notifications.items) { UmkmNotificationStore.replace(notifications.items) }
     UmkmDashboardContent(
         uiState = uiState,

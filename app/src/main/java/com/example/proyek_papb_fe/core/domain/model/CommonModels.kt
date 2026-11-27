@@ -6,7 +6,6 @@ data class Category(val id: String, val name: String, val description: String)
 
 data class Page<T>(val items: List<T>, val hasMore: Boolean)
 
-/** Ringkasan user lain (lawan transaksi) yang dikirim BE di workflow & pembayaran. */
 data class UserSummary(
     val id: String,
     val name: String,

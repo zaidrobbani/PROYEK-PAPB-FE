@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.umkm.find_freelancer.container
 
+import androidx.compose.runtime.saveable.Saver
+import android.os.Bundle
 import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -52,15 +53,25 @@ private val PageGutter = 16.903.dp
 
 private const val QuickRating = 4.8
 
-private val TalentFilterSaver = listSaver<TalentFilter, Any>(
-    save = { listOf(it.minRating ?: -1.0, it.budgetMinIndex, it.budgetMaxIndex, it.location.name, it.fastResponse) },
+private val TalentFilterSaver = Saver<TalentFilter, Bundle>(
+    save = {
+        Bundle().apply {
+            it.minRating?.let { rating -> putDouble("minRating", rating) }
+            putInt("budgetMinIndex", it.budgetMinIndex)
+            putInt("budgetMaxIndex", it.budgetMaxIndex)
+            putString("location", it.location.name)
+            putBoolean("fastResponse", it.fastResponse)
+        }
+    },
     restore = {
+        val default = TalentFilter()
         TalentFilter(
-            minRating = (it[0] as Double).takeIf { rating -> rating >= 0 },
-            budgetMinIndex = it[1] as Int,
-            budgetMaxIndex = it[2] as Int,
-            location = TalentLocation.valueOf(it[3] as String),
-            fastResponse = it[4] as Boolean
+            minRating = if (it.containsKey("minRating")) it.getDouble("minRating") else null,
+            budgetMinIndex = it.getInt("budgetMinIndex", default.budgetMinIndex),
+            budgetMaxIndex = it.getInt("budgetMaxIndex", default.budgetMaxIndex),
+            location = it.getString("location")?.let { name -> TalentLocation.entries.firstOrNull { l -> l.name == name } }
+                ?: default.location,
+            fastResponse = it.getBoolean("fastResponse")
         )
     }
 )
@@ -185,4 +196,3 @@ fun FindFreelancerScreen(
     )
     }
 }
-

@@ -22,13 +22,11 @@ data class DashboardFreelancer(
     val rating: String,
     val reviewLabel: String,
     val startingPrice: String,
-    /** "Mulai dari" bila hanya ada harga minimum, "Kisaran harga" bila ada rentang. */
     val priceLabel: String = "Mulai dari",
     val city: String = "",
     val isAvailable: Boolean = true,
     val skills: List<String> = emptyList(),
     val experienceCount: Int = 0,
-    /** Persentase kecocokan skill (≥ 60%) dengan project TERBUKA milik UMKM; null bila tidak ada. */
     val matchPercent: Int? = null,
     val matchProjectTitle: String? = null
 )

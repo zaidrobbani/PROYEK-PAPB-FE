@@ -8,7 +8,6 @@ import com.example.proyek_papb_fe.core.domain.model.FreelancerSearchFilter
 import com.example.proyek_papb_fe.core.domain.model.FreelancerSummary
 import com.example.proyek_papb_fe.core.domain.model.Page
 
-/** Pencarian & profil publik freelancer (dipakai UMKM). */
 interface FreelancerRepository {
     suspend fun search(filter: FreelancerSearchFilter, limit: Int = 50, offset: Int = 0): Page<FreelancerSummary>
     suspend fun detail(freelancerId: String): FreelancerDetail
@@ -18,7 +17,6 @@ interface FreelancerRepository {
 class DefaultFreelancerRepository(
     private val remote: FreelancerRemoteDataSource
 ) : FreelancerRepository {
-
     override suspend fun search(filter: FreelancerSearchFilter, limit: Int, offset: Int): Page<FreelancerSummary> {
         val page = remote.search(
             search = filter.search?.trim()?.ifBlank { null },

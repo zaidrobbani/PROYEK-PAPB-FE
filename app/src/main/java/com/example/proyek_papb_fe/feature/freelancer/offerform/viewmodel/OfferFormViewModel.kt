@@ -28,13 +28,11 @@ data class OfferFormUiState(
     val submitted: Boolean = false
 )
 
-/** Ajukan penawaran = `POST /projects/{id}/applications` (harga, estimasi hari, pesan proposal). */
 class OfferFormViewModel(
     private val projectId: String,
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(OfferFormUiState())
     val uiState: StateFlow<OfferFormUiState> = _uiState.asStateFlow()
 

@@ -19,14 +19,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Indikator tetap tampil sebentar agar tarikan terasa direspons walau data cepat kembali. */
 private const val MinRefreshMillis = 500L
 
-/**
- * Tarik ke bawah untuk muat ulang. [onRefresh] mengembalikan Job dari ViewModel; indikator berputar
- * sampai Job selesai. Konten di dalamnya harus bisa di-scroll (LazyColumn / verticalScroll).
- * [onRefresh] null = tanpa tarik untuk muat ulang.
- */
 @Composable
 fun RefreshableContent(
     onRefresh: (() -> Job)?,

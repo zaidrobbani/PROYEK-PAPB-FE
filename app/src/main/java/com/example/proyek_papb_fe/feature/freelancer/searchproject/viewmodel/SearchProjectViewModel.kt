@@ -31,13 +31,11 @@ data class SearchProjectUiState(
     val hasUnreadNotification: Boolean = false
 )
 
-/** Cari project TERBUKA: pencarian dikirim ke BE (`search`) dengan debounce, seperti pola modul 8. */
 class SearchProjectViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
     private val notificationRepository: NotificationRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SearchProjectUiState())
     val uiState: StateFlow<SearchProjectUiState> = _uiState.asStateFlow()
 
@@ -60,7 +58,6 @@ class SearchProjectViewModel(
         viewModelScope.launch { fetch(_query.value.trim()) }
     }
 
-    /** Tarik untuk muat ulang: daftar lama tetap tampil selama memuat. */
     fun refresh(): Job = viewModelScope.launch { fetch(_query.value.trim(), showLoading = false) }
 
     @OptIn(FlowPreview::class)

@@ -3,7 +3,6 @@ package com.example.proyek_papb_fe.core.data
 import com.example.proyek_papb_fe.core.data.model.OfferDraft
 
 object OfferDraftStore {
-
     private val drafts = mutableMapOf<String, OfferDraft>()
 
     fun get(projectId: String): OfferDraft? = drafts[projectId]

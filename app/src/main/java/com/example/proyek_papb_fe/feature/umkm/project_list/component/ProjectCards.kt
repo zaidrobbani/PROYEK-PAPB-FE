@@ -84,9 +84,7 @@ data class ProjectCardActions(
     val onViewApplications: (UmkmProject) -> Unit,
     val onFinalFiles: (UmkmProject) -> Unit,
     val onOrderAgain: (UmkmProject) -> Unit,
-    /** Status MENUNGGU_KESEPAKATAN: buka kesepakatan & rencana kerja. */
     val onOpenAgreement: (UmkmProject) -> Unit = {},
-    /** Status MENUNGGU_PEMBAYARAN: buka pembayaran QRIS. */
     val onPay: (UmkmProject) -> Unit = {}
 )
 

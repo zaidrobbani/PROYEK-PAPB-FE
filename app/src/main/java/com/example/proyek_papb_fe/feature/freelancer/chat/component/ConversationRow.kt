@@ -123,7 +123,6 @@ internal fun InitialsAvatar(
     modifier: Modifier = Modifier,
     photoUrl: String? = null
 ) {
-    // Foto profil dari BE bila ada; selama memuat atau bila belum ada foto, tampil inisial.
     val photo = com.example.proyek_papb_fe.core.ui.components.rememberServerImageUri(photoUrl)
     if (photo != null) {
         com.example.proyek_papb_fe.core.ui.components.LocalImage(

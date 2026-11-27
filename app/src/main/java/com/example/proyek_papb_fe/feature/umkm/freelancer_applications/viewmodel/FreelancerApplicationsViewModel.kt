@@ -46,7 +46,6 @@ class FreelancerApplicationsViewModel(
     private val freelancerRepository: FreelancerRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerApplicationsUiState())
     val uiState: StateFlow<FreelancerApplicationsUiState> = _uiState.asStateFlow()
 
@@ -58,7 +57,6 @@ class FreelancerApplicationsViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {
@@ -79,7 +77,6 @@ class FreelancerApplicationsViewModel(
                         .filter { it.status != ApplicationStatusCode.CANCELLED }
                         .map { application ->
                             async {
-                                // Profil publik untuk nama, keahlian, & rating; lamaran BE hanya berisi id freelancer.
                                 val profile = runCatching { freelancerRepository.detail(application.freelancerId) }.getOrNull()?.summary
                                 val match = matchById[application.freelancerId]
                                 ProjectApplication(
@@ -121,7 +118,6 @@ class FreelancerApplicationsViewModel(
         }
     }
 
-    /** POST /projects/{id}/agreement: project jadi MENUNGGU_KESEPAKATAN, pelamar lain otomatis tidak dipilih. */
     fun select(application: ProjectApplication) {
         if (_uiState.value.isSelecting) return
         viewModelScope.launch {

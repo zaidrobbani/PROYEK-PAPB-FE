@@ -53,7 +53,6 @@ interface ChatApiService {
         @Part("caption") caption: RequestBody?
     ): ApiResponse<MessageWithAttachmentsDto>
 
-    /** Hapus banyak pesan sekaligus (ala WhatsApp). */
     @POST("conversations/{id}/messages/delete")
     suspend fun deleteMessages(@Path("id") conversationId: String, @Body body: DeleteMessagesRequest): ApiResponse<DeleteMessagesDto>
 

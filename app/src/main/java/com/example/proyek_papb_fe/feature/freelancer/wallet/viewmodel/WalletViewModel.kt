@@ -26,11 +26,9 @@ data class WalletVmState(
     val entries: List<WalletEntry> = emptyList()
 )
 
-/** Dompet freelancer (F3): saldo tersedia = dana RELEASED, saldo ditahan = dana HELD. Pencairan di luar scope MVP. */
 class WalletViewModel(
     private val paymentRepository: PaymentRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(WalletVmState())
     val uiState: StateFlow<WalletVmState> = _uiState.asStateFlow()
 
@@ -38,7 +36,6 @@ class WalletViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

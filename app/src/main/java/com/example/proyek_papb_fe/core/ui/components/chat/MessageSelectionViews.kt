@@ -37,10 +37,6 @@ import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaTypography
 
 private val SelectedRow = TemuKaryaColors.ActionPrimary.copy(alpha = 0.14f)
 
-/**
- * Baris pesan yang bisa dipilih ala WhatsApp: tekan lama untuk mulai memilih, lalu ketuk untuk
- * menambah/membuang. Di luar mode pilih, ketukan biasa tidak ditangkap (lampiran tetap bisa dibuka).
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Modifier.selectableMessage(
@@ -65,7 +61,6 @@ fun Modifier.selectableMessage(
         )
 }
 
-/** Pengganti top bar saat memilih pesan: tutup, jumlah terpilih, hapus. */
 @Composable
 fun MessageSelectionBar(
     count: Int,
@@ -110,10 +105,6 @@ fun MessageSelectionBar(
     }
 }
 
-/**
- * Konfirmasi hapus ala WhatsApp. "Hapus untuk semua orang" hanya muncul bila semua pesan terpilih
- * milik sendiri dan masih ≤ 48 jam.
- */
 @Composable
 fun DeleteMessagesDialog(
     count: Int,
@@ -144,7 +135,6 @@ fun DeleteMessagesDialog(
     )
 }
 
-/** Isi bubble pesan yang sudah dihapus untuk semua orang. */
 @Composable
 fun DeletedMessageText(mine: Boolean, color: Color, modifier: Modifier = Modifier) {
     Text(

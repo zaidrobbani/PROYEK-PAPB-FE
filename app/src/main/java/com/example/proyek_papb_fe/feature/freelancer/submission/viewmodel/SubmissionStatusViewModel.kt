@@ -25,9 +25,7 @@ data class SubmissionStatusVmState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val application: Application? = null,
-    /** Detail alur, hanya ada bila freelancer sudah terpilih. */
     val workflow: WorkflowDetail? = null,
-    /** Project publik (saat masih TERBUKA). */
     val project: Project? = null
 ) {
     val isSelected: Boolean get() = application?.status == ApplicationStatusCode.ACCEPTED && workflow != null
@@ -39,13 +37,11 @@ data class SubmissionStatusVmState(
         get() = workflow?.project?.status !in setOf(null, ProjectStatusCode.MENUNGGU_KESEPAKATAN, ProjectStatusCode.DIBATALKAN)
 }
 
-/** Status Pengajuan: "disetujui" = UMKM memilih freelancer ini (lamaran ACCEPTED + project MENUNGGU_KESEPAKATAN dst). */
 class SubmissionStatusViewModel(
     private val projectId: String,
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SubmissionStatusVmState())
     val uiState: StateFlow<SubmissionStatusVmState> = _uiState.asStateFlow()
 
@@ -53,7 +49,6 @@ class SubmissionStatusViewModel(
         fetch(showLoading = true)
     }
 
-    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
     fun refresh(): Job = fetch(showLoading = false)
 
     private fun fetch(showLoading: Boolean): Job {

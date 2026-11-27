@@ -14,12 +14,10 @@ import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class ImageCompressorTest {
-
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val compressor = ImageCompressor(context.contentResolver)
 
     private fun photoFile(width: Int, height: Int): File {
-        // Piksel acak = kasus terburuk untuk kompresi (mirip foto kamera penuh detail).
         val random = Random(42)
         val pixels = IntArray(width * height) { Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)) }
         val bitmap = Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)

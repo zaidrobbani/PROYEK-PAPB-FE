@@ -61,7 +61,6 @@ fun ChatRoomScreen(
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
     topBanner: (@Composable () -> Unit)? = null,
-    /** Pilihan project tujuan ("Kirim ke") bila ada beberapa project dengan UMKM ini. */
     replySelector: (@Composable () -> Unit)? = null,
     onFileClick: (ChatBubbleUi) -> Unit = {},
     isOpening: (ChatBubbleUi) -> Boolean = { false },

@@ -35,7 +35,6 @@ import kotlinx.coroutines.launch
 class CityLocator internal constructor(private val start: () -> Unit, private val busy: () -> Boolean) {
     val isLocating: Boolean get() = busy()
 
-    /** Minta izin lokasi (bila belum), lalu isi kota dari lokasi perangkat. */
     fun locate() = start()
 }
 
@@ -71,7 +70,6 @@ fun rememberCityLocator(onCity: (DeviceCity) -> Unit): CityLocator {
     }
 }
 
-/** Ikon lokasi di ujung kolom kota: ketuk untuk mengisi otomatis. */
 @Composable
 fun LocationFillButton(locator: CityLocator, tint: Color, iconRes: Int) {
     Box(

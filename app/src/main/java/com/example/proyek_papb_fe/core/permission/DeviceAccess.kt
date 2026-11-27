@@ -32,10 +32,6 @@ import androidx.core.content.ContextCompat
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/**
- * Akses perangkat yang dipakai TEMUKARYA. Kamera & lokasi memakai izin sistem Android;
- * galeri & dokumen memakai pemilih bawaan Android (tanpa izin sistem), jadi cukup persetujuan di aplikasi.
- */
 enum class DeviceAccess(
     val title: String,
     val message: String,
@@ -80,13 +76,11 @@ enum class DeviceAccess(
         message = "TEMUKARYA mengirim notifikasi ke HP saat ada pesan baru, pengajuan, kesepakatan, pembayaran, " +
             "atau hasil kerja, walau aplikasi sedang ditutup.",
         icon = R.drawable.ic_notifications,
-        // Sebelum Android 13 notifikasi aktif tanpa izin runtime.
         systemPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.POST_NOTIFICATIONS else null,
         settingsHint = "Notifikasi dimatikan. Aktifkan lewat Pengaturan › Notifikasi agar tidak ketinggalan pesan dan update project."
     )
 }
 
-/** Persetujuan di aplikasi (galeri & dokumen) dan catatan izin sistem yang sudah pernah diminta. */
 private class AccessConsentStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("temukarya_device_access", Context.MODE_PRIVATE)
 
@@ -100,7 +94,6 @@ private class AccessConsentStore(context: Context) {
 class DeviceAccessRequester internal constructor(
     private val onRequest: (DeviceAccess, () -> Unit) -> Unit
 ) {
-    /** Jalankan [onGranted] bila akses sudah ada; selain itu tanya dulu (dialog aplikasi, lalu dialog sistem bila perlu). */
     fun request(access: DeviceAccess, onGranted: () -> Unit) = onRequest(access, onGranted)
 }
 
@@ -121,7 +114,6 @@ fun rememberDeviceAccess(): DeviceAccessRequester {
     fun canAskSystem(access: DeviceAccess): Boolean {
         val permission = access.systemPermission ?: return true
         val activity = context.findActivity() ?: return true
-        // Sudah pernah diminta dan Android tidak lagi menampilkan dialog = ditolak permanen.
         return !store.wasAsked(access) || ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
     }
 

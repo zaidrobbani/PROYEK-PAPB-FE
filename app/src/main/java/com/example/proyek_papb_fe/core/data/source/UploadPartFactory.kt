@@ -8,7 +8,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/** Membaca file pilihan user (content:// Uri) menjadi part multipart. */
 class UploadPartFactory(
     private val contentResolver: ContentResolver
 ) {

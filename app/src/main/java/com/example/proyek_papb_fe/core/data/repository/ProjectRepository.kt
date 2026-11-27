@@ -45,7 +45,6 @@ class DefaultProjectRepository(
     private val remote: ProjectRemoteDataSource,
     private val uploadPartFactory: UploadPartFactory
 ) : ProjectRepository {
-
     override suspend fun create(input: ProjectInput): Project = remote.create(input.toRequest()).toDomain()
 
     override suspend fun update(projectId: String, input: ProjectInput): Project =

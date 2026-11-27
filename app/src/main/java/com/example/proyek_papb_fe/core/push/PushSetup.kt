@@ -9,10 +9,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-/**
- * Inisialisasi Firebase dari BuildConfig (diisi Gradle dari app/google-services.json).
- * Tanpa file itu [isAvailable] = false dan seluruh fitur push diam-diam nonaktif.
- */
 object PushSetup {
     private const val Tag = "PushSetup"
 
@@ -39,7 +35,6 @@ object PushSetup {
         }.onFailure { Log.w(Tag, "Firebase gagal diinisialisasi", it) }.getOrDefault(false)
     }
 
-    /** Token FCM perangkat ini, null bila Firebase nonaktif atau Play Services tidak tersedia. */
     suspend fun currentToken(): String? {
         if (!isAvailable) return null
         return suspendCancellableCoroutine { continuation ->

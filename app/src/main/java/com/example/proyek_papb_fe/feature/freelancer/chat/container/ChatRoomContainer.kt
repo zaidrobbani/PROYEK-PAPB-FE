@@ -82,7 +82,6 @@ private fun List<Message>.toRoomItems(
     contactName: String,
     umkmName: String,
     pending: List<OutgoingAttachment>,
-    /** Judul project per percakapan; null = hanya satu project, penanda project tidak ditampilkan. */
     projectTitleOf: ((conversationId: String) -> String)? = null
 ): List<ChatRoomItem> {
     val items = mutableListOf<ChatRoomItem>()
@@ -118,7 +117,6 @@ private fun List<Message>.toRoomItems(
         )
         previous = message
     }
-    // Lampiran yang masih dikirim/gagal tampil di akhir, seperti WhatsApp.
     pending.forEachIndexed { index, item ->
         val newDay = previous == null || !isSameDay(previous!!.sentAtMillis, item.createdAtMillis)
         if (index == 0 && newDay) items += ChatRoomItem.DateSeparator(formatDateSeparator(item.createdAtMillis))
@@ -326,7 +324,6 @@ fun ChatRoomContainer(
         }
     }
     val stage = resultStageEntry(detail)
-    // Proyek berjalan: jalan pintas ke Rencana Pengerjaan untuk mulai kerja & menandai milestone.
     val workEntry = when (detail?.project?.status) {
         ProjectStatusCode.SIAP_DIKERJAKAN -> UmkmSimulationEntry(
             "Dana sudah ditahan TEMUKARYA. Mulai pengerjaan di Rencana Pengerjaan.",

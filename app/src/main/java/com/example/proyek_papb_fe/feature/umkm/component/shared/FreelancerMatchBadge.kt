@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.sp
 import com.example.proyek_papb_fe.core.ui.theme.OnMatchChip
 import com.example.proyek_papb_fe.feature.auth.component.shared.withFrameMetrics
 
-/** "Cocok 92% · Desain Logo Kopi": kecocokan skill (matching F1) dengan project TERBUKA milik UMKM. */
 @Composable
 fun FreelancerMatchBadge(percent: Int, projectTitle: String?, modifier: Modifier = Modifier) {
     Text(

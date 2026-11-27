@@ -18,13 +18,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 import kotlin.coroutines.resume
 
-/** Kota hasil lokasi perangkat. */
 data class DeviceCity(val city: String, val province: String?)
 
-/**
- * Lokasi perkiraan perangkat (jaringan/GPS) → nama kota lewat Geocoder. Tanpa Google Play Services.
- * Pemanggil wajib memastikan izin ACCESS_COARSE_LOCATION sudah diberikan.
- */
 class DeviceLocationSource(context: Context) {
     private val appContext = context.applicationContext
     private val manager = appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -91,7 +86,6 @@ class DeviceLocationSource(context: Context) {
         }
     }
 
-    /** "Kota Malang" / "Kabupaten Malang" → "Malang", sesuai contoh isian kota di aplikasi. */
     private fun cleanCity(raw: String?): String? = raw?.trim()
         ?.replace(Regex("^(Kota Administrasi|Kota|Kabupaten|Kab\\.)\\s+", RegexOption.IGNORE_CASE), "")
         ?.takeIf { it.isNotBlank() }

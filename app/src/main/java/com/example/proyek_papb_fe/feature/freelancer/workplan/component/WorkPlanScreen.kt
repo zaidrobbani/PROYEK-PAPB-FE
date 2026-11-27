@@ -46,7 +46,6 @@ fun WorkPlanScreen(
     onRefresh: (() -> Job)? = null,
     umkmEntry: UmkmSimulationEntry? = null,
     onOpenUmkmSimulation: () -> Unit = {},
-    /** Diisi saat proyek sudah berjalan: daftar milestone berubah jadi daftar progres. */
     progressItems: List<MilestoneProgressItem>? = null,
     progressPercent: Int = 0,
     canCompleteMilestone: Boolean = false,

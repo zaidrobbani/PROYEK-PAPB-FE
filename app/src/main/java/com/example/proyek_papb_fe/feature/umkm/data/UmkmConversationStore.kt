@@ -38,7 +38,6 @@ data class UmkmConversation(
     val unreadCount: Int,
     val projectStatus: String? = null
 ) {
-    /** Project selesai/dibatalkan: tidak dipilih otomatis sebagai tujuan kirim. */
     val isClosed: Boolean
         get() = projectStatus == ProjectStatusCode.SELESAI || projectStatus == ProjectStatusCode.DIBATALKAN
 
@@ -50,13 +49,8 @@ data class UmkmConversation(
             .joinToString("") { it.first().uppercase() }
 }
 
-/**
- * Satu baris chat per freelancer (seperti WhatsApp). BE menyimpan percakapan per project,
- * jadi semua percakapan dengan freelancer yang sama digabung di sini.
- */
 data class UmkmThread(
     val freelancerId: String,
-    /** Urut dari aktivitas terbaru. */
     val conversations: List<UmkmConversation>
 ) {
     private val latest: UmkmConversation get() = conversations.first()
@@ -70,7 +64,6 @@ data class UmkmThread(
     val projectTitle: String
         get() = latest.projectTitle + if (conversations.size > 1) " · +${conversations.size - 1} project lain" else ""
 
-    /** Percakapan yang dibuka dari daftar: project aktif dengan pesan terbaru, atau yang terbaru. */
     val primaryConversationId: String
         get() = (conversations.firstOrNull { !it.isClosed } ?: latest).id
 
@@ -98,13 +91,10 @@ data class ChatMessage(
     val sentAt: LocalDateTime,
     val attachment: ChatAttachment? = null,
     val readByFreelancer: Boolean = false,
-    /** Foto/dokumen chat dari server (berbeda dengan `attachment` draf hasil kerja). */
     val file: MessageAttachment? = null,
-    /** Dihapus untuk semua orang: tampil sebagai "Pesan ini telah dihapus". */
     val isDeleted: Boolean = false
 )
 
-/** Cache percakapan UMKM dari BE (`ChatOverviewRepository`), diperbarui lewat WebSocket saat ruang chat terbuka. */
 object UmkmConversationStore {
     private val items = mutableStateListOf<UmkmConversation>()
     private val messagesById = mutableStateMapOf<String, List<ChatMessage>>()
@@ -123,7 +113,6 @@ object UmkmConversationStore {
     fun threadOf(conversationId: String): UmkmThread? =
         conversation(conversationId)?.freelancerId?.let { id -> threads.firstOrNull { it.freelancerId == id } }
 
-    /** Semua pesan dengan satu freelancer dari seluruh project, urut waktu. */
     fun threadMessages(thread: UmkmThread): List<ChatMessage> =
         thread.conversations.flatMap { messages(it.id) }.sortedBy { it.sentAt }
 
@@ -178,13 +167,11 @@ object UmkmConversationStore {
 
     fun messages(conversationId: String): List<ChatMessage> = messagesById[conversationId].orEmpty()
 
-    /** Hapus untuk saya: pesan hilang dari perangkat ini. */
     fun removeMessages(conversationId: String, ids: Set<String>) {
         messagesById[conversationId] = messages(conversationId).filterNot { it.id in ids }
         refreshPreview(conversationId)
     }
 
-    /** Hapus untuk semua orang: isi & lampiran dibuang, pesan tetap ada sebagai penanda. */
     fun markDeleted(conversationId: String, ids: Set<String>) {
         messagesById[conversationId] = messages(conversationId).map {
             if (it.id in ids) it.copy(text = "", file = null, attachment = null, isDeleted = true) else it
@@ -239,10 +226,6 @@ fun formatConversationTime(time: LocalDateTime, today: LocalDate = LocalDate.now
 private val ConversationClock = DateTimeFormatter.ofPattern("HH.mm")
 private val ConversationDate = DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("id-ID"))
 
-/**
- * Pencarian per kata pada nama freelancer dan judul project (placeholder Figma:
- * "Cari nama freelancer atau project"). [stage] null = semua tahap.
- */
 fun searchThreads(source: List<UmkmThread>, query: String, stage: ConversationStage?): List<UmkmThread> {
     val tokens = query.lowercase().split(" ").filter { it.isNotBlank() }
     return source.filter { thread ->

@@ -84,7 +84,6 @@ fun WalletContainer(
         state = state,
         onBack = onBack,
         onWithdrawClick = {
-            // Keputusan PRD: pencairan dana ke rekening di luar scope MVP (BE belum punya endpoint).
             Toast.makeText(context, "Pencairan dana ke rekening belum tersedia di versi ini.", Toast.LENGTH_LONG).show()
         },
         onChangeAccountClick = {

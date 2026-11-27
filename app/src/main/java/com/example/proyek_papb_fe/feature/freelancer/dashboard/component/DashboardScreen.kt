@@ -234,10 +234,6 @@ private fun DashboardScreenPreview() {
     )
 }
 
-/**
- * Rekomendasi kosong: matching F1 hanya mengirim project TERBUKA yang skill-nya cocok minimal 60%.
- * Tanpa skill sama sekali, rekomendasi tidak bisa dihitung, jadi arahkan ke Profil Profesional.
- */
 @Composable
 private fun EmptyRecommendations(
     hasSkills: Boolean?,

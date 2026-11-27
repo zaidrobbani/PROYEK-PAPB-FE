@@ -9,10 +9,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import com.example.proyek_papb_fe.core.di.AppContainer
 
-/**
- * Foto profil dari BE (`profile_image_url`) butuh token, jadi diunduh dulu ke cache lalu dipakai sebagai Uri lokal
- * oleh komponen yang sudah ada (LocalImage). null selama memuat atau bila user belum punya foto.
- */
 @Composable
 fun rememberServerImageUri(profileImageUrl: String?): String? {
     var localUri by remember(profileImageUrl) { mutableStateOf<String?>(null) }
@@ -22,7 +18,6 @@ fun rememberServerImageUri(profileImageUrl: String?): String? {
     return localUri
 }
 
-/** Foto profil dari BE; selama memuat atau bila belum ada foto, tampil avatar inisial. */
 @Composable
 fun ProfilePhoto(
     photoUrl: String?,

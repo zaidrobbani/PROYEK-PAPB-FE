@@ -1,6 +1,5 @@
 package com.example.proyek_papb_fe.core.domain.model
 
-/** Nilai `projects.status` di BE. */
 object ProjectStatusCode {
     const val TERBUKA = "TERBUKA"
     const val MENUNGGU_KESEPAKATAN = "MENUNGGU_KESEPAKATAN"
@@ -20,15 +19,12 @@ data class Project(
     val title: String,
     val description: String,
     val budget: Long,
-    /** `yyyy-MM-dd`. */
     val deadline: String,
     val deadlineMillis: Long?,
     val status: String,
     val publishedAtMillis: Long?,
     val createdAtMillis: Long?,
-    /** null bila endpoint tidak mengirim skill (mis. daftar proyek milik UMKM). */
     val skillIds: List<String>? = null,
-    /** UMKM pemilik; dikirim BE di detail & pencarian proyek publik. */
     val owner: UserSummary? = null
 )
 
@@ -48,7 +44,6 @@ data class ProjectFile(
     val sizeBytes: Long
 )
 
-/** File lokal yang dipilih user untuk diunggah. */
 data class UploadFile(
     val uri: String,
     val fileName: String,
