@@ -8,6 +8,10 @@ data class Conversation(
     val lastMessageAtMillis: Long?
 )
 
+const val DeleteForEveryoneWindowMillis = 48L * 60 * 60 * 1000
+
+const val DeletedMessageLabel = "🚫 Pesan ini telah dihapus"
+
 data class Message(
     val id: String,
     val conversationId: String,
@@ -16,15 +20,23 @@ data class Message(
     val type: String,
     val sentAtMillis: Long,
     val readAtMillis: Long?,
-    val attachments: List<MessageAttachment> = emptyList()
+    val attachments: List<MessageAttachment> = emptyList(),
+    val deletedAtMillis: Long? = null
 ) {
     val attachmentNames: List<String> get() = attachments.map { it.fileName }
 
-    /** Teks ringkas untuk daftar percakapan/notifikasi: caption, atau label lampiran seperti WhatsApp. */
+    val isDeleted: Boolean get() = deletedAtMillis != null
+
+    fun asDeleted(atMillis: Long): Message = copy(text = "", attachments = emptyList(), deletedAtMillis = atMillis)
+
+    fun canDeleteForEveryone(myId: String?, nowMillis: Long = System.currentTimeMillis()): Boolean =
+        senderUserId == myId && !isDeleted && nowMillis - sentAtMillis <= DeleteForEveryoneWindowMillis
+
     val previewText: String
         get() {
             val first = attachments.firstOrNull()
             return when {
+                isDeleted -> DeletedMessageLabel
                 text.isNotBlank() -> if (first != null) "${if (first.isImage) "📷" else "📄"} $text" else text
                 first == null -> ""
                 first.isImage -> "📷 Foto"
@@ -33,7 +45,6 @@ data class Message(
         }
 }
 
-/** Lampiran pesan chat. Path unduh butuh token; thumbnailPath hanya ada untuk foto. */
 data class MessageAttachment(
     val id: String,
     val fileName: String,
@@ -45,7 +56,6 @@ data class MessageAttachment(
     val isImage: Boolean get() = mimeType.startsWith("image/")
 }
 
-/** Lampiran yang sedang/akan dikirim dari perangkat (tampil di chat sebelum server menyimpannya). */
 data class OutgoingAttachment(
     val localId: String,
     val uri: String,

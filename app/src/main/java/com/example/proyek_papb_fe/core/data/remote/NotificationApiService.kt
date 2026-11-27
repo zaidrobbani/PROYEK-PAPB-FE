@@ -32,8 +32,8 @@ interface NotificationApiService {
     suspend fun markRead(@Path("id") notificationId: String): ApiResponse<NotificationDto>
 
     @PUT("notifications/devices")
-    suspend fun registerDevice(@Body body: DeviceTokenRequest): ApiResponse<Any?>
+    suspend fun registerDevice(@Body body: DeviceTokenRequest): ApiResponse<Nothing>
 
     @HTTP(method = "DELETE", path = "notifications/devices", hasBody = true)
-    suspend fun unregisterDevice(@Body body: DeviceTokenRequest): ApiResponse<Any?>
+    suspend fun unregisterDevice(@Body body: DeviceTokenRequest): ApiResponse<Nothing>
 }

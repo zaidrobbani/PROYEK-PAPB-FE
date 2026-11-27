@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.annotation.DrawableRes
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -14,7 +15,7 @@ import com.example.proyek_papb_fe.feature.profile.navigation.ProfileRoute
 enum class TopLevelDestination(
     val label: String,
     @param:DrawableRes val iconRes: Int,
-    val route: Any
+    val route: TopLevelRoute
 ) {
     HOME(
         label = "Beranda",

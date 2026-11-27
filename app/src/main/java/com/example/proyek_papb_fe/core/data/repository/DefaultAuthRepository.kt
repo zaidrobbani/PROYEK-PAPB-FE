@@ -13,10 +13,8 @@ import kotlinx.coroutines.CancellationException
 class DefaultAuthRepository(
     private val remoteDataSource: AuthRemoteDataSource,
     private val sessionManager: SessionManager,
-    /** Dijalankan selagi token masih berlaku, mis. melepas token push perangkat dari akun. */
     private val beforeLogout: suspend () -> Unit = {}
 ) : AuthRepository {
-
     override suspend fun login(email: String, password: String): SessionUser {
         val token = remoteDataSource.login(email.trim(), password)
         val user = token.user.toSessionUser()
@@ -73,7 +71,6 @@ class DefaultAuthRepository(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Sesi lokal tetap dihapus walau server tidak terjangkau.
         } finally {
             sessionManager.clear()
         }

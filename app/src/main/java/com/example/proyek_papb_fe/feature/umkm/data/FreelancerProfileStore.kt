@@ -13,7 +13,6 @@ data class PortfolioItem(
     val tagIsSage: Boolean,
     @param:DrawableRes val image: Int? = null,
     val link: String? = null,
-    /** Path gambar cover dari BE (`cover_image_url`), diunduh dengan token sebelum ditampilkan. */
     val imageUrl: String? = null
 )
 

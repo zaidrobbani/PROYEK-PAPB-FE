@@ -7,18 +7,23 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.AuthRepository
+import com.example.proyek_papb_fe.core.data.repository.FreelancerBestMatch
+import com.example.proyek_papb_fe.core.data.repository.FreelancerMatchRepository
 import com.example.proyek_papb_fe.core.data.repository.FreelancerRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
 import com.example.proyek_papb_fe.core.data.repository.ProfilePhotoRepository
 import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.core.domain.model.FreelancerSearchFilter
+import com.example.proyek_papb_fe.core.domain.model.FreelancerSummary
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.util.rupiah
 import com.example.proyek_papb_fe.feature.umkm.dashboard.container.DashboardActiveProject
 import com.example.proyek_papb_fe.feature.umkm.dashboard.container.DashboardFreelancer
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,22 +46,29 @@ class UmkmDashboardViewModel(
     private val profileRepository: ProfileRepository,
     private val workflowRepository: WorkflowRepository,
     private val freelancerRepository: FreelancerRepository,
-    private val photoRepository: ProfilePhotoRepository
+    private val photoRepository: ProfilePhotoRepository,
+    private val matchRepository: FreelancerMatchRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(
         UmkmDashboardUiState(ownerFirstName = authRepository.currentUser()?.name.orEmpty().substringBefore(" "))
     )
     val uiState: StateFlow<UmkmDashboardUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val profile = async { profileRepository.umkmProfile() }
                     val projects = async { workflowRepository.myProjects() }
-                    val freelancers = async { freelancerRepository.search(FreelancerSearchFilter(), limit = 10) }
+                    val freelancers = async { freelancerRepository.search(FreelancerSearchFilter(), limit = 50).items }
+                    val matches = async { runCatching { matchRepository.bestMatches() }.getOrDefault(emptyMap()) }
                     val ownerName = authRepository.currentUser()?.name.orEmpty()
                     val business = profile.await()
                     UmkmAccount.update(ownerName, business)
@@ -79,10 +91,8 @@ class UmkmDashboardViewModel(
                                     progress = ((item.progressPercent ?: 0.0) / 100.0).toFloat()
                                 )
                             },
-                        recommendedFreelancers = freelancers.await().items
-                            .sortedByDescending { it.averageRating ?: 0.0 }
-                            .take(MaxFreelancers)
-                            .map { freelancer ->
+                        recommendedFreelancers = recommended(freelancers.await(), matches.await())
+                            .map { (freelancer, match) ->
                                 DashboardFreelancer(
                                     id = freelancer.userId,
                                     name = freelancer.name,
@@ -97,7 +107,9 @@ class UmkmDashboardViewModel(
                                     city = freelancer.city,
                                     isAvailable = freelancer.isAvailable,
                                     skills = freelancer.skills.map { it.name },
-                                    experienceCount = freelancer.experienceCount
+                                    experienceCount = freelancer.experienceCount,
+                                    matchPercent = match?.percent,
+                                    matchProjectTitle = match?.projectTitle
                                 )
                             }
                     )
@@ -110,6 +122,22 @@ class UmkmDashboardViewModel(
         }
     }
 
+    private suspend fun recommended(
+        searched: List<FreelancerSummary>,
+        matches: Map<String, FreelancerBestMatch>
+    ): List<Pair<FreelancerSummary, FreelancerBestMatch?>> = coroutineScope {
+        val byId = searched.associateBy { it.userId }
+        val topMatched = matches.entries.sortedByDescending { it.value.percent }.take(MaxFreelancers)
+        val matched = topMatched.map { (id, match) ->
+            async { (byId[id] ?: runCatching { freelancerRepository.detail(id).summary }.getOrNull())?.let { it to match } }
+        }.awaitAll().filterNotNull()
+        val rest = searched
+            .filter { it.userId !in matches }
+            .sortedByDescending { it.averageRating ?: 0.0 }
+            .map { it to null }
+        (matched + rest).take(MaxFreelancers)
+    }
+
     companion object {
         private const val MaxActiveProjects = 3
         private const val MaxFreelancers = 6
@@ -120,16 +148,18 @@ class UmkmDashboardViewModel(
             profileRepository: ProfileRepository,
             workflowRepository: WorkflowRepository,
             freelancerRepository: FreelancerRepository,
-            photoRepository: ProfilePhotoRepository
+            photoRepository: ProfilePhotoRepository,
+            matchRepository: FreelancerMatchRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                UmkmDashboardViewModel(authRepository, profileRepository, workflowRepository, freelancerRepository, photoRepository)
+                UmkmDashboardViewModel(
+                    authRepository, profileRepository, workflowRepository, freelancerRepository, photoRepository, matchRepository
+                )
             }
         }
     }
 }
 
-/** Harga layanan freelancer: rentang bila ada maksimum, selain itu harga minimum. */
 private fun priceText(min: Long?, max: Long?): String = when {
     min != null && max != null && max > min -> "${rupiah(min)} – ${rupiah(max)}"
     min != null -> rupiah(min)

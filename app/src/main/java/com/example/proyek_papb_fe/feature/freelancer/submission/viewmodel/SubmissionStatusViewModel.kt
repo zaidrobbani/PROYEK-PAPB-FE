@@ -13,6 +13,7 @@ import com.example.proyek_papb_fe.core.domain.model.ApplicationStatusCode
 import com.example.proyek_papb_fe.core.domain.model.Project
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +25,7 @@ data class SubmissionStatusVmState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val application: Application? = null,
-    /** Detail alur, hanya ada bila freelancer sudah terpilih. */
     val workflow: WorkflowDetail? = null,
-    /** Project publik (saat masih TERBUKA). */
     val project: Project? = null
 ) {
     val isSelected: Boolean get() = application?.status == ApplicationStatusCode.ACCEPTED && workflow != null
@@ -38,19 +37,23 @@ data class SubmissionStatusVmState(
         get() = workflow?.project?.status !in setOf(null, ProjectStatusCode.MENUNGGU_KESEPAKATAN, ProjectStatusCode.DIBATALKAN)
 }
 
-/** Status Pengajuan: "disetujui" = UMKM memilih freelancer ini (lamaran ACCEPTED + project MENUNGGU_KESEPAKATAN dst). */
 class SubmissionStatusViewModel(
     private val projectId: String,
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SubmissionStatusVmState())
     val uiState: StateFlow<SubmissionStatusVmState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val application = projectRepository.myApplications().firstOrNull { it.projectId == projectId }
                 val workflow = if (application?.status == ApplicationStatusCode.ACCEPTED) {

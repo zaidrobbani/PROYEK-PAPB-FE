@@ -16,7 +16,6 @@ import com.example.proyek_papb_fe.core.domain.model.UploadFile
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/** Kirim hasil, minta revisi, setujui hasil (project selesai + dana diteruskan), dan ulasan. */
 interface SubmissionRepository {
     suspend fun submit(projectId: String, files: List<UploadFile>, note: String?, resultUrl: String?): Submission
     suspend fun submissions(projectId: String): SubmissionList
@@ -30,7 +29,6 @@ interface SubmissionRepository {
     suspend fun approve(projectId: String, submissionId: String, review: ReviewInput?): Completion
     suspend fun createReview(projectId: String, review: ReviewInput): Review
 
-    /** null bila project belum diulas. */
     suspend fun review(projectId: String): Review?
 }
 
@@ -38,7 +36,6 @@ class DefaultSubmissionRepository(
     private val remote: SubmissionRemoteDataSource,
     private val uploadPartFactory: UploadPartFactory
 ) : SubmissionRepository {
-
     override suspend fun submit(projectId: String, files: List<UploadFile>, note: String?, resultUrl: String?): Submission {
         val parts = files.map { uploadPartFactory.create("files", it) }
         val text = "text/plain".toMediaType()

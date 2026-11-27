@@ -15,7 +15,6 @@ import java.util.Locale
 import java.util.TimeZone
 
 object WalletStore {
-
     const val WithdrawalFee: Long = 0
 
     const val WithdrawalEstimate: String = "1x24 jam kerja"

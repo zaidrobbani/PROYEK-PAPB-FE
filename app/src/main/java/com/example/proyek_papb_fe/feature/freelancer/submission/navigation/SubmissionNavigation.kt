@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.submission.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptionsBuilder
@@ -11,7 +12,7 @@ import com.example.proyek_papb_fe.feature.freelancer.submission.container.Submis
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object SubmissionRoute
+data object SubmissionRoute : TopLevelRoute
 
 fun NavGraphBuilder.submissionScreen(
     onProposalClick: (projectId: String) -> Unit,

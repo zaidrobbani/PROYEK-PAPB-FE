@@ -135,4 +135,3 @@ fun CompareDraftsScreen(
         }
     }
 }
-

@@ -1,6 +1,5 @@
 package com.example.proyek_papb_fe.core.data.remote
 
-/** Envelope semua response BE: `{ success, message, data }`. */
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String?,

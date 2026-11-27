@@ -16,12 +16,10 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-/** State sesi tingkat aplikasi: logout dari layar profil dan event sesi berakhir (401). */
 class AppSessionViewModel(
     private val authRepository: AuthRepository,
     sessionManager: SessionManager
 ) : ViewModel() {
-
     val sessionExpired: SharedFlow<Unit> = sessionManager.expiredEvents
 
     val currentEmail: String get() = authRepository.currentUser()?.email.orEmpty()
@@ -39,7 +37,6 @@ class AppSessionViewModel(
         }
     }
 
-    /** Cache tampilan per akun harus dikosongkan agar tidak terlihat oleh akun berikutnya. */
     fun clearCaches() {
         UmkmAccount.clear()
         UmkmProjectStore.replace(emptyList())

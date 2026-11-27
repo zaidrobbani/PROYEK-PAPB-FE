@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.dashboard.component
 
+import com.example.proyek_papb_fe.feature.umkm.component.shared.FreelancerMatchBadge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -130,6 +131,9 @@ fun FreelancerRecommendationCard(
                         lineHeight = 16.903.sp
                     )
                 )
+                freelancer.matchPercent?.let {
+                    FreelancerMatchBadge(it, freelancer.matchProjectTitle, Modifier.padding(top = 4.226.dp))
+                }
                 Row(
                     modifier = Modifier.padding(top = 4.226.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.451.dp),
@@ -165,7 +169,6 @@ fun FreelancerRecommendationCard(
             AvailabilityPill(freelancer.isAvailable)
         }
 
-        // Lokasi & pengalaman
         Row(
             modifier = Modifier.padding(top = 12.677.dp),
             horizontalArrangement = Arrangement.spacedBy(12.677.dp),
@@ -180,7 +183,6 @@ fun FreelancerRecommendationCard(
             )
         }
 
-        // Keahlian: maksimal 2 chip + sisa, satu baris agar tinggi kartu seragam.
         Row(
             modifier = Modifier.padding(top = 8.451.dp),
             horizontalArrangement = Arrangement.spacedBy(6.338.dp),

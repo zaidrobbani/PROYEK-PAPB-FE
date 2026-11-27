@@ -15,6 +15,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -45,7 +46,6 @@ class FreelancerApplicationsViewModel(
     private val freelancerRepository: FreelancerRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerApplicationsUiState())
     val uiState: StateFlow<FreelancerApplicationsUiState> = _uiState.asStateFlow()
 
@@ -54,8 +54,14 @@ class FreelancerApplicationsViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }
@@ -71,7 +77,6 @@ class FreelancerApplicationsViewModel(
                         .filter { it.status != ApplicationStatusCode.CANCELLED }
                         .map { application ->
                             async {
-                                // Profil publik untuk nama, keahlian, & rating; lamaran BE hanya berisi id freelancer.
                                 val profile = runCatching { freelancerRepository.detail(application.freelancerId) }.getOrNull()?.summary
                                 val match = matchById[application.freelancerId]
                                 ProjectApplication(
@@ -113,7 +118,6 @@ class FreelancerApplicationsViewModel(
         }
     }
 
-    /** POST /projects/{id}/agreement: project jadi MENUNGGU_KESEPAKATAN, pelamar lain otomatis tidak dipilih. */
     fun select(application: ProjectApplication) {
         if (_uiState.value.isSelecting) return
         viewModelScope.launch {

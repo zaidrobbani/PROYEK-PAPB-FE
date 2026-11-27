@@ -12,17 +12,13 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/** Foto profil akun yang login: unggah (dikompres ke WebP), hapus, dan versi lokal untuk ditampilkan. */
 interface ProfilePhotoRepository {
-    /** Mengembalikan Uri `file://` foto baru yang siap ditampilkan. */
     suspend fun upload(sourceUri: String): String
 
     suspend fun remove()
 
-    /** Foto akun saat ini dari server (diunduh ke cache), null bila belum ada foto. */
     suspend fun currentLocalUri(): String?
 
-    /** Foto user lain dari `profile_image_url`, null bila tidak ada atau gagal diunduh. */
     suspend fun localUriOf(profileImageUrl: String?): String?
 }
 
@@ -32,7 +28,6 @@ class DefaultProfilePhotoRepository(
     private val fileRepository: FileRepository,
     private val sessionManager: SessionManager
 ) : ProfilePhotoRepository {
-
     override suspend fun upload(sourceUri: String): String {
         val bytes = withContext(Dispatchers.Default) { compressor.compressToWebp(sourceUri) }
         val part = MultipartBody.Part.createFormData(
@@ -55,7 +50,6 @@ class DefaultProfilePhotoRepository(
 
     override suspend fun localUriOf(profileImageUrl: String?): String? {
         val path = profileImageUrl?.takeIf { it.isNotBlank() } ?: return null
-        // Path memuat ?v=<versi>, jadi versi foto baru otomatis memakai file cache baru.
         val version = path.substringAfter("?v=", path.hashCode().toUInt().toString())
         return runCatching { fileRepository.downloadToCache(path, "avatar_$version", "avatar.webp") }.getOrNull()
     }

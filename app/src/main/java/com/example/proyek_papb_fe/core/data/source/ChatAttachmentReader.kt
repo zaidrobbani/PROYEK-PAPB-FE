@@ -7,12 +7,10 @@ import android.webkit.MimeTypeMap
 import com.example.proyek_papb_fe.core.data.remote.ApiException
 import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
 
-/** File pilihan user (Galeri/Kamera/Dokumen) yang sudah dikenali nama, ukuran, dan jenisnya. */
 data class PickedChatFile(val uri: String, val fileName: String, val mimeType: String?, val sizeBytes: Long?) {
     val isImage: Boolean get() = mimeType in ChatAttachmentRules.ImageMimeTypes
 }
 
-/** Aturan lampiran chat, disamakan dengan BE (`docs/api/chat-attachments.md`). */
 object ChatAttachmentRules {
     const val MaxFileBytes = 10L * 1024 * 1024
     val ImageMimeTypes = setOf("image/jpeg", "image/png", "image/webp")
@@ -29,7 +27,6 @@ object ChatAttachmentRules {
     )
     private val DocumentExtensions = setOf("pdf", "docx", "xlsx", "pptx", "txt", "csv", "zip")
 
-    /** null bila boleh dikirim; selain itu pesan penolakan untuk user. */
     fun rejectDocument(file: PickedChatFile): String? {
         val extension = file.fileName.substringAfterLast('.', "").lowercase()
         return when {
@@ -42,7 +39,6 @@ object ChatAttachmentRules {
     }
 }
 
-/** Membaca lampiran chat dari content:// Uri: foto dikompres ke WebP, dokumen dibaca apa adanya. */
 class ChatAttachmentReader(
     private val contentResolver: ContentResolver,
     private val compressor: ImageCompressor = ImageCompressor(
@@ -69,7 +65,6 @@ class ChatAttachmentReader(
         return PickedChatFile(uriString, fileName, mime, size)
     }
 
-    /** Mengembalikan (bytes, nama file, mime) siap diunggah. */
     fun read(attachment: OutgoingAttachment): Triple<ByteArray, String, String> {
         if (attachment.isImage) {
             val stem = attachment.fileName.substringBeforeLast('.').ifBlank { "foto" }

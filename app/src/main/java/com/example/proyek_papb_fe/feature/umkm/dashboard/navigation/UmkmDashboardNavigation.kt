@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.dashboard.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -8,7 +9,7 @@ import com.example.proyek_papb_fe.feature.umkm.dashboard.container.UmkmDashboard
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object UmkmDashboardRoute
+data object UmkmDashboardRoute : TopLevelRoute
 
 fun NavController.navigateToUmkmDashboard() {
     navigate(UmkmDashboardRoute) {

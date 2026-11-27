@@ -29,7 +29,8 @@ data class MessageDto(
     val messageType: String,
     val sentAt: String,
     val createdAt: String?,
-    val readAt: String?
+    val readAt: String?,
+    val deletedAt: String? = null
 )
 
 data class MessageAttachmentDto(
@@ -60,3 +61,12 @@ data class MessagePageDto(
 data class SendMessageRequest(val messageText: String)
 
 data class MarkReadDto(val conversationId: String, val markedCount: Int)
+
+data class DeleteMessagesRequest(val messageIds: List<String>, val scope: String)
+
+data class DeleteMessagesDto(
+    val conversationId: String,
+    val scope: String,
+    val messageIds: List<String>?,
+    val deletedAt: String?
+)

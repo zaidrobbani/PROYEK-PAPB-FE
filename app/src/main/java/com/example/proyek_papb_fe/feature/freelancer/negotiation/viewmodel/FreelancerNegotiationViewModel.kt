@@ -13,6 +13,7 @@ import com.example.proyek_papb_fe.core.domain.model.CancelReasonCode
 import com.example.proyek_papb_fe.core.domain.model.Message
 import com.example.proyek_papb_fe.core.domain.model.WorkflowActionCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,7 +45,6 @@ class FreelancerNegotiationViewModel(
     private val workflowRepository: WorkflowRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerNegotiationUiState())
     val uiState: StateFlow<FreelancerNegotiationUiState> = _uiState.asStateFlow()
 
@@ -53,11 +53,16 @@ class FreelancerNegotiationViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val detail = workflowRepository.detail(projectId)
-                // Pesan negosiasi = percakapan project dengan UMKM (dibuat bila belum ada).
                 val messages = runCatching {
                     val conversation = chatRepository.openConversation(detail.umkm.id, projectId)
                     chatRepository.messages(conversation.id).items
@@ -76,7 +81,6 @@ class FreelancerNegotiationViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isCancelling = true) }
             try {
-                // BE mewajibkan catatan bila alasan LAINNYA; sheet Figma tidak punya kolom catatan.
                 val note = if (reason == CancellationReason.OTHER) reason.label else null
                 workflowRepository.cancel(projectId, reason.toCode(), note)
                 _uiState.update { it.copy(isCancelling = false, cancelled = true) }

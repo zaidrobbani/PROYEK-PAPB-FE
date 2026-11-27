@@ -16,14 +16,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 
-/**
- * Antrean lampiran keluar untuk satu ruang chat (dipakai VM freelancer & UMKM).
- * Lampiran langsung tampil di chat dengan status "mengirim"; diunggah berurutan agar urutannya terjaga.
- * Gagal → tetap tampil dengan tanda gagal, bisa dikirim ulang atau dibuang.
- */
 class OutgoingAttachmentQueue(
     private val scope: CoroutineScope,
-    /** Percakapan tujuan, dibaca saat lampiran dipilih (UMKM bisa memilih project tujuan). */
     private val conversationId: () -> String,
     private val chatRepository: ChatRepository,
     private val onSent: (Message) -> Unit
@@ -67,7 +61,6 @@ class OutgoingAttachmentQueue(
                 try {
                     val target = targets[item.localId] ?: return@withLock
                     val sent = chatRepository.sendAttachment(target, item)
-                    // Pesan asli (juga datang lewat WebSocket) menggantikan item lokal; duplikat dibuang berdasar id.
                     onSent(sent)
                     discard(item.localId)
                 } catch (e: CancellationException) {

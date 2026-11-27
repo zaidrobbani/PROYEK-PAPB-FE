@@ -20,11 +20,9 @@ data class SplashUiState(
     val loggedInRole: UserRole? = null
 )
 
-/** Bila masih ada token yang diterima BE, user langsung masuk ke beranda sesuai peran. */
 class SplashViewModel(
     private val repository: AuthRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SplashUiState())
     val uiState: StateFlow<SplashUiState> = _uiState.asStateFlow()
 
@@ -39,8 +37,6 @@ class SplashViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // 401 sudah menghapus sesi lewat AuthInterceptor. Error lain (server mati/offline):
-                // tetap pakai sesi tersimpan, layar berikutnya menampilkan error + coba lagi.
                 repository.currentUser()?.role
             }
             _uiState.update { SplashUiState(isCheckingSession = false, loggedInRole = role?.toUserRole()) }

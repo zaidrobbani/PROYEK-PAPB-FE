@@ -19,8 +19,6 @@ fun NavController.navigateToNegotiation(projectId: String) {
 fun NavGraphBuilder.negotiationScreen(
     onBack: () -> Unit,
 
-
-
     onProjectCancelled: (projectId: String) -> Unit,
     onContinueProject: (projectId: String) -> Unit
 ) {

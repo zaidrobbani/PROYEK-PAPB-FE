@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.core.di
 
+import com.example.proyek_papb_fe.core.data.repository.FreelancerMatchRepository
 import com.example.proyek_papb_fe.core.push.PushTokenRegistrar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,12 +62,7 @@ import com.example.proyek_papb_fe.core.data.source.UploadPartFactory
 import com.example.proyek_papb_fe.core.data.source.WorkflowRemoteDataSource
 import com.example.proyek_papb_fe.core.session.SessionManager
 
-/**
- * Dependency injection manual: satu instance per aplikasi.
- * ViewModel menerima repository lewat ViewModelProvider.Factory, bukan membuatnya sendiri.
- */
 object AppContainer {
-
     private lateinit var appContext: Context
 
     fun init(context: Context) {
@@ -80,7 +76,6 @@ object AppContainer {
     private val chatRealtimeClient by lazy { ChatRealtimeClient(okHttpClient, RetrofitClient.gson, sessionManager) }
     private val uploadPartFactory by lazy { UploadPartFactory(appContext.contentResolver) }
 
-    /** Scope aplikasi untuk kerja latar yang tidak terikat layar (mis. pendaftaran token push). */
     val appScope: CoroutineScope by lazy { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
 
     val pushTokenRegistrar: PushTokenRegistrar by lazy {
@@ -135,6 +130,10 @@ object AppContainer {
         DefaultNotificationRepository(NotificationRemoteDataSource(retrofit.create(NotificationApiService::class.java)))
     }
 
+    val freelancerMatchRepository: FreelancerMatchRepository by lazy {
+        FreelancerMatchRepository(workflowRepository, projectRepository)
+    }
+
     val chatOverviewRepository: ChatOverviewRepository by lazy {
         ChatOverviewRepository(chatRepository, workflowRepository, projectRepository, freelancerRepository, sessionManager)
     }
@@ -156,6 +155,5 @@ object AppContainer {
         DefaultLocationRepository(DeviceLocationSource(appContext))
     }
 
-    /** Id user yang sedang login (dipakai membedakan pesan milik sendiri di chat, dsb.). */
     val currentUserId: String? get() = sessionManager.currentUser?.id
 }

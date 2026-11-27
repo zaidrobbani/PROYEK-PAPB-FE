@@ -9,7 +9,6 @@ import com.example.proyek_papb_fe.core.domain.model.UserSummary
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
 import java.util.Locale
 
-/** Status project BE (`TERBUKA`, ...) ke enum UI UMKM. */
 fun projectStatusOf(code: String): ProjectStatus = when (code) {
     ProjectStatusCode.TERBUKA -> ProjectStatus.Terbuka
     ProjectStatusCode.MENUNGGU_KESEPAKATAN -> ProjectStatus.MenungguKesepakatan
@@ -71,7 +70,6 @@ fun WorkflowDetail.toUmkmProject(categoryName: String, milestones: List<Mileston
         isPaid = payment?.status == PaymentStatusCode.BERHASIL
     )
 
-/** Project yang menunggu tindakan UMKM: hasil perlu direview, atau ada lamaran yang belum dipilih. */
 fun MyProjectItem.needsUmkmAction(): Boolean =
     project.status == ProjectStatusCode.MENUNGGU_REVIEW ||
         (project.status == ProjectStatusCode.TERBUKA && applicationCount > 0)

@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.R
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
 
-/** Milestone saat proyek berjalan: selesai (dengan tanggal) atau masih dikerjakan. */
 data class MilestoneProgressItem(
     val id: String,
     val name: String,
@@ -38,7 +37,6 @@ data class MilestoneProgressItem(
 
 private val CardShape = RoundedCornerShape(16.dp)
 
-/** Bilah progres + daftar milestone dengan tombol "Tandai Selesai" per milestone (urutan bebas, sesuai BE). */
 @Composable
 internal fun MilestoneProgressList(
     items: List<MilestoneProgressItem>,

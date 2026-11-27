@@ -14,12 +14,10 @@ data class ProjectDto(
     val completedAt: String?,
     val createdAt: String?,
     val updatedAt: String?,
-    /** Hanya di detail & pencarian proyek publik. */
     val skillIds: List<String>? = null,
     val umkm: ProjectOwnerDto? = null
 )
 
-/** UMKM pemilik proyek (nama usaha, pemilik, kota, foto) untuk tampilan freelancer. */
 data class ProjectOwnerDto(
     val userId: String,
     val ownerName: String,

@@ -60,7 +60,7 @@ interface ProfileApiService {
     suspend fun updateExperience(@Path("id") id: String, @Body body: ExperienceRequest): ApiResponse<ExperienceDto>
 
     @DELETE("profiles/freelancer/experiences/{id}")
-    suspend fun deleteExperience(@Path("id") id: String): ApiResponse<Any?>
+    suspend fun deleteExperience(@Path("id") id: String): ApiResponse<Nothing>
 
     @GET("profiles/freelancer/portfolios")
     suspend fun getPortfolios(
@@ -75,7 +75,7 @@ interface ProfileApiService {
     suspend fun updatePortfolio(@Path("id") id: String, @Body body: PortfolioRequest): ApiResponse<PortfolioDto>
 
     @DELETE("profiles/freelancer/portfolios/{id}")
-    suspend fun deletePortfolio(@Path("id") id: String): ApiResponse<Any?>
+    suspend fun deletePortfolio(@Path("id") id: String): ApiResponse<Nothing>
 
     @Multipart
     @POST("profiles/freelancer/portfolios/{id}/media")
@@ -104,5 +104,5 @@ interface ProfileApiService {
     suspend fun deletePortfolioMedia(
         @Path("id") portfolioId: String,
         @Path("mediaId") mediaId: String
-    ): ApiResponse<Any?>
+    ): ApiResponse<Nothing>
 }

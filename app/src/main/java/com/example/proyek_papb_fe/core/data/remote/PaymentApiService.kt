@@ -12,7 +12,6 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/** Pembayaran simulasi QRIS, riwayat transaksi UMKM, dan dompet freelancer (F3). */
 interface PaymentApiService {
     @GET("projects/{id}/payment")
     suspend fun detail(@Path("id") projectId: String): ApiResponse<PaymentDetailDto>

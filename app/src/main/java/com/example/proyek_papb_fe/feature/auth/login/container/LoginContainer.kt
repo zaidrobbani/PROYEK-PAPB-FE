@@ -47,7 +47,6 @@ fun LoginContainer(
         onResendVerification = viewModel::resendVerification,
         onForgotPassword = onForgotPassword,
         onGoogleLogin = {
-            // BE butuh GOOGLE_CLIENT_ID + Google Sign-In; belum dikonfigurasi.
             Toast.makeText(context, "Login Google sedang tidak tersedia, silakan masuk dengan email", Toast.LENGTH_SHORT).show()
         },
         onRegister = onRegister

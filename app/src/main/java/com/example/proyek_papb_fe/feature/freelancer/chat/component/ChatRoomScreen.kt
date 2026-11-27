@@ -24,7 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.data.model.ChatProjectContext
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import com.example.proyek_papb_fe.core.ui.components.chat.MessageSelectionBar
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
+import kotlinx.coroutines.Job
 
 data class ChatRoomUiState(
     val contactName: String,
@@ -58,11 +61,17 @@ fun ChatRoomScreen(
     onCancelProjectClick: () -> Unit = {},
     onContinueProjectClick: () -> Unit = {},
     topBanner: (@Composable () -> Unit)? = null,
-    /** Pilihan project tujuan ("Kirim ke") bila ada beberapa project dengan UMKM ini. */
     replySelector: (@Composable () -> Unit)? = null,
     onFileClick: (ChatBubbleUi) -> Unit = {},
-    isOpening: (ChatBubbleUi) -> Boolean = { false }
+    isOpening: (ChatBubbleUi) -> Boolean = { false },
+    selectedIds: Set<String> = emptySet(),
+    isDeletingMessages: Boolean = false,
+    onToggleSelect: (ChatBubbleUi) -> Unit = {},
+    onClearSelection: () -> Unit = {},
+    onDeleteSelected: () -> Unit = {},
+    onRefresh: (() -> Job)? = null
 ) {
+    val selectionMode = selectedIds.isNotEmpty()
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val showNegotiationExtras = negotiation != null && !isImeVisible && !isAttachmentOpen
     Column(
@@ -71,14 +80,23 @@ fun ChatRoomScreen(
             .background(TemuKaryaColors.BgCanvas)
             .imePadding()
     ) {
-        ChatRoomTopBar(
-            contactName = state.contactName,
-            contactInitials = state.contactInitials,
-            umkmName = state.umkmName,
-            contactPhotoUrl = state.contactPhotoUrl,
-            onBack = onBack,
-            onMoreClick = onMoreClick
-        )
+        if (selectionMode) {
+            MessageSelectionBar(
+                count = selectedIds.size,
+                isDeleting = isDeletingMessages,
+                onClose = onClearSelection,
+                onDelete = onDeleteSelected
+            )
+        } else {
+            ChatRoomTopBar(
+                contactName = state.contactName,
+                contactInitials = state.contactInitials,
+                umkmName = state.umkmName,
+                contactPhotoUrl = state.contactPhotoUrl,
+                onBack = onBack,
+                onMoreClick = onMoreClick
+            )
+        }
         ProjectContextStrip(
             projectTitle = state.projectTitle,
             context = state.context,
@@ -99,22 +117,30 @@ fun ChatRoomScreen(
         ) {
             topBanner?.invoke()
         }
-        LazyColumn(
-            state = listState,
+        RefreshableContent(
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(16.dp)
+                .weight(1f)
         ) {
-            items(items = state.items, key = { it.key }) { item ->
-                when (item) {
-                    is ChatRoomItem.DateSeparator -> ChatDateSeparator(label = item.label)
-                    is ChatRoomItem.ProjectSeparator -> ChatDateSeparator(label = "Project · ${item.title}")
-                    is ChatRoomItem.Message -> ChatMessageBubble(
-                        bubble = item.bubble,
-                        isOpening = isOpening(item.bubble),
-                        onFileClick = onFileClick
-                    )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(items = state.items, key = { it.key }) { item ->
+                    when (item) {
+                        is ChatRoomItem.DateSeparator -> ChatDateSeparator(label = item.label)
+                        is ChatRoomItem.ProjectSeparator -> ChatDateSeparator(label = "Project · ${item.title}")
+                        is ChatRoomItem.Message -> ChatMessageBubble(
+                            bubble = item.bubble,
+                            isOpening = isOpening(item.bubble),
+                            onFileClick = onFileClick,
+                            isSelected = item.bubble.id in selectedIds,
+                            selectionMode = selectionMode,
+                            onToggleSelect = onToggleSelect
+                        )
+                    }
                 }
             }
         }

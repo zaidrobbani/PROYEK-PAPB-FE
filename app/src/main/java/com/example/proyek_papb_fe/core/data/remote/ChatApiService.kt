@@ -3,6 +3,8 @@ package com.example.proyek_papb_fe.core.data.remote
 import com.example.proyek_papb_fe.core.data.remote.dto.ConversationDto
 import com.example.proyek_papb_fe.core.data.remote.dto.ConversationListDto
 import com.example.proyek_papb_fe.core.data.remote.dto.CreateConversationRequest
+import com.example.proyek_papb_fe.core.data.remote.dto.DeleteMessagesDto
+import com.example.proyek_papb_fe.core.data.remote.dto.DeleteMessagesRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.MarkReadDto
 import com.example.proyek_papb_fe.core.data.remote.dto.MessageDto
 import com.example.proyek_papb_fe.core.data.remote.dto.MessagePageDto
@@ -50,6 +52,9 @@ interface ChatApiService {
         @Part file: MultipartBody.Part,
         @Part("caption") caption: RequestBody?
     ): ApiResponse<MessageWithAttachmentsDto>
+
+    @POST("conversations/{id}/messages/delete")
+    suspend fun deleteMessages(@Path("id") conversationId: String, @Body body: DeleteMessagesRequest): ApiResponse<DeleteMessagesDto>
 
     @PATCH("conversations/{id}/read")
     suspend fun markRead(@Path("id") conversationId: String): ApiResponse<MarkReadDto>

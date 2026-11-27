@@ -8,25 +8,21 @@ import com.example.proyek_papb_fe.core.domain.model.TransactionGroup
 import com.example.proyek_papb_fe.core.domain.model.Wallet
 import com.example.proyek_papb_fe.core.domain.model.WalletEntry
 
-/** F3: pembayaran simulasi (tanpa uang sungguhan). Nominal selalu dihitung BE dari kesepakatan. */
 interface PaymentRepository {
     suspend fun payment(projectId: String): PaymentDetail
     suspend fun regenerateQris(projectId: String): PaymentDetail
 
-    /** [idempotencyKey] sama untuk klik ganda pada satu percobaan bayar, agar tidak tercatat dua kali. */
     suspend fun simulatePay(projectId: String, idempotencyKey: String, success: Boolean = true): PaymentDetail
 
     suspend fun history(group: TransactionGroup, search: String? = null): PaymentHistory
     suspend fun wallet(): Wallet
 
-    /** [type]: ALL, HELD, atau INCOME. */
     suspend fun walletEntries(type: String = "ALL"): List<WalletEntry>
 }
 
 class DefaultPaymentRepository(
     private val remote: PaymentRemoteDataSource
 ) : PaymentRepository {
-
     override suspend fun payment(projectId: String): PaymentDetail = remote.detail(projectId).toDomain()
 
     override suspend fun regenerateQris(projectId: String): PaymentDetail = remote.regenerateQris(projectId).toDomain()

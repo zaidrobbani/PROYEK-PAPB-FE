@@ -31,7 +31,6 @@ data class FreelancerProfileRequest(
     val bio: String?,
     val servicePriceMin: Long?,
     val servicePriceMax: Long?,
-    /** Wajib saat PUT, diabaikan saat POST. */
     val availabilityStatus: String? = null
 )
 
@@ -65,7 +64,6 @@ data class PortfolioDto(
     val projectUrl: String?,
     val createdAt: String?,
     val updatedAt: String?,
-    /** Hanya dikirim endpoint discovery (detail freelancer); path relatif yang butuh token. */
     val coverImageUrl: String? = null
 )
 

@@ -19,7 +19,6 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/** Alur project (F2) + rencana pengerjaan/milestone (F4). */
 interface WorkflowApiService {
     @GET("workflow/projects")
     suspend fun myProjects(

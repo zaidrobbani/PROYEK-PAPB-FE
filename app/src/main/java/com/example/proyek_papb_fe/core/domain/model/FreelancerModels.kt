@@ -12,7 +12,6 @@ data class FreelancerSummary(
     val experienceCount: Int,
     val averageRating: Double?,
     val reviewCount: Int,
-    /** `profile_image_url` BE; tampilkan lewat rememberServerImageUri / ProfilePhotoRepository. */
     val photoUrl: String? = null
 )
 

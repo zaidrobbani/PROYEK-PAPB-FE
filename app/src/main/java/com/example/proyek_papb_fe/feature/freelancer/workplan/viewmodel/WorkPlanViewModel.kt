@@ -12,6 +12,7 @@ import com.example.proyek_papb_fe.core.domain.model.MilestonePlan
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowActionCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -28,22 +29,16 @@ data class WorkPlanVmState(
     val plan: MilestonePlan? = null,
     val isSaving: Boolean = false,
     val message: String? = null,
-    /** Bertambah tiap rencana dimuat ulang dari BE, dipakai layar untuk mengisi ulang input. */
     val planVersion: Int = 0
 ) {
     val isEditable: Boolean
         get() = detail?.can(WorkflowActionCode.EDIT_MILESTONE_PLAN) == true && detail.agreement?.approvedByMe != true
 }
 
-/**
- * Rencana Pengerjaan freelancer (F2 + F4): simpan draf = PUT milestones, Ajukan ke UMKM = PUT lalu approve
- * kesepakatan, Mulai Pengerjaan setelah dibayar, dan tandai milestone selesai.
- */
 class WorkPlanViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(WorkPlanVmState())
     val uiState: StateFlow<WorkPlanVmState> = _uiState.asStateFlow()
 
@@ -52,8 +47,14 @@ class WorkPlanViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }
@@ -77,7 +78,6 @@ class WorkPlanViewModel(
 
     fun submitToUmkm(items: List<MilestoneDraft>) = runAction(null) {
         workflowRepository.saveMilestones(projectId, items)
-        // PUT milestone mereset persetujuan & menaikkan versi kesepakatan, jadi ambil versi terbaru dulu.
         val version = workflowRepository.detail(projectId).agreement?.version
         val updated = workflowRepository.approveAgreement(projectId, version)
         _uiState.update {

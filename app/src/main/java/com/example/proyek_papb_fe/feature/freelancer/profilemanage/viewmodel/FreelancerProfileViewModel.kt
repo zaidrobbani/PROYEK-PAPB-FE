@@ -27,6 +27,7 @@ import com.example.proyek_papb_fe.core.domain.model.Experience
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.UploadFile
 import com.example.proyek_papb_fe.core.ui.components.initialsOf
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -43,7 +44,6 @@ data class FreelancerProfileUiState(
     val errorMessage: String? = null,
     val isSaving: Boolean = false,
     val message: String? = null,
-    /** Bertambah setiap simpan/hapus berhasil (layar menutup form / menampilkan snackbar). */
     val savedCount: Int = 0,
     val availableBalance: Long = 0,
     val skillOptions: List<String> = emptyList(),
@@ -51,7 +51,6 @@ data class FreelancerProfileUiState(
     val photoMessage: String? = null
 )
 
-/** Profil freelancer: profil profesional, skill, portofolio (+ cover), dan pengalaman kerja. */
 class FreelancerProfileViewModel(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
@@ -62,13 +61,18 @@ class FreelancerProfileViewModel(
     private val fileRepository: FileRepository,
     private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FreelancerProfileUiState())
     val uiState: StateFlow<FreelancerProfileUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val profile = async { profileRepository.freelancerProfile() }
@@ -104,7 +108,6 @@ class FreelancerProfileViewModel(
                             isAvailableForWork = p?.isAvailable ?: true,
                             acceptsRemoteWork = FreelancerProfileStore.profile.acceptsRemoteWork,
                             completedProjects = completed,
-                            // BE belum punya metrik "Amanah"; dipakai rasio project selesai vs dibatalkan.
                             trustPercent = if (completed + cancelled > 0) completed * 100 / (completed + cancelled) else 0,
                             experienceYearsLabel = "${totalYears(exps)} thn",
                             skills = skillNames,
@@ -207,15 +210,20 @@ class FreelancerProfileViewModel(
             availabilityStatus = if (isAvailable) AvailabilityStatus.AVAILABLE else AvailabilityStatus.BUSY
         )
         val known = masterDataRepository.skills()
+        val unknown = skills.filter { name -> known.none { it.name.equals(name, ignoreCase = true) } }
+        if (unknown.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "Keahlian ${unknown.joinToString()} tidak tersedia. Hapus lalu pilih dari daftar keahlian."
+            )
+        }
         val ids = skills.mapNotNull { name -> known.firstOrNull { it.name.equals(name, ignoreCase = true) }?.id }
-        if (ids.isNotEmpty()) profileRepository.setMySkills(ids.distinct())
+        profileRepository.setMySkills(ids.distinct())
         FreelancerProfileStore.replace(
             FreelancerProfileStore.profile.copy(primaryField = primaryField, acceptsRemoteWork = acceptsRemote),
             hasProfile = true
         )
     }
 
-    /** Foto langsung diunggah saat dipilih: dikompres ke WebP (maks 512 px, <= 150 KB) lalu `PUT /users/me/photo`. */
     fun uploadPhoto(uri: String) {
         if (_uiState.value.isUploadingPhoto) return
         viewModelScope.launch {
@@ -277,7 +285,8 @@ class FreelancerProfileViewModel(
                 throw e
             } catch (e: Exception) {
                 val field = (e as? ApiException)?.fieldErrors?.values?.firstOrNull()
-                _uiState.update { it.copy(isSaving = false, message = field ?: e.userMessage()) }
+                val local = (e as? IllegalArgumentException)?.message
+                _uiState.update { it.copy(isSaving = false, message = field ?: local ?: e.userMessage()) }
             }
         }
     }
@@ -305,7 +314,6 @@ class FreelancerProfileViewModel(
     }
 }
 
-/** Factory bawaan untuk semua layar profil freelancer. */
 fun freelancerProfileViewModelFactory(): ViewModelProvider.Factory {
     val c = com.example.proyek_papb_fe.core.di.AppContainer
     return FreelancerProfileViewModel.factory(

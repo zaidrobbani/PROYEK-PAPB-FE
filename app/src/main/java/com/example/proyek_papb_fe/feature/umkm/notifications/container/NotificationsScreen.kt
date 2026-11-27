@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.notifications.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -69,54 +70,53 @@ fun NotificationsScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         AuthAppBar(title = "Notifikasi", onBack = onBack)
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(key = "chips") {
-                NotificationFilterChips(
-                    selected = category,
-                    totalCount = all.size,
-                    onSelect = { categoryName = it?.name }
-                )
-            }
-            if (shown.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        text = "Belum ada notifikasi di kategori ini.",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 33.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.7.sp,
-                            lineHeight = 17.78.sp
+        RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(key = "chips") {
+                    NotificationFilterChips(
+                        selected = category,
+                        totalCount = all.size,
+                        onSelect = { categoryName = it?.name }
+                    )
+                }
+                if (shown.isEmpty()) {
+                    item(key = "empty") {
+                        Text(
+                            text = "Belum ada notifikasi di kategori ini.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 33.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 12.7.sp,
+                                lineHeight = 17.78.sp
+                            )
                         )
-                    )
+                    }
                 }
-            }
-            groups.forEach { (day, items) ->
-                item(key = "label-$day") {
-                    NotificationGroupLabel(notificationGroupLabel(day, now.toLocalDate()))
-                }
-                item(key = "group-$day") {
-                    NotificationGroupCard(
-                        notifications = items,
-                        timeLabel = { formatNotificationTime(it.time, now) },
-                        onClick = { notification ->
-                            UmkmNotificationStore.markRead(notification.id)
-                            viewModel.markRead(notification.id)
-                            onNotificationClick(notification)
-                        }
-                    )
+                groups.forEach { (day, items) ->
+                    item(key = "label-$day") {
+                        NotificationGroupLabel(notificationGroupLabel(day, now.toLocalDate()))
+                    }
+                    item(key = "group-$day") {
+                        NotificationGroupCard(
+                            notifications = items,
+                            timeLabel = { formatNotificationTime(it.time, now) },
+                            onClick = { notification ->
+                                UmkmNotificationStore.markRead(notification.id)
+                                viewModel.markRead(notification.id)
+                                onNotificationClick(notification)
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
-

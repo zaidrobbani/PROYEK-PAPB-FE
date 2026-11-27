@@ -77,7 +77,6 @@ fun ChangePasswordScreen(
     val onSubmit: () -> Unit = {
         submitted = true
         if (!validateChangePassword(current, new, confirm).hasError) {
-            // BE belum punya endpoint ubah kata sandi saat login (docs/api/auth.md keputusan #26).
             Toast.makeText(
                 context,
                 "Ubah kata sandi belum tersedia di server. Gunakan \"Lupa kata sandi?\" untuk mengatur ulang lewat email.",

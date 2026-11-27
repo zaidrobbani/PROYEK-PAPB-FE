@@ -11,15 +11,12 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-
-    /** BE memakai snake_case; field DTO Kotlin cukup camelCase. Field null tidak dikirim (dianggap default oleh BE). */
     val gson = GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
     fun createClient(sessionManager: SessionManager): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
-            // BASIC: method, URL, status. Body tidak dicatat agar kata sandi & token tidak masuk logcat.
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()

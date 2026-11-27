@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.project_list.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -121,42 +122,44 @@ fun ProjectListScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 3.61.dp, bottom = ListBottomPadding),
-                verticalArrangement = Arrangement.spacedBy(12.677.dp)
-            ) {
-                if (actionCount > 0) {
-                    item(key = "attention") {
-                        ProjectAttentionBanner(
-                            reviewCount = reviewCount,
-                            offerCount = offerProjects.sumOf { it.offersCount },
-                            actionCount = actionCount,
-                            modifier = Modifier.padding(horizontal = PageGutter)
+            RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(top = 3.61.dp, bottom = ListBottomPadding),
+                    verticalArrangement = Arrangement.spacedBy(12.677.dp)
+                ) {
+                    if (actionCount > 0) {
+                        item(key = "attention") {
+                            ProjectAttentionBanner(
+                                reviewCount = reviewCount,
+                                offerCount = offerProjects.sumOf { it.offersCount },
+                                actionCount = actionCount,
+                                modifier = Modifier.padding(horizontal = PageGutter)
+                            )
+                        }
+                    }
+                    item(key = "tabs") {
+                        ProjectStatusTabs(
+                            selected = selectedTab,
+                            counts = counts,
+                            onSelect = { selectedTab = it },
+                            horizontalPadding = PageGutter
                         )
                     }
-                }
-                item(key = "tabs") {
-                    ProjectStatusTabs(
-                        selected = selectedTab,
-                        counts = counts,
-                        onSelect = { selectedTab = it },
-                        horizontalPadding = PageGutter
-                    )
-                }
-                if (uiState.isLoading && projects.isEmpty()) {
-                    item(key = "loading") { LoadingContent(Modifier.padding(top = 48.dp)) }
-                } else if (uiState.errorMessage != null && projects.isEmpty()) {
-                    item(key = "error") { InlineErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load) }
-                } else if (visible.isEmpty()) {
-                    item(key = "empty") { EmptyProjects(selectedTab) }
-                } else {
-                    items(visible, key = { it.id }) { project ->
-                        ProjectCard(
-                            project = project,
-                            actions = actions,
-                            modifier = Modifier.padding(horizontal = PageGutter)
-                        )
+                    if (uiState.isLoading && projects.isEmpty()) {
+                        item(key = "loading") { LoadingContent(Modifier.padding(top = 48.dp)) }
+                    } else if (uiState.errorMessage != null && projects.isEmpty()) {
+                        item(key = "error") { InlineErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load) }
+                    } else if (visible.isEmpty()) {
+                        item(key = "empty") { EmptyProjects(selectedTab) }
+                    } else {
+                        items(visible, key = { it.id }) { project ->
+                            ProjectCard(
+                                project = project,
+                                actions = actions,
+                                modifier = Modifier.padding(horizontal = PageGutter)
+                            )
+                        }
                     }
                 }
             }

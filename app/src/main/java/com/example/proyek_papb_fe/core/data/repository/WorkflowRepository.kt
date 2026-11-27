@@ -13,7 +13,6 @@ import com.example.proyek_papb_fe.core.domain.model.MilestoneProgress
 import com.example.proyek_papb_fe.core.domain.model.MyProjects
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
 
-/** Alur project F2 (kesepakatan, batal, mulai) dan rencana pengerjaan/milestone F4. */
 interface WorkflowRepository {
     suspend fun myProjects(status: String? = null): MyProjects
     suspend fun detail(projectId: String): WorkflowDetail
@@ -40,7 +39,6 @@ interface WorkflowRepository {
 class DefaultWorkflowRepository(
     private val remote: WorkflowRemoteDataSource
 ) : WorkflowRepository {
-
     override suspend fun myProjects(status: String?): MyProjects {
         val dto = remote.myProjects(status)
         return MyProjects(dto.items.orEmpty().map { it.toDomain() }, dto.statusCounts.orEmpty())

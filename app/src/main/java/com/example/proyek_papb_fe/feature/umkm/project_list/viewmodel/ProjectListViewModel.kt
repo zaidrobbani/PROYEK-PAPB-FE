@@ -12,6 +12,7 @@ import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 import com.example.proyek_papb_fe.feature.umkm.data.needsUmkmAction
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,6 @@ data class ProjectListUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val projects: List<UmkmProject> = emptyList(),
-    /** Id project yang menunggu tindakan UMKM (review hasil / pilih pelamar). */
     val actionProjectIds: Set<String> = emptySet(),
     val isDeleting: Boolean = false,
     val message: String? = null
@@ -34,13 +34,18 @@ class ProjectListViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectListUiState())
     val uiState: StateFlow<ProjectListUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val items = workflowRepository.myProjects().items
                 val categories = runCatching { masterDataRepository.categories() }.getOrDefault(emptyList())

@@ -1,5 +1,8 @@
 package com.example.proyek_papb_fe.feature.umkm.find_freelancer.container
 
+import androidx.compose.runtime.saveable.Saver
+import android.os.Bundle
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -51,15 +53,25 @@ private val PageGutter = 16.903.dp
 
 private const val QuickRating = 4.8
 
-private val TalentFilterSaver = listSaver<TalentFilter, Any>(
-    save = { listOf(it.minRating ?: -1.0, it.budgetMinIndex, it.budgetMaxIndex, it.location.name, it.fastResponse) },
+private val TalentFilterSaver = Saver<TalentFilter, Bundle>(
+    save = {
+        Bundle().apply {
+            it.minRating?.let { rating -> putDouble("minRating", rating) }
+            putInt("budgetMinIndex", it.budgetMinIndex)
+            putInt("budgetMaxIndex", it.budgetMaxIndex)
+            putString("location", it.location.name)
+            putBoolean("fastResponse", it.fastResponse)
+        }
+    },
     restore = {
+        val default = TalentFilter()
         TalentFilter(
-            minRating = (it[0] as Double).takeIf { rating -> rating >= 0 },
-            budgetMinIndex = it[1] as Int,
-            budgetMaxIndex = it[2] as Int,
-            location = TalentLocation.valueOf(it[3] as String),
-            fastResponse = it[4] as Boolean
+            minRating = if (it.containsKey("minRating")) it.getDouble("minRating") else null,
+            budgetMinIndex = it.getInt("budgetMinIndex", default.budgetMinIndex),
+            budgetMaxIndex = it.getInt("budgetMaxIndex", default.budgetMaxIndex),
+            location = it.getString("location")?.let { name -> TalentLocation.entries.firstOrNull { l -> l.name == name } }
+                ?: default.location,
+            fastResponse = it.getBoolean("fastResponse")
         )
     }
 )
@@ -72,7 +84,7 @@ fun FindFreelancerScreen(
     onTabSelected: (UmkmTab) -> Unit,
     modifier: Modifier = Modifier,
     initialShowFilter: Boolean = false,
-    viewModel: FindFreelancerViewModel = viewModel(factory = FindFreelancerViewModel.factory(AppContainer.freelancerRepository))
+    viewModel: FindFreelancerViewModel = viewModel(factory = FindFreelancerViewModel.factory(AppContainer.freelancerRepository, AppContainer.freelancerMatchRepository))
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -100,72 +112,71 @@ fun FindFreelancerScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         UmkmTopBar(onNotificationsClick = onNotificationsClick, title = "Cari Freelancer")
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .imePadding(),
-            contentPadding = PaddingValues(top = 22.549.dp + 4.226.dp, bottom = 25.354.dp)
-        ) {
-            item(key = "search") {
-                FindFreelancerSearchBar(
-                    query = query,
-                    onQueryChange = { query = it },
-                    activeFilterCount = activeFilterCount,
-                    onOpenFilter = { showFilter = true },
-                    modifier = Modifier.padding(horizontal = PageGutter)
-                )
-            }
-            item(key = "filters") {
-                FindFreelancerFilters(
-                    categories = uiState.freelancers.map { it.category }.filter { it.isNotBlank() }.distinct(),
-                    selectedCategory = category,
-                    onCategorySelect = { category = it },
-                    activeQuickFilters = chipFilters,
-                    onQuickFilterToggle = { filter ->
-                        if (filter == QuickFilter.Rating48) {
-                            talentFilter = talentFilter.copy(
-                                minRating = if (talentFilter.minRating == QuickRating) null else QuickRating
-                            )
-                        } else quickFilterNames = if (filter in quickFilters) {
-                            quickFilterNames - filter.name
-                        } else {
-                            quickFilterNames + filter.name
-                        }
-                    },
-                    horizontalPadding = PageGutter,
-                    modifier = Modifier.padding(top = 8.451.dp, bottom = 8.451.dp)
-                )
-            }
-            item(key = "header") {
-                FindFreelancerResultHeader(
-                    count = results.size,
-                    modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 4.226.dp)
-                )
-            }
-            if (results.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        text = "Tidak ada freelancer yang cocok. Coba kata kunci lain atau kurangi filter.",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = PageGutter, vertical = 33.805.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.79.sp,
-                            lineHeight = 21.128.sp
-                        )
+        RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().imePadding(),
+                contentPadding = PaddingValues(top = 22.549.dp + 4.226.dp, bottom = 25.354.dp)
+            ) {
+                item(key = "search") {
+                    FindFreelancerSearchBar(
+                        query = query,
+                        onQueryChange = { query = it },
+                        activeFilterCount = activeFilterCount,
+                        onOpenFilter = { showFilter = true },
+                        modifier = Modifier.padding(horizontal = PageGutter)
                     )
                 }
-            }
-            items(results, key = { it.id }) { freelancer ->
-                FreelancerResultCard(
-                    freelancer = freelancer,
-                    onViewProfile = { onViewProfile(freelancer.id) },
-                    modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = 12.677.dp)
-                )
+                item(key = "filters") {
+                    FindFreelancerFilters(
+                        categories = uiState.freelancers.map { it.category }.filter { it.isNotBlank() }.distinct(),
+                        selectedCategory = category,
+                        onCategorySelect = { category = it },
+                        activeQuickFilters = chipFilters,
+                        onQuickFilterToggle = { filter ->
+                            if (filter == QuickFilter.Rating48) {
+                                talentFilter = talentFilter.copy(
+                                    minRating = if (talentFilter.minRating == QuickRating) null else QuickRating
+                                )
+                            } else quickFilterNames = if (filter in quickFilters) {
+                                quickFilterNames - filter.name
+                            } else {
+                                quickFilterNames + filter.name
+                            }
+                        },
+                        horizontalPadding = PageGutter,
+                        modifier = Modifier.padding(top = 8.451.dp, bottom = 8.451.dp)
+                    )
+                }
+                item(key = "header") {
+                    FindFreelancerResultHeader(
+                        count = results.size,
+                        modifier = Modifier.padding(start = PageGutter, end = PageGutter, bottom = 4.226.dp)
+                    )
+                }
+                if (results.isEmpty()) {
+                    item(key = "empty") {
+                        Text(
+                            text = "Tidak ada freelancer yang cocok. Coba kata kunci lain atau kurangi filter.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = PageGutter, vertical = 33.805.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium.withFrameMetrics(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.79.sp,
+                                lineHeight = 21.128.sp
+                            )
+                        )
+                    }
+                }
+                items(results, key = { it.id }) { freelancer ->
+                    FreelancerResultCard(
+                        freelancer = freelancer,
+                        onViewProfile = { onViewProfile(freelancer.id) },
+                        modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = 12.677.dp)
+                    )
+                }
             }
         }
         UmkmBottomNav(
@@ -185,4 +196,3 @@ fun FindFreelancerScreen(
     )
     }
 }
-

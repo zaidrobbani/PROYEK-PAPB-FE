@@ -77,6 +77,7 @@ fun ProjectDetailContainer(
     }
 
     ProjectDetailScreen(
+        onRefresh = viewModel::refresh,
         project = project,
         onBack = onBack,
         onChatClick = viewModel::openChat,

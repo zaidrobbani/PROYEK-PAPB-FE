@@ -11,25 +11,18 @@ import kotlinx.coroutines.coroutineScope
 data class ConversationOverview(
     val conversation: Conversation,
     val counterpartName: String,
-    /** Nama usaha (UMKM) atau jabatan profesional (freelancer). */
     val counterpartSubtitle: String?,
     val projectTitle: String?,
     val projectStatus: String?,
     val messages: List<Message>,
     val unreadCount: Int,
     val workflow: com.example.proyek_papb_fe.core.domain.model.WorkflowDetail? = null,
-    /** Id user lawan bicara (freelancer bagi UMKM, UMKM bagi freelancer). */
     val counterpartId: String = "",
-    /** `profile_image_url` lawan bicara (path ber-versi), null bila belum punya foto. */
     val counterpartPhotoUrl: String? = null
 ) {
     val lastMessage: Message? get() = messages.lastOrNull()
 }
 
-/**
- * `GET /conversations` hanya berisi id. Nama lawan bicara & judul project dirakit dari detail alur
- * (bila freelancer sudah terpilih), project publik, atau profil publik freelancer.
- */
 class ChatOverviewRepository(
     private val chatRepository: ChatRepository,
     private val workflowRepository: WorkflowRepository,

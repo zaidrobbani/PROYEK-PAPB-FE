@@ -110,7 +110,6 @@ fun ProfessionalProfileContainer(
             viewModel.onPhotoMessageShown()
         }
     }
-    // Foto tampil dari cache server; field lain di form tidak ikut tertimpa.
     val storedPhoto = FreelancerProfileStore.profile.photoUri
     LaunchedEffect(storedPhoto) { form = form.copy(photoUri = storedPhoto) }
 
@@ -154,6 +153,7 @@ fun ProfessionalProfileContainer(
             }
         },
         onViewProfile = onBack,
-        onBack = onBack
+        onBack = onBack,
+        skillOptions = uiState.skillOptions
     )
 }

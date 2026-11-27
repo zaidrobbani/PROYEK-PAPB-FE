@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.dashboard.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -7,7 +8,7 @@ import com.example.proyek_papb_fe.feature.freelancer.dashboard.container.Dashboa
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object DashboardRoute
+data object DashboardRoute : TopLevelRoute
 
 fun NavController.navigateToFreelancerDashboard() {
     navigate(DashboardRoute) {
@@ -21,7 +22,8 @@ fun NavGraphBuilder.dashboardScreen(
     onSeeAllActiveProjectsClick: () -> Unit,
     onRecommendedProjectClick: (projectId: String) -> Unit,
     onSeeAllRecommendationsClick: () -> Unit,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    onManageSkillsClick: () -> Unit
 ) {
     composable<DashboardRoute> {
         DashboardContainer(
@@ -30,7 +32,8 @@ fun NavGraphBuilder.dashboardScreen(
             onSeeAllActiveProjectsClick = onSeeAllActiveProjectsClick,
             onRecommendedProjectClick = onRecommendedProjectClick,
             onSeeAllRecommendationsClick = onSeeAllRecommendationsClick,
-            onNotificationClick = onNotificationClick
+            onNotificationClick = onNotificationClick,
+            onManageSkillsClick = onManageSkillsClick
         )
     }
 }

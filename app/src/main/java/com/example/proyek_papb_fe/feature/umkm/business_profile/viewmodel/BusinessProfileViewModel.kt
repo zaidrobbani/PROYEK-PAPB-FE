@@ -26,7 +26,6 @@ data class BusinessProfileUiState(
     val profile: UmkmBusinessProfile? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
-    /** Bertambah setiap simpan berhasil (memicu snackbar). */
     val savedCount: Int = 0,
     val fieldErrors: Map<String, String> = emptyMap(),
     val isUploadingPhoto: Boolean = false
@@ -39,7 +38,6 @@ class BusinessProfileViewModel(
     private val authRepository: AuthRepository,
     private val photoRepository: ProfilePhotoRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(BusinessProfileUiState())
     val uiState: StateFlow<BusinessProfileUiState> = _uiState.asStateFlow()
 
@@ -72,7 +70,6 @@ class BusinessProfileViewModel(
                 val owner = ownerName.trim()
                 val savedOwner = if (owner != _uiState.value.ownerName) authRepository.updateName(owner).name else owner
                 _uiState.update { it.copy(ownerName = savedOwner) }
-                // Figma hanya punya field kota di section "Alamat Usaha"; BE mewajibkan business_address.
                 val saved = profileRepository.saveUmkmProfile(
                     businessName = businessName,
                     category = category,
@@ -104,7 +101,6 @@ class BusinessProfileViewModel(
         }
     }
 
-    /** Foto langsung diunggah saat dipilih (dikompres ke WebP), terpisah dari tombol Simpan. */
     fun uploadPhoto(uri: String) {
         if (_uiState.value.isUploadingPhoto) return
         viewModelScope.launch {

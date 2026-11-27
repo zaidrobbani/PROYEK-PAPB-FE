@@ -27,7 +27,6 @@ private fun transactionTime(millis: Long): String =
         timeZone = TimeZone.getTimeZone("Asia/Jakarta")
     }.format(Date(millis)) + " WIB"
 
-/** Bukti pembayaran: data dari `GET /projects/{id}/payment` (transaction_number, paid_at, nominal). */
 @Composable
 fun PaymentProofContainer(
     projectId: String,

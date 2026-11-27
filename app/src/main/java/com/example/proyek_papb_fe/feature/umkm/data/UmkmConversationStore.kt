@@ -2,6 +2,7 @@ package com.example.proyek_papb_fe.feature.umkm.data
 
 import androidx.compose.runtime.mutableStateMapOf
 import com.example.proyek_papb_fe.core.data.repository.ConversationOverview
+import com.example.proyek_papb_fe.core.domain.model.DeletedMessageLabel
 import com.example.proyek_papb_fe.core.domain.model.Message
 import com.example.proyek_papb_fe.core.domain.model.MessageAttachment
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
@@ -37,7 +38,6 @@ data class UmkmConversation(
     val unreadCount: Int,
     val projectStatus: String? = null
 ) {
-    /** Project selesai/dibatalkan: tidak dipilih otomatis sebagai tujuan kirim. */
     val isClosed: Boolean
         get() = projectStatus == ProjectStatusCode.SELESAI || projectStatus == ProjectStatusCode.DIBATALKAN
 
@@ -49,13 +49,8 @@ data class UmkmConversation(
             .joinToString("") { it.first().uppercase() }
 }
 
-/**
- * Satu baris chat per freelancer (seperti WhatsApp). BE menyimpan percakapan per project,
- * jadi semua percakapan dengan freelancer yang sama digabung di sini.
- */
 data class UmkmThread(
     val freelancerId: String,
-    /** Urut dari aktivitas terbaru. */
     val conversations: List<UmkmConversation>
 ) {
     private val latest: UmkmConversation get() = conversations.first()
@@ -69,7 +64,6 @@ data class UmkmThread(
     val projectTitle: String
         get() = latest.projectTitle + if (conversations.size > 1) " · +${conversations.size - 1} project lain" else ""
 
-    /** Percakapan yang dibuka dari daftar: project aktif dengan pesan terbaru, atau yang terbaru. */
     val primaryConversationId: String
         get() = (conversations.firstOrNull { !it.isClosed } ?: latest).id
 
@@ -97,11 +91,10 @@ data class ChatMessage(
     val sentAt: LocalDateTime,
     val attachment: ChatAttachment? = null,
     val readByFreelancer: Boolean = false,
-    /** Foto/dokumen chat dari server (berbeda dengan `attachment` draf hasil kerja). */
-    val file: MessageAttachment? = null
+    val file: MessageAttachment? = null,
+    val isDeleted: Boolean = false
 )
 
-/** Cache percakapan UMKM dari BE (`ChatOverviewRepository`), diperbarui lewat WebSocket saat ruang chat terbuka. */
 object UmkmConversationStore {
     private val items = mutableStateListOf<UmkmConversation>()
     private val messagesById = mutableStateMapOf<String, List<ChatMessage>>()
@@ -120,7 +113,6 @@ object UmkmConversationStore {
     fun threadOf(conversationId: String): UmkmThread? =
         conversation(conversationId)?.freelancerId?.let { id -> threads.firstOrNull { it.freelancerId == id } }
 
-    /** Semua pesan dengan satu freelancer dari seluruh project, urut waktu. */
     fun threadMessages(thread: UmkmThread): List<ChatMessage> =
         thread.conversations.flatMap { messages(it.id) }.sortedBy { it.sentAt }
 
@@ -175,6 +167,32 @@ object UmkmConversationStore {
 
     fun messages(conversationId: String): List<ChatMessage> = messagesById[conversationId].orEmpty()
 
+    fun removeMessages(conversationId: String, ids: Set<String>) {
+        messagesById[conversationId] = messages(conversationId).filterNot { it.id in ids }
+        refreshPreview(conversationId)
+    }
+
+    fun markDeleted(conversationId: String, ids: Set<String>) {
+        messagesById[conversationId] = messages(conversationId).map {
+            if (it.id in ids) it.copy(text = "", file = null, attachment = null, isDeleted = true) else it
+        }
+        refreshPreview(conversationId)
+    }
+
+    private fun refreshPreview(conversationId: String) {
+        val index = items.indexOfFirst { it.id == conversationId }
+        if (index < 0) return
+        val last = messages(conversationId).lastOrNull()
+        items[index] = items[index].copy(
+            lastMessage = when {
+                last == null -> ""
+                last.isDeleted -> DeletedMessageLabel
+                last.file != null && last.text.isBlank() -> if (last.file.isImage) "📷 Foto" else "📄 ${last.file.fileName}"
+                else -> last.text
+            }
+        )
+    }
+
     fun markRead(id: String) {
         val index = items.indexOfFirst { it.id == id }
         if (index >= 0) items[index] = items[index].copy(unreadCount = 0)
@@ -195,7 +213,8 @@ object UmkmConversationStore {
         text = text,
         sentAt = toLocal(sentAtMillis),
         readByFreelancer = readAtMillis != null,
-        file = attachments.firstOrNull()
+        file = attachments.firstOrNull(),
+        isDeleted = isDeleted
     )
 }
 fun formatConversationTime(time: LocalDateTime, today: LocalDate = LocalDate.now()): String = when (time.toLocalDate()) {
@@ -207,10 +226,6 @@ fun formatConversationTime(time: LocalDateTime, today: LocalDate = LocalDate.now
 private val ConversationClock = DateTimeFormatter.ofPattern("HH.mm")
 private val ConversationDate = DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("id-ID"))
 
-/**
- * Pencarian per kata pada nama freelancer dan judul project (placeholder Figma:
- * "Cari nama freelancer atau project"). [stage] null = semua tahap.
- */
 fun searchThreads(source: List<UmkmThread>, query: String, stage: ConversationStage?): List<UmkmThread> {
     val tokens = query.lowercase().split(" ").filter { it.isNotBlank() }
     return source.filter { thread ->

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.sp
 fun initialsOf(name: String): String =
     name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
 
-/** Pengganti foto profil: BE belum menyediakan unggah foto, jadi tampilkan inisial nama. */
 @Composable
 fun InitialsAvatar(
     name: String,

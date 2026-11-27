@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.chat.navigation
 
+import com.example.proyek_papb_fe.core.navigation.TopLevelRoute
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -11,7 +12,7 @@ import com.example.proyek_papb_fe.feature.freelancer.chat.container.ChatScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object ChatRoute
+data object ChatRoute : TopLevelRoute
 
 fun NavGraphBuilder.chatScreen(
     onConversationClick: (conversationId: String) -> Unit,

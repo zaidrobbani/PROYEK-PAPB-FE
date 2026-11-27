@@ -15,6 +15,7 @@ import com.example.proyek_papb_fe.core.domain.model.TransactionGroup
 import com.example.proyek_papb_fe.feature.umkm.data.FundStatus
 import com.example.proyek_papb_fe.feature.umkm.data.PaymentStatus
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmTransaction
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,11 +29,9 @@ data class TransactionHistoryUiState(
     val transactions: List<UmkmTransaction> = emptyList()
 )
 
-/** Riwayat Transaksi UMKM (`GET /payments/history`). Tab & pencarian difilter lokal dari daftar lengkap. */
 class TransactionHistoryViewModel(
     private val paymentRepository: PaymentRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(TransactionHistoryUiState())
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
@@ -41,8 +40,14 @@ class TransactionHistoryViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val history = paymentRepository.history(TransactionGroup.ALL)
                 _uiState.update { it.copy(isLoading = false, transactions = history.items.map { item -> item.toTransaction() }) }

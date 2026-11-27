@@ -30,7 +30,6 @@ data class Experience(
     val jobTitle: String,
     val organizationName: String,
     val description: String,
-    /** Format `yyyy-MM-dd`. */
     val startDate: String,
     val endDate: String?
 )

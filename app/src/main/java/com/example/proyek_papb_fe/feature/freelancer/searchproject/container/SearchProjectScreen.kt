@@ -41,12 +41,12 @@ fun SearchProjectContainer(
     }
 
     val categories = remember(uiState.projects) { buildCategoryOptions(uiState.projects) }
-    // Kata kunci sudah difilter BE; filter lokal hanya untuk kategori.
     val visibleProjects = remember(uiState.projects, selectedCategory) {
         uiState.projects.filterProjects(query = "", category = selectedCategory)
     }
 
     SearchProjectScreen(
+        onRefresh = viewModel::refresh,
         query = query,
         onQueryChange = viewModel::onQueryChange,
         categories = categories,

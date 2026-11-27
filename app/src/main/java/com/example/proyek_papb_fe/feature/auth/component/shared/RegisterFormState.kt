@@ -1,11 +1,12 @@
 package com.example.proyek_papb_fe.feature.auth.component.shared
 
+import androidx.compose.runtime.saveable.Saver
+import android.os.Bundle
 import android.util.Patterns
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 
@@ -116,25 +117,25 @@ internal class RegisterFormState(
     )
 
     companion object {
-        val Saver = listSaver<RegisterFormState, Any>(
+        val Saver = Saver<RegisterFormState, Bundle>(
             save = {
-                listOf(
-                    it.fullName,
-                    it.email,
-                    it.whatsapp,
-                    it.passwordVisible,
-                    it.termsAccepted,
-                    it.submitted
-                )
+                Bundle().apply {
+                    putString("fullName", it.fullName)
+                    putString("email", it.email)
+                    putString("whatsapp", it.whatsapp)
+                    putBoolean("passwordVisible", it.passwordVisible)
+                    putBoolean("termsAccepted", it.termsAccepted)
+                    putBoolean("submitted", it.submitted)
+                }
             },
             restore = {
                 RegisterFormState(
-                    fullName = it[0] as String,
-                    email = it[1] as String,
-                    whatsapp = it[2] as String,
-                    passwordVisible = it[3] as Boolean,
-                    termsAccepted = it[4] as Boolean,
-                    submitted = it[5] as Boolean
+                    fullName = it.getString("fullName").orEmpty(),
+                    email = it.getString("email").orEmpty(),
+                    whatsapp = it.getString("whatsapp").orEmpty(),
+                    passwordVisible = it.getBoolean("passwordVisible"),
+                    termsAccepted = it.getBoolean("termsAccepted"),
+                    submitted = it.getBoolean("submitted")
                 )
             }
         )

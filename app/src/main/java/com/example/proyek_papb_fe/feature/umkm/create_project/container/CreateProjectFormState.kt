@@ -1,11 +1,12 @@
 package com.example.proyek_papb_fe.feature.umkm.create_project.container
 
+import androidx.compose.runtime.saveable.Saver
+import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectAttachment
@@ -17,7 +18,6 @@ internal const val AttachmentMaxBytes = 10L * 1024 * 1024
 
 internal val AttachmentMimeTypes = arrayOf("image/jpeg", "image/png", "application/pdf")
 
-/** Diganti daftar skill BE (`GET /skills`) setelah dimuat. */
 internal val SuggestedSkills = emptyList<String>()
 
 data class CreateProjectDraft(
@@ -128,37 +128,37 @@ internal class CreateProjectFormState {
     )
 
     companion object {
-        val Saver = listSaver<CreateProjectFormState, Any>(
+        val Saver = Saver<CreateProjectFormState, Bundle>(
             save = { state ->
-                listOf(
-                    state.title,
-                    state.category ?: "",
-                    state.description,
-                    ArrayList(state.skillOptions),
-                    ArrayList(state.selectedSkills),
-                    state.budgetDigits,
-                    state.deadlineUtcMillis ?: -1L,
-                    ArrayList(state.attachments.flatMap { listOf(it.uri, it.name, it.sizeBytes.toString()) }),
-                    state.submitted
-                )
+                Bundle().apply {
+                    putString("title", state.title)
+                    putString("category", state.category)
+                    putString("description", state.description)
+                    putStringArrayList("skillOptions", ArrayList(state.skillOptions))
+                    putStringArrayList("selectedSkills", ArrayList(state.selectedSkills))
+                    putString("budgetDigits", state.budgetDigits)
+                    state.deadlineUtcMillis?.let { putLong("deadlineUtcMillis", it) }
+                    putStringArrayList("attachmentUris", ArrayList(state.attachments.map { it.uri }))
+                    putStringArrayList("attachmentNames", ArrayList(state.attachments.map { it.name }))
+                    putLongArray("attachmentSizes", state.attachments.map { it.sizeBytes }.toLongArray())
+                    putBoolean("submitted", state.submitted)
+                }
             },
             restore = { saved ->
                 CreateProjectFormState().apply {
-                    title = saved[0] as String
-                    category = (saved[1] as String).ifEmpty { null }
-                    description = saved[2] as String
+                    title = saved.getString("title").orEmpty()
+                    category = saved.getString("category")
+                    description = saved.getString("description").orEmpty()
                     skillOptions.clear()
-                    @Suppress("UNCHECKED_CAST")
-                    skillOptions.addAll(saved[3] as List<String>)
-                    @Suppress("UNCHECKED_CAST")
-                    selectedSkills.addAll(saved[4] as List<String>)
-                    budgetDigits = saved[5] as String
-                    deadlineUtcMillis = (saved[6] as Long).takeIf { it >= 0 }
-                    @Suppress("UNCHECKED_CAST")
-                    (saved[7] as List<String>).chunked(3).forEach { (uri, name, size) ->
-                        attachments.add(ProjectAttachment(uri, name, size.toLong()))
-                    }
-                    submitted = saved[8] as Boolean
+                    skillOptions.addAll(saved.getStringArrayList("skillOptions").orEmpty())
+                    selectedSkills.addAll(saved.getStringArrayList("selectedSkills").orEmpty())
+                    budgetDigits = saved.getString("budgetDigits").orEmpty()
+                    deadlineUtcMillis = if (saved.containsKey("deadlineUtcMillis")) saved.getLong("deadlineUtcMillis") else null
+                    val uris = saved.getStringArrayList("attachmentUris").orEmpty()
+                    val names = saved.getStringArrayList("attachmentNames").orEmpty()
+                    val sizes = saved.getLongArray("attachmentSizes") ?: LongArray(0)
+                    uris.indices.forEach { i -> attachments.add(ProjectAttachment(uris[i], names[i], sizes[i])) }
+                    submitted = saved.getBoolean("submitted")
                 }
             }
         )

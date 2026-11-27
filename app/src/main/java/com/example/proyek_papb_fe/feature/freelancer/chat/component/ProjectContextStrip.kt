@@ -38,8 +38,6 @@ internal fun ProjectContextStrip(
     onDetailClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 
-
-
     isNegotiation: Boolean = false
 ) {
     Row(

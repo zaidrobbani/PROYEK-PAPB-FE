@@ -12,7 +12,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Hanya intent awal; saat Activity dibuat ulang (rotasi) notifikasi tidak dibuka dua kali.
         if (savedInstanceState == null) handlePushIntent(intent)
         setContent {
             App()

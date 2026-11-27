@@ -31,20 +31,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Satu project (percakapan) dengan UMKM yang sama, untuk pilihan "Kirim ke". */
 data class ChatThread(val conversationId: String, val projectId: String?, val projectTitle: String, val statusLabel: String)
 
 data class ChatRoomVmState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    /** Percakapan tujuan yang sedang dipilih (konteks project, kirim pesan, unggah draf, batal). */
     val overview: ConversationOverview? = null,
     val targetConversationId: String = "",
-    /** Semua project dengan UMKM ini; lebih dari satu = tampil penanda project & pilihan "Kirim ke". */
     val threads: List<ChatThread> = emptyList(),
-    /** Pesan semua percakapan dengan UMKM ini, urut waktu. */
     val messages: List<Message> = emptyList(),
-    /** Detail alur project tujuan (hanya bila user pihak dalam kesepakatan). */
     val workflow: WorkflowDetail? = null,
     val submissions: SubmissionList? = null,
     val isSending: Boolean = false,
@@ -54,11 +49,6 @@ data class ChatRoomVmState(
     val cancelled: Boolean = false
 )
 
-/**
- * Ruang chat freelancer dengan satu UMKM, seperti chat UMKM: BE menyimpan percakapan per project, jadi semua
- * percakapan dengan UMKM yang sama digabung (masing-masing WebSocket sendiri). Pesan baru, lampiran, unggah hasil,
- * dan pembatalan memakai percakapan tujuan yang dipilih (awalnya percakapan yang dibuka).
- */
 class ChatRoomViewModel(
     private val initialConversationId: String,
     private val chatRepository: ChatRepository,
@@ -66,7 +56,6 @@ class ChatRoomViewModel(
     private val workflowRepository: WorkflowRepository,
     private val submissionRepository: SubmissionRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ChatRoomVmState(targetConversationId = initialConversationId))
     val uiState: StateFlow<ChatRoomVmState> = _uiState.asStateFlow()
 
@@ -75,11 +64,9 @@ class ChatRoomViewModel(
     private var connectionJob: Job? = null
 
     private val _isRealtime = MutableStateFlow(false)
-    /** true saat semua WebSocket percakapan tersambung; layar hanya polling bila false. */
     val isRealtime: StateFlow<Boolean> = _isRealtime.asStateFlow()
 
     private val outgoing = OutgoingAttachmentQueue(viewModelScope, { _uiState.value.targetConversationId }, chatRepository, ::addMessage)
-    /** Foto/dokumen yang sedang dikirim atau gagal terkirim (tampil di akhir chat). */
     val pendingAttachments: StateFlow<List<OutgoingAttachment>> = outgoing.items
 
     fun sendAttachment(file: PickedChatFile, caption: String, asImage: Boolean) = outgoing.enqueue(file, caption, asImage)
@@ -87,6 +74,47 @@ class ChatRoomViewModel(
     fun retryAttachment(localId: String) = outgoing.retry(localId)
 
     fun discardAttachment(localId: String) = outgoing.discard(localId)
+
+    private val selection = MessageSelection()
+    val selectedMessageIds: StateFlow<Set<String>> = selection.selected
+    val isDeletingMessages: StateFlow<Boolean> = selection.isDeleting
+
+    fun toggleMessageSelection(messageId: String) {
+        if (_uiState.value.messages.any { it.id == messageId }) selection.toggle(messageId)
+    }
+
+    fun clearMessageSelection() = selection.clear()
+
+    fun canDeleteSelectedForEveryone(): Boolean {
+        val ids = selection.selected.value
+        val myId = AppContainer.currentUserId
+        return ids.isNotEmpty() && _uiState.value.messages.filter { it.id in ids }.let { picked ->
+            picked.size == ids.size && picked.all { it.canDeleteForEveryone(myId) }
+        }
+    }
+
+    fun deleteSelectedMessages(forEveryone: Boolean) {
+        val conversationOf = _uiState.value.messages.associate { it.id to it.conversationId }
+        viewModelScope.launch {
+            try {
+                selection.delete(chatRepository, conversationOf, forEveryone) { _, ids, deletedAt ->
+                    applyDeletion(ids.toSet(), if (forEveryone) deletedAt else null)
+                }
+                _uiState.update { it.copy(message = if (forEveryone) "Pesan dihapus untuk semua orang" else "Pesan dihapus") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(message = e.userMessage()) }
+            }
+        }
+    }
+
+    private fun applyDeletion(ids: Set<String>, deletedAtMillis: Long?) = _uiState.update { state ->
+        state.copy(
+            messages = if (deletedAtMillis == null) state.messages.filterNot { it.id in ids }
+            else state.messages.map { if (it.id in ids && !it.isDeleted) it.asDeleted(deletedAtMillis) else it }
+        )
+    }
 
     private fun addMessage(message: Message) = _uiState.update { state ->
         if (state.messages.any { it.id == message.id }) state
@@ -117,7 +145,6 @@ class ChatRoomViewModel(
             is ChatRealtimeEvent.NewMessage -> {
                 val message = event.message
                 addMessage(message)
-                // Layar sedang terbuka: pesan masuk langsung dianggap dibaca.
                 if (message.senderUserId != myId && !session.markRead()) {
                     viewModelScope.launch { runCatching { chatRepository.markRead(conversationId) } }
                 }
@@ -131,6 +158,7 @@ class ChatRoomViewModel(
                     })
                 }
             }
+            is ChatRealtimeEvent.MessagesDeleted -> applyDeletion(event.messageIds.toSet(), event.deletedAtMillis)
             is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
         }
     }
@@ -139,13 +167,12 @@ class ChatRoomViewModel(
         sessions.values.forEach { it.close() }
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(isLoading = it.overview == null, errorMessage = null) }
             try {
                 val opened = overviewRepository.overview(initialConversationId)
                 overviews[opened.conversation.id] = opened
-                // Percakapan project lain dengan UMKM yang sama.
                 val others = runCatching {
                     chatRepository.conversations()
                         .filter { it.umkmId == opened.conversation.umkmId && it.id != opened.conversation.id }
@@ -186,7 +213,6 @@ class ChatRoomViewModel(
             )
         }
 
-    /** Detail alur & kiriman hasil untuk project tujuan saja. */
     private suspend fun loadTargetDetails() {
         val projectId = _uiState.value.overview?.conversation?.projectId
         val (workflow, submissions) = coroutineScope {
@@ -199,7 +225,6 @@ class ChatRoomViewModel(
         }
     }
 
-    /** Ganti project tujuan; konteks project (status, negosiasi, unggah draf) ikut berganti. */
     fun selectTarget(conversationId: String) {
         val overview = overviews[conversationId] ?: return
         if (conversationId == _uiState.value.targetConversationId) return
@@ -207,18 +232,17 @@ class ChatRoomViewModel(
         viewModelScope.launch { loadTargetDetails() }
     }
 
-    /** Cadangan saat WebSocket terputus: dipanggil berkala dari layar. */
     fun refreshMessages() {
         val ids = overviews.keys.toList()
         viewModelScope.launch {
             ids.forEach { id ->
                 val latest = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@forEach
                 val current = _uiState.value.messages.filter { it.conversationId == id }
-                // Bandingkan seluruh isi agar status dibaca ikut ter-update saat WebSocket terputus.
                 if (latest != current) {
                     _uiState.update { state ->
                         state.copy(messages = (state.messages.filterNot { it.conversationId == id } + latest).sortedBy { it.sentAtMillis })
                     }
+                    selection.retain(_uiState.value.messages.map { it.id }.toSet())
                     if (latest.lastOrNull()?.id != current.lastOrNull()?.id) runCatching { chatRepository.markRead(id) }
                 }
             }
@@ -229,7 +253,6 @@ class ChatRoomViewModel(
         val body = text.trim()
         if (body.isEmpty() || _uiState.value.isSending) return
         val target = _uiState.value.targetConversationId
-        // Lewat WebSocket: pesan kembali sebagai event `message` (ke pengirim & lawan bicara). REST hanya cadangan.
         if (sessions[target]?.sendMessage(body) == true) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSending = true) }

@@ -16,6 +16,7 @@ import com.example.proyek_papb_fe.core.domain.model.SubmissionDecision
 import com.example.proyek_papb_fe.core.ui.components.initialsOf
 import com.example.proyek_papb_fe.core.util.formatShortDate
 import com.example.proyek_papb_fe.core.util.formatTime
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -32,13 +33,11 @@ data class RevisionRequestUiState(
     val request: RevisionRequest? = null
 )
 
-/** Permintaan revisi = review `REVISION_REQUESTED` pada kiriman terbaru (`GET /projects/{id}/submissions`). */
 class RevisionRequestViewModel(
     private val projectId: String,
     private val submissionRepository: SubmissionRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(RevisionRequestUiState())
     val uiState: StateFlow<RevisionRequestUiState> = _uiState.asStateFlow()
 
@@ -47,8 +46,14 @@ class RevisionRequestViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val submissions = async { submissionRepository.submissions(projectId) }

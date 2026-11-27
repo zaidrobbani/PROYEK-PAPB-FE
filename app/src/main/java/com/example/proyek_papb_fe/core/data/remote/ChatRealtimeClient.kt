@@ -27,17 +27,13 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 
-/** Event real-time dari `WS /conversations/{id}/ws`. */
 sealed interface ChatRealtimeEvent {
     data class NewMessage(val message: Message) : ChatRealtimeEvent
     data class Read(val readerUserId: String, val readAtMillis: Long?) : ChatRealtimeEvent
+    data class MessagesDeleted(val messageIds: List<String>, val deletedAtMillis: Long) : ChatRealtimeEvent
     data class Error(val message: String) : ChatRealtimeEvent
 }
 
-/**
- * Satu koneksi WebSocket per ruang chat, dengan reconnect otomatis (1, 2, 4 ... maks 30 detik).
- * Berhenti mencoba bila server menutup dengan 4401 (token) atau 4404 (bukan peserta).
- */
 class ChatRealtimeSession internal constructor(
     private val client: OkHttpClient,
     private val url: String,
@@ -48,7 +44,6 @@ class ChatRealtimeSession internal constructor(
     val events: SharedFlow<ChatRealtimeEvent> = _events.asSharedFlow()
 
     private val _isConnected = MutableStateFlow(false)
-    /** true saat socket siap (event `ready` diterima); layar memakai polling bila false. */
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
     @Volatile private var socket: WebSocket? = null
@@ -66,7 +61,6 @@ class ChatRealtimeSession internal constructor(
                 socket = null
                 _isConnected.value = false
                 if (code == CloseUnauthorized) {
-                    // Sama seperti 401 REST: sesi berakhir, App mengarahkan ke Login.
                     token?.let(sessionManager::expire)
                     return@launch
                 }
@@ -106,13 +100,19 @@ class ChatRealtimeSession internal constructor(
                     wasReady = true
                     _isConnected.value = true
                 }
-                // Event `message` = { message, attachments } (bentuk sama dengan riwayat pesan).
                 "message" -> runCatching { gson.fromJson(json, MessageWithAttachmentsDto::class.java).toDomain() }
                     .getOrNull()?.let { _events.tryEmit(ChatRealtimeEvent.NewMessage(it)) }
                 "read" -> _events.tryEmit(
                     ChatRealtimeEvent.Read(
                         readerUserId = json.get("reader_user_id")?.asString.orEmpty(),
                         readAtMillis = DateTimeParser.parseUtcMillis(json.get("read_at")?.asString)
+                    )
+                )
+                "message_deleted" -> _events.tryEmit(
+                    ChatRealtimeEvent.MessagesDeleted(
+                        messageIds = json.getAsJsonArray("message_ids")?.map { it.asString }.orEmpty(),
+                        deletedAtMillis = DateTimeParser.parseUtcMillis(json.get("deleted_at")?.asString)
+                            ?: System.currentTimeMillis()
                     )
                 )
                 "error" -> _events.tryEmit(ChatRealtimeEvent.Error(json.get("message")?.asString ?: "Pesan gagal dikirim"))
@@ -144,7 +144,6 @@ class ChatRealtimeClient(
     private val gson: Gson,
     private val sessionManager: SessionManager
 ) {
-    // Ping menjaga koneksi tetap hidup lewat NAT/adb reverse; read timeout tidak berlaku untuk socket.
     private val client = okHttpClient.newBuilder()
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .pingInterval(25, TimeUnit.SECONDS)

@@ -44,7 +44,7 @@ interface ProjectApiService {
     suspend fun update(@Path("id") projectId: String, @Body body: ProjectRequest): ApiResponse<ProjectDto>
 
     @DELETE("projects/{id}")
-    suspend fun delete(@Path("id") projectId: String): ApiResponse<Any?>
+    suspend fun delete(@Path("id") projectId: String): ApiResponse<Nothing>
 
     @Multipart
     @POST("projects/{id}/attachments")
@@ -67,7 +67,7 @@ interface ProjectApiService {
     suspend fun deleteAttachment(
         @Path("id") projectId: String,
         @Path("attachmentId") attachmentId: String
-    ): ApiResponse<Any?>
+    ): ApiResponse<Nothing>
 
     @POST("projects/{id}/applications")
     suspend fun apply(@Path("id") projectId: String, @Body body: SubmitApplicationRequest): ApiResponse<ApplicationDto>

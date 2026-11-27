@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.workplan.container
 
+import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -14,7 +15,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,18 +39,24 @@ import com.example.proyek_papb_fe.feature.freelancer.workplan.viewmodel.WorkPlan
 
 private const val ScreenTitle = "Rencana Pengerjaan"
 
-private val MilestoneListSaver: Saver<List<MilestoneInput>, Any> = listSaver(
-    save = { list -> list.flatMap { listOf(it.id, it.name, it.weight) } },
-    restore = { flat ->
-        flat.chunked(3).map { (id, name, weight) ->
-            MilestoneInput(id = id as Long, name = name as String, weight = weight as String)
+private val MilestoneListSaver: Saver<List<MilestoneInput>, Bundle> = Saver(
+    save = { list ->
+        Bundle().apply {
+            putLongArray("ids", list.map { it.id }.toLongArray())
+            putStringArrayList("names", ArrayList(list.map { it.name }))
+            putStringArrayList("weights", ArrayList(list.map { it.weight }))
         }
+    },
+    restore = { saved ->
+        val ids = saved.getLongArray("ids") ?: LongArray(0)
+        val names = saved.getStringArrayList("names").orEmpty()
+        val weights = saved.getStringArrayList("weights").orEmpty()
+        ids.indices.map { i -> MilestoneInput(id = ids[i], name = names[i], weight = weights[i]) }
     }
 )
 
 private fun MilestoneInput.toDraft() = MilestoneDraft(name = name.trim(), description = "", weightPercent = weightValue)
 
-/** [onOpenUmkmSimulation] tidak dipakai lagi: aksi status (mulai kerja, tandai milestone) dijalankan langsung ke BE. */
 @Composable
 fun WorkPlanContainer(
     projectId: String,
@@ -148,7 +154,6 @@ fun WorkPlanContainer(
         ) to viewModel::load
         else -> null
     }
-    // Setelah dibayar, rencana terkunci: tampilkan progres & tombol tandai selesai per milestone.
     val isRunning = status in setOf(
         ProjectStatusCode.SIAP_DIKERJAKAN,
         ProjectStatusCode.SEDANG_DIKERJAKAN,
@@ -172,6 +177,7 @@ fun WorkPlanContainer(
     }
 
     WorkPlanScreen(
+        onRefresh = viewModel::refresh,
         header = header,
         milestones = milestones,
         isSubmitted = !uiState.isEditable,

@@ -4,14 +4,9 @@ import com.example.proyek_papb_fe.core.session.SessionManager
 import okhttp3.Interceptor
 import okhttp3.Response
 
-/**
- * Menempelkan `Authorization: Bearer` dan mengakhiri sesi saat BE menjawab 401
- * untuk request yang membawa token (token kedaluwarsa, logout, sandi direset).
- */
 class AuthInterceptor(
     private val sessionManager: SessionManager
 ) : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val token = sessionManager.accessToken
@@ -26,7 +21,6 @@ class AuthInterceptor(
     }
 
     private companion object {
-        // Endpoint tanpa login; 401 di sini (mis. sandi salah) bukan tanda sesi habis.
         val PublicPaths = listOf(
             "/auth/login",
             "/auth/register",

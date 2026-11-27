@@ -7,7 +7,6 @@ import com.example.proyek_papb_fe.core.domain.model.Skill
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Master skill & kategori project jarang berubah, jadi disimpan di memori setelah request pertama. */
 interface MasterDataRepository {
     suspend fun skills(): List<Skill>
     suspend fun categories(): List<Category>
@@ -18,7 +17,6 @@ interface MasterDataRepository {
 class DefaultMasterDataRepository(
     private val remote: MasterDataRemoteDataSource
 ) : MasterDataRepository {
-
     private val mutex = Mutex()
     private var cachedSkills: List<Skill>? = null
     private var cachedCategories: List<Category>? = null

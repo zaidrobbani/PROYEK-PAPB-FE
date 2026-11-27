@@ -15,7 +15,10 @@ import com.example.proyek_papb_fe.core.data.repository.MasterDataRepository
 import com.example.proyek_papb_fe.core.data.source.PickedChatFile
 import com.example.proyek_papb_fe.core.di.AppContainer
 import com.example.proyek_papb_fe.core.domain.model.OutgoingAttachment
+import com.example.proyek_papb_fe.core.domain.model.DeleteForEveryoneWindowMillis
+import com.example.proyek_papb_fe.feature.chat.viewmodel.MessageSelection
 import com.example.proyek_papb_fe.feature.chat.viewmodel.OutgoingAttachmentQueue
+import java.time.ZoneId
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmConversationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
@@ -33,22 +36,15 @@ data class UmkmChatThreadUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val message: String? = null,
-    /** Percakapan (project) tujuan pesan yang dikirim UMKM. */
     val targetConversationId: String
 )
 
-/**
- * Ruang chat UMKM dengan satu freelancer. BE menyimpan percakapan per project, jadi semua percakapan
- * dengan freelancer itu dimuat & digabung, masing-masing dengan WebSocket sendiri. Pesan baru dikirim ke
- * percakapan tujuan (awalnya yang dibuka; bisa diganti bila ada beberapa project).
- */
 class UmkmChatThreadViewModel(
     private val initialConversationId: String,
     private val overviewRepository: ChatOverviewRepository,
     private val chatRepository: ChatRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmChatThreadUiState(targetConversationId = initialConversationId))
     val uiState: StateFlow<UmkmChatThreadUiState> = _uiState.asStateFlow()
 
@@ -56,26 +52,23 @@ class UmkmChatThreadViewModel(
     private val sessions = mutableMapOf<String, ChatRealtimeSession>()
 
     private val _conversationIds = MutableStateFlow(setOf(initialConversationId))
-    /** Semua percakapan (project) dengan freelancer ini yang sedang ditampilkan di ruang chat. */
     val conversationIds: StateFlow<Set<String>> = _conversationIds.asStateFlow()
     private var connectionJob: Job? = null
 
     private val _isRealtime = MutableStateFlow(false)
-    /** true saat semua WebSocket percakapan tersambung; layar hanya polling bila false. */
     val isRealtime: StateFlow<Boolean> = _isRealtime.asStateFlow()
 
     private val outgoing = OutgoingAttachmentQueue(viewModelScope, { _uiState.value.targetConversationId }, chatRepository) {
         UmkmConversationStore.append(it, myId)
     }
-    /** Foto/dokumen yang sedang dikirim atau gagal terkirim (tampil di akhir chat). */
     val pendingAttachments: StateFlow<List<OutgoingAttachment>> = outgoing.items
 
     init {
         load()
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
             try {
                 val opened = overviewRepository.overview(initialConversationId)
@@ -84,7 +77,6 @@ class UmkmChatThreadViewModel(
                 connect(listOf(initialConversationId))
                 markRead(initialConversationId)
 
-                // Percakapan project lain dengan freelancer yang sama.
                 val others = chatRepository.conversations()
                     .filter { it.freelancerId == opened.conversation.freelancerId && it.id != initialConversationId }
                 overviewRepository.overviews(others).forEach { store(it) }
@@ -124,7 +116,6 @@ class UmkmChatThreadViewModel(
         when (event) {
             is ChatRealtimeEvent.NewMessage -> {
                 UmkmConversationStore.append(event.message, myId)
-                // Layar sedang terbuka: pesan masuk langsung dianggap dibaca.
                 if (event.message.senderUserId != myId) {
                     if (!session.markRead()) viewModelScope.launch { runCatching { chatRepository.markRead(conversationId) } }
                     UmkmConversationStore.markRead(conversationId)
@@ -132,6 +123,8 @@ class UmkmChatThreadViewModel(
             }
             is ChatRealtimeEvent.Read ->
                 if (event.readerUserId != myId) UmkmConversationStore.markReadByFreelancer(conversationId)
+            is ChatRealtimeEvent.MessagesDeleted ->
+                UmkmConversationStore.markDeleted(conversationId, event.messageIds.toSet())
             is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
         }
     }
@@ -141,7 +134,6 @@ class UmkmChatThreadViewModel(
         UmkmConversationStore.markRead(conversationId)
     }
 
-    /** Cadangan saat WebSocket terputus: dipanggil berkala dari layar. */
     fun refreshMessages() {
         val ids = sessions.keys.toList()
         viewModelScope.launch {
@@ -149,6 +141,7 @@ class UmkmChatThreadViewModel(
                 val messages = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@forEach
                 val lastBefore = UmkmConversationStore.messages(id).lastOrNull()?.id
                 UmkmConversationStore.replaceMessages(id, messages, myId)
+                selection.retain(visibleMessages().keys)
                 if (messages.lastOrNull()?.id != lastBefore) markRead(id)
             }
         }
@@ -160,7 +153,6 @@ class UmkmChatThreadViewModel(
         val body = text.trim()
         if (body.isEmpty()) return
         val target = _uiState.value.targetConversationId
-        // Lewat WebSocket bila tersambung; pesan kembali sebagai event `message`. REST hanya cadangan.
         if (sessions[target]?.sendMessage(body) == true) return
         viewModelScope.launch {
             try {
@@ -180,6 +172,48 @@ class UmkmChatThreadViewModel(
     fun discardAttachment(localId: String) = outgoing.discard(localId)
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
+
+    private val selection = MessageSelection()
+    val selectedMessageIds: StateFlow<Set<String>> = selection.selected
+    val isDeletingMessages: StateFlow<Boolean> = selection.isDeleting
+
+    private fun visibleMessages() = _conversationIds.value
+        .flatMap { UmkmConversationStore.messages(it) }
+        .associateBy { it.id }
+
+    fun toggleMessageSelection(messageId: String) {
+        if (messageId in visibleMessages()) selection.toggle(messageId)
+    }
+
+    fun clearMessageSelection() = selection.clear()
+
+    fun canDeleteSelectedForEveryone(): Boolean {
+        val ids = selection.selected.value
+        val messages = visibleMessages()
+        val now = System.currentTimeMillis()
+        return ids.isNotEmpty() && ids.all { id ->
+            val message = messages[id] ?: return@all false
+            val sentAt = message.sentAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            message.fromUmkm && !message.isDeleted && now - sentAt <= DeleteForEveryoneWindowMillis
+        }
+    }
+
+    fun deleteSelectedMessages(forEveryone: Boolean) {
+        val conversationOf = visibleMessages().mapValues { it.value.conversationId }
+        viewModelScope.launch {
+            try {
+                selection.delete(chatRepository, conversationOf, forEveryone) { conversationId, ids, _ ->
+                    if (forEveryone) UmkmConversationStore.markDeleted(conversationId, ids.toSet())
+                    else UmkmConversationStore.removeMessages(conversationId, ids.toSet())
+                }
+                _uiState.update { it.copy(message = if (forEveryone) "Pesan dihapus untuk semua orang" else "Pesan dihapus") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(message = e.userMessage()) }
+            }
+        }
+    }
 
     override fun onCleared() {
         sessions.values.forEach { it.close() }

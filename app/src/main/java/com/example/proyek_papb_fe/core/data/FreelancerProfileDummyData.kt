@@ -9,7 +9,6 @@ import com.example.proyek_papb_fe.core.data.model.PortfolioItem
 import com.example.proyek_papb_fe.core.data.model.WorkExperience
 
 object FreelancerProfileDummyData {
-
     val current = FreelancerProfile(
         fullName = "Andi Ramadhan",
         initials = "AR",

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.NotificationRepository
 import com.example.proyek_papb_fe.core.domain.model.AppNotification
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,17 +23,21 @@ data class NotificationsUiState(
     val unreadCount: Int = 0
 )
 
-/** Notifikasi (UMKM & freelancer). Filter kategori dilakukan lokal agar hitungan tiap tab tetap lengkap. */
 class NotificationsViewModel(
     private val repository: NotificationRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val list = repository.notifications()
                 _uiState.update { it.copy(isLoading = false, items = list.items, unreadCount = list.unreadCount) }

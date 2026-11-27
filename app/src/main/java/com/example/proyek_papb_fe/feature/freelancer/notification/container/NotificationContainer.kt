@@ -47,7 +47,6 @@ private fun freelancerNotificationType(backendType: String): NotificationType = 
     else -> NotificationType.SYSTEM
 }
 
-/** Halaman tujuan notifikasi freelancer; dipakai daftar notifikasi dan ketukan notifikasi HP (push). */
 sealed interface FreelancerNotificationDestination {
     data class Chat(val conversationId: String) : FreelancerNotificationDestination
     data class RevisionRequest(val projectId: String) : FreelancerNotificationDestination
@@ -115,6 +114,7 @@ fun NotificationContainer(
     val shown = if (selected == 0) all else all.filter { it.freelancerType().group == filters[selected - 1] }
 
     NotificationScreen(
+        onRefresh = viewModel::refresh,
         filters = listOf(NotificationFilterUi("Semua (${all.size})", selected == 0)) +
             filters.mapIndexed { i, f -> NotificationFilterUi(f.label, selected == i + 1) },
         unreadCount = uiState.unreadCount,

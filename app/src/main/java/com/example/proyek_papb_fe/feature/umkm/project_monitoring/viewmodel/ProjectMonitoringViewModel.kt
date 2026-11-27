@@ -16,6 +16,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.ProjectMonitoringResult
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProject
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
 import com.example.proyek_papb_fe.feature.umkm.data.utcMillisToDate
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,14 +39,12 @@ data class ProjectMonitoringUiState(
     val message: String? = null
 )
 
-/** F4: progres dari milestone SELESAI dan risiko keterlambatan dihitung BE (`/milestones/delay-risk`). */
 class ProjectMonitoringViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository,
     private val chatRepository: ChatRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectMonitoringUiState())
     val uiState: StateFlow<ProjectMonitoringUiState> = _uiState.asStateFlow()
 
@@ -56,8 +55,14 @@ class ProjectMonitoringViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }
@@ -113,7 +118,6 @@ class ProjectMonitoringViewModel(
         )
     }
 
-    /** Membuka (atau membuat) percakapan dengan freelancer terpilih untuk project ini. */
     fun openChat() {
         val counterpart = freelancerId
         if (counterpart == null) {

@@ -29,13 +29,8 @@ data class ChatConversation(
     val contactInitials: String,
     val projectTitle: String,
 
-
-
-
     val projectStatus: ProjectStatus,
     val context: ChatProjectContext,
-
-
 
     val messages: List<ChatMessage>,
     val unreadCount: Int = 0

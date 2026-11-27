@@ -16,11 +16,9 @@ import com.example.proyek_papb_fe.core.domain.model.UmkmBusinessProfile
 import com.example.proyek_papb_fe.core.domain.model.UploadFile
 
 interface ProfileRepository {
-    /** null bila UMKM belum membuat profil bisnis (BE menjawab 404). */
     suspend fun umkmProfile(): UmkmBusinessProfile?
     suspend fun saveUmkmProfile(businessName: String, category: String, address: String, city: String): UmkmBusinessProfile
 
-    /** null bila freelancer belum membuat profil profesional. */
     suspend fun freelancerProfile(): FreelancerProfessionalProfile?
     suspend fun saveFreelancerProfile(
         title: String,
@@ -51,7 +49,6 @@ class DefaultProfileRepository(
     private val remote: ProfileRemoteDataSource,
     private val uploadPartFactory: UploadPartFactory
 ) : ProfileRepository {
-
     override suspend fun umkmProfile(): UmkmBusinessProfile? = nullIfNotFound { remote.getUmkm().toDomain() }
 
     override suspend fun saveUmkmProfile(
@@ -87,7 +84,6 @@ class DefaultProfileRepository(
         )
         return if (existing == null) {
             val created = remote.createFreelancer(body.copy(availabilityStatus = null)).toDomain()
-            // POST selalu AVAILABLE; set ulang bila user memilih status lain.
             if (created.availabilityStatus != availabilityStatus) remote.updateFreelancer(body).toDomain() else created
         } else {
             remote.updateFreelancer(body).toDomain()

@@ -9,7 +9,6 @@ import java.util.Calendar
 
 private val ImageExtensions = setOf("jpg", "jpeg", "png", "webp", "gif", "heic")
 
-/** [localUri] terisi setelah file diunduh dari BE (endpoint unduh butuh token). Kunci item = id file BE. */
 internal fun SubmissionFile.toReviewFileUi(localUri: String?): ReviewFileUi {
     val ext = fileName.substringAfterLast('.', "").lowercase()
     return ReviewFileUi(
@@ -27,7 +26,6 @@ internal fun SubmissionFile.toReviewFileUi(localUri: String?): ReviewFileUi {
 
 internal const val RemoteFilePrefix = "remote-file:"
 
-/** Id file BE dari [ReviewFileUi.uri] (baik yang sudah diunduh maupun belum). */
 internal fun ReviewFileUi.fileId(files: List<SubmissionFile>, localUris: Map<String, String>): String? =
     if (uri.startsWith(RemoteFilePrefix)) uri.removePrefix(RemoteFilePrefix)
     else localUris.entries.firstOrNull { it.value == uri }?.key ?: files.firstOrNull { it.fileName == name }?.id

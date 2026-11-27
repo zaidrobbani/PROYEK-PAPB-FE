@@ -187,7 +187,8 @@ fun AppNavHost(
             onSeeAllActiveProjectsClick = { navController.navigateToTopLevel(SubmissionRoute) },
             onRecommendedProjectClick = { projectId -> navController.navigateToProjectDetail(projectId) },
             onSeeAllRecommendationsClick = { navController.navigateToTopLevel(SearchProjectRoute) },
-            onNotificationClick = { navController.navigateToNotifications() }
+            onNotificationClick = { navController.navigateToNotifications() },
+            onManageSkillsClick = { navController.navigateToProfessionalProfile() }
         )
 
         searchProjectScreen(
@@ -250,7 +251,6 @@ fun AppNavHost(
         )
         workPlanScreen(
             onBack = { navController.navigateUp() },
-            // Simulasi sisi UMKM dari akun freelancer dihapus: persetujuan & pembayaran kini dilakukan akun UMKM sungguhan.
             onOpenUmkmSimulation = {},
             onOpenProjectChat = openProjectChat,
             onOpenWallet = { navController.navigateToWallet() }
@@ -321,7 +321,6 @@ fun AppNavHost(
             },
             onGiveReview = { projectId -> navController.navigateToFreelancerReview(projectId) },
             onReviewDone = { navController.navigateUp() },
-            // Layar ini milik UMKM: kembali ke Beranda UMKM (pop bila ada di tumpukan, selain itu buka sebagai tab).
             onBackToHome = {
                 if (!navController.popBackStack<UmkmDashboardRoute>(inclusive = false)) {
                     navController.navigateToTopLevel(UmkmDashboardRoute)
@@ -495,7 +494,6 @@ fun AppNavHost(
             onBack = { navController.navigateUp() },
             onSelected = { navController.navigateUp() },
             onOpenApplications = { projectId ->
-                // Dibuka dari halaman Pengajuan project yang sama: cukup kembali, jangan menumpuk layar.
                 val previous = navController.previousBackStackEntry
                 val isSameApplicationsBelow = previous?.destination?.hasRoute<FreelancerApplicationsRoute>() == true &&
                     previous.toRoute<FreelancerApplicationsRoute>().projectId == projectId
@@ -549,7 +547,6 @@ fun AppNavHost(
         )
         umkmConversationListScreen(
             onNotificationsClick = { navController.navigateToUmkmNotifications() },
-            // Selalu ke ruang chat agar bisa langsung membalas; kesepakatan yang menunggu dibuka dari banner di sana.
             onOpenConversation = { conversationId -> navController.navigateToUmkmChatRoom(conversationId) },
             onTabSelected = { tab ->
                 when (tab) {

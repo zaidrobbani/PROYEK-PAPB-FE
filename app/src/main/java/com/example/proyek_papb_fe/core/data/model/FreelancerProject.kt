@@ -37,7 +37,6 @@ data class FreelancerProject(
     val ownerName: String,
     val ownerRole: String,
     val clientRating: Double,
-    /** Foto profil UMKM dari BE (`profile_image_url`), null = avatar inisial. */
     val clientPhotoUrl: String? = null,
 
     val budgetLabel: String,

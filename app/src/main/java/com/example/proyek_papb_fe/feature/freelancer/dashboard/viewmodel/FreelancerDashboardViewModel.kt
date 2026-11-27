@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.freelancer.dashboard.viewmodel
 
+import com.example.proyek_papb_fe.core.data.repository.ProfileRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,6 +16,7 @@ import com.example.proyek_papb_fe.core.data.repository.WorkflowRepository
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.util.rupiah
 import com.example.proyek_papb_fe.feature.freelancer.dashboard.component.DashboardProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -34,6 +36,7 @@ data class FreelancerDashboardUiState(
     val availableBalance: Long = 0,
     val activeProject: DashboardProject? = null,
     val recommendations: List<DashboardProject> = emptyList(),
+    val hasSkills: Boolean? = null,
     val hasUnreadNotification: Boolean = false
 )
 
@@ -43,23 +46,30 @@ class FreelancerDashboardViewModel(
     private val workflowRepository: WorkflowRepository,
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(
         FreelancerDashboardUiState(userName = authRepository.currentUser()?.name.orEmpty().substringBefore(" "))
     )
     val uiState: StateFlow<FreelancerDashboardUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val wallet = async { runCatching { paymentRepository.wallet() }.getOrNull() }
                     val projects = async { workflowRepository.myProjects() }
                     val recommended = async { projectRepository.recommendedProjects(limit = RecommendationCount) }
                     val unread = async { runCatching { notificationRepository.unreadCount() }.getOrDefault(0) }
+                    val skills = async { runCatching { profileRepository.mySkillIds() }.getOrDefault(emptyList()) }
                     val categories = runCatching { masterDataRepository.categories() }.getOrDefault(emptyList())
                         .associate { it.id to it.name }
                     val now = System.currentTimeMillis()
@@ -79,7 +89,6 @@ class FreelancerDashboardViewModel(
                                 daysRemaining = deadline?.let { TimeUnit.MILLISECONDS.toDays(it - now).toInt().coerceAtLeast(0) }
                             )
                         }
-                    // Rekomendasi matching hanya berisi ringkasan; budget & deskripsi diambil dari detail project.
                     val recommendations = recommended.await().take(RecommendationCount).map { rec ->
                         async {
                             val project = runCatching { projectRepository.detail(rec.projectId) }.getOrNull()
@@ -101,6 +110,7 @@ class FreelancerDashboardViewModel(
                             availableBalance = wallet.await()?.availableBalance ?: 0,
                             activeProject = active,
                             recommendations = recommendations,
+                            hasSkills = skills.await().isNotEmpty(),
                             hasUnreadNotification = unread.await() > 0
                         )
                     }
@@ -135,11 +145,13 @@ class FreelancerDashboardViewModel(
             workflowRepository: WorkflowRepository,
             projectRepository: ProjectRepository,
             masterDataRepository: MasterDataRepository,
-            notificationRepository: NotificationRepository
+            notificationRepository: NotificationRepository,
+            profileRepository: ProfileRepository
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 FreelancerDashboardViewModel(
-                    authRepository, paymentRepository, workflowRepository, projectRepository, masterDataRepository, notificationRepository
+                    authRepository, paymentRepository, workflowRepository, projectRepository, masterDataRepository,
+                    notificationRepository, profileRepository
                 )
             }
         }

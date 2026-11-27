@@ -17,6 +17,7 @@ import com.example.proyek_papb_fe.core.domain.model.RevisionItem
 import com.example.proyek_papb_fe.core.domain.model.Submission
 import com.example.proyek_papb_fe.core.domain.model.SubmissionFile
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -34,7 +35,6 @@ data class ProjectResultUiState(
     val detail: WorkflowDetail? = null,
     val latest: Submission? = null,
     val review: Review? = null,
-    /** id file → Uri `file://` hasil unduhan (untuk pratinjau gambar). */
     val localUris: Map<String, String> = emptyMap(),
     val isSubmitting: Boolean = false,
     val message: String? = null,
@@ -50,14 +50,12 @@ data class ProjectResultUiState(
         }
 }
 
-/** Review hasil (UMKM): minta revisi, setujui hasil (project SELESAI + dana RELEASED dalam satu transaksi BE), ulasan. */
 class ProjectResultViewModel(
     private val projectId: String,
     private val workflowRepository: WorkflowRepository,
     private val submissionRepository: SubmissionRepository,
     private val fileRepository: FileRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProjectResultUiState())
     val uiState: StateFlow<ProjectResultUiState> = _uiState.asStateFlow()
 
@@ -66,8 +64,14 @@ class ProjectResultViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { workflowRepository.detail(projectId) }
@@ -132,7 +136,6 @@ class ProjectResultViewModel(
         }
     }
 
-    /** Ulasan opsional ikut dikirim bersama persetujuan bila rating diisi. */
     fun approve(rating: Int, reviewText: String) {
         val submission = _uiState.value.latest ?: return
         if (_uiState.value.isSubmitting) return
@@ -153,7 +156,6 @@ class ProjectResultViewModel(
 
     fun submitReview(rating: Int, highlightLabels: Set<String>, text: String, highlightOptions: List<String>) {
         if (_uiState.value.isSubmitting || rating !in 1..5) return
-        // Urutan opsi Figma sama dengan enum BE review_highlights.
         val codes = highlightLabels.mapNotNull { label ->
             when (highlightOptions.indexOf(label)) {
                 0 -> ReviewHighlightCode.RESPONSIF_KOMUNIKATIF

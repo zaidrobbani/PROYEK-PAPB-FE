@@ -52,10 +52,6 @@ private fun NavController.openFreelancerDestination(destination: FreelancerNotif
     FreelancerNotificationDestination.NotificationList -> navigateToNotifications()
 }
 
-/**
- * Notifikasi HP yang diketuk → halaman tujuannya (sama dengan mengetuk item di daftar notifikasi), lalu ditandai dibaca.
- * Menunggu splash selesai supaya navigasi splash ke beranda tidak menimpa halaman tujuan.
- */
 @Composable
 fun PushNavigationEffect(navController: NavHostController) {
     val pending by PushEvents.pendingOpen.collectAsStateWithLifecycle()
@@ -68,7 +64,7 @@ fun PushNavigationEffect(navController: NavHostController) {
         val role = session?.user?.role
         if (onSplash) return@LaunchedEffect
         PushEvents.consumeOpen(message)
-        if (role == null) return@LaunchedEffect // sesi habis: pengguna sudah diarahkan ke login
+        if (role == null) return@LaunchedEffect
         navController.openPush(message, role)
         AppContainer.appScope.launch {
             runCatching { AppContainer.notificationRepository.markRead(message.notificationId) }
@@ -91,7 +87,6 @@ private fun NavController.openPush(message: PushMessage, role: AccountRole) {
 private const val PromptPrefs = "temukarya_device_access"
 private const val PromptKey = "auto_prompt_notifications"
 
-/** Sekali setelah login pertama di perangkat ini, minta izin notifikasi (dengan penjelasan dulu). */
 @Composable
 fun NotificationPermissionPrompt(navController: NavHostController) {
     if (!PushSetup.isAvailable) return

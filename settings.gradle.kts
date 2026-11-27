@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "PROYEK-PAPB-FE"
 include(":app")
- 

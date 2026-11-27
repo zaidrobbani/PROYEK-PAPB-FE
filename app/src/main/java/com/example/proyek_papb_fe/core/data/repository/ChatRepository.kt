@@ -3,6 +3,7 @@ package com.example.proyek_papb_fe.core.data.repository
 import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeClient
 import com.example.proyek_papb_fe.core.data.remote.ChatRealtimeSession
 import com.example.proyek_papb_fe.core.data.remote.dto.toDomain
+import com.example.proyek_papb_fe.core.util.DateTimeParser.parseUtcMillis
 import com.example.proyek_papb_fe.core.data.source.ChatAttachmentReader
 import com.example.proyek_papb_fe.core.data.source.ChatRemoteDataSource
 import com.example.proyek_papb_fe.core.data.source.PickedChatFile
@@ -25,13 +26,12 @@ interface ChatRepository {
     suspend fun send(conversationId: String, text: String): Message
     suspend fun markRead(conversationId: String)
 
-    /** Kirim foto (dikompres ke WebP) atau dokumen dengan caption opsional. */
+    suspend fun deleteMessages(conversationId: String, messageIds: List<String>, forEveryone: Boolean): Long
+
     suspend fun sendAttachment(conversationId: String, attachment: OutgoingAttachment): Message
 
-    /** Nama, ukuran, dan jenis file pilihan user (untuk pratinjau sebelum kirim). */
     fun describeFile(uri: String): PickedChatFile
 
-    /** Koneksi WebSocket ruang chat; panggil `start(scope)` dan `close()` mengikuti umur layar. */
     fun realtime(conversationId: String): ChatRealtimeSession
 }
 
@@ -40,7 +40,6 @@ class DefaultChatRepository(
     private val realtimeClient: ChatRealtimeClient,
     private val attachmentReader: ChatAttachmentReader
 ) : ChatRepository {
-
     override fun describeFile(uri: String): PickedChatFile = attachmentReader.describe(uri)
 
     override suspend fun sendAttachment(conversationId: String, attachment: OutgoingAttachment): Message {
@@ -74,5 +73,10 @@ class DefaultChatRepository(
 
     override suspend fun markRead(conversationId: String) {
         remote.markRead(conversationId)
+    }
+
+    override suspend fun deleteMessages(conversationId: String, messageIds: List<String>, forEveryone: Boolean): Long {
+        val result = remote.deleteMessages(conversationId, messageIds, if (forEveryone) "EVERYONE" else "ME")
+        return parseUtcMillis(result.deletedAt) ?: System.currentTimeMillis()
     }
 }

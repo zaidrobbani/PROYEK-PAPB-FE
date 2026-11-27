@@ -15,6 +15,7 @@ import com.example.proyek_papb_fe.core.util.rupiah
 import com.example.proyek_papb_fe.feature.freelancer.data.freelancerStatusOf
 import com.example.proyek_papb_fe.feature.freelancer.submission.component.ProposalListItem
 import com.example.proyek_papb_fe.feature.freelancer.submission.component.ProposalStage
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,18 +32,22 @@ data class ProposalListUiState(
     val items: List<ProposalListItem> = emptyList()
 )
 
-/** Tab "Proyek" freelancer: lamaran saya (`/applications/mine`) digabung status alur project (`/workflow/projects`). */
 class ProposalListViewModel(
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProposalListUiState())
     val uiState: StateFlow<ProposalListUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val applications = async { projectRepository.myApplications() }
@@ -53,7 +58,6 @@ class ProposalListViewModel(
                         .map { application ->
                             async {
                                 val workflow = byProject[application.projectId]
-                                // Project yang tidak lagi TERBUKA hanya bisa dibaca freelancer terpilih (lewat workflow).
                                 val publicProject = if (workflow == null) {
                                     runCatching { projectRepository.detail(application.projectId) }.getOrNull()
                                 } else null

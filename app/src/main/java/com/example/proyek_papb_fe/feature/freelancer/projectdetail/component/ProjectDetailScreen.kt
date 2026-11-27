@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.projectdetail.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import com.example.proyek_papb_fe.core.ui.components.chat.formatFileSize
 import com.example.proyek_papb_fe.core.domain.model.ProjectFile
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +42,7 @@ fun ProjectDetailScreen(
     onChatClick: () -> Unit,
     onSubmitOfferClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     attachments: List<ProjectFile> = emptyList(),
     openingAttachmentId: String? = null,
     onAttachmentClick: (ProjectFile) -> Unit = {}
@@ -51,69 +54,70 @@ fun ProjectDetailScreen(
     ) {
         DetailTopBar(title = "Detail Proyek", onBack = onBack)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = ScreenHorizontalPadding,
-                    end = ScreenHorizontalPadding,
-                    top = 3.61.dp + SectionSpacing,
-                    bottom = 16.903.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(SectionSpacing)
-        ) {
-            ProjectDetailHeader(
-                title = project.title,
-                publishedAgo = project.publishedAgo,
-                match = project.match
-            )
-
-            ClientProfileCard(project = project)
-
-            KeyMetricsRow(
-                budget = project.budgetCompact,
-                deadline = project.deadlineCompact
-            )
-
-            DetailSectionCard(
-                iconRes = R.drawable.ic_description,
-                title = "Deskripsi Proyek & Kebutuhan",
-                titleStyle = TemuKaryaTypography.SectionTitle,
-                contentSpacing = 8.451.dp
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = ScreenHorizontalPadding,
+                        end = ScreenHorizontalPadding,
+                        top = 3.61.dp + SectionSpacing,
+                        bottom = 16.903.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(SectionSpacing)
             ) {
-                Text(
-                    text = project.description,
-                    style = TemuKaryaTypography.BodyLarge,
-                    color = TemuKaryaColors.TextPrimary
+                ProjectDetailHeader(
+                    title = project.title,
+                    publishedAgo = project.publishedAgo,
+                    match = project.match
                 )
-            }
 
-            if (project.skills.isNotEmpty()) {
-                DetailSectionCard(
-                    iconRes = R.drawable.ic_skill,
-                    title = "Keahlian yang Dibutuhkan",
-                    titleStyle = TemuKaryaTypography.SubsectionTitle,
-                    contentSpacing = 4.226.dp
-                ) {
-                    SkillChips(skills = project.skills)
-                }
-            }
+                ClientProfileCard(project = project)
 
-            if (attachments.isNotEmpty()) {
+                KeyMetricsRow(
+                    budget = project.budgetCompact,
+                    deadline = project.deadlineCompact
+                )
+
                 DetailSectionCard(
-                    iconRes = R.drawable.ic_document,
-                    title = "Lampiran Pendukung",
-                    titleStyle = TemuKaryaTypography.SubsectionTitle,
+                    iconRes = R.drawable.ic_description,
+                    title = "Deskripsi Proyek & Kebutuhan",
+                    titleStyle = TemuKaryaTypography.SectionTitle,
                     contentSpacing = 8.451.dp
                 ) {
-                    attachments.forEach { file ->
-                        AttachmentRow(
-                            file = file,
-                            isOpening = file.id == openingAttachmentId,
-                            onClick = { onAttachmentClick(file) }
-                        )
+                    Text(
+                        text = project.description,
+                        style = TemuKaryaTypography.BodyLarge,
+                        color = TemuKaryaColors.TextPrimary
+                    )
+                }
+
+                if (project.skills.isNotEmpty()) {
+                    DetailSectionCard(
+                        iconRes = R.drawable.ic_skill,
+                        title = "Keahlian yang Dibutuhkan",
+                        titleStyle = TemuKaryaTypography.SubsectionTitle,
+                        contentSpacing = 4.226.dp
+                    ) {
+                        SkillChips(skills = project.skills)
+                    }
+                }
+
+                if (attachments.isNotEmpty()) {
+                    DetailSectionCard(
+                        iconRes = R.drawable.ic_document,
+                        title = "Lampiran Pendukung",
+                        titleStyle = TemuKaryaTypography.SubsectionTitle,
+                        contentSpacing = 8.451.dp
+                    ) {
+                        attachments.forEach { file ->
+                            AttachmentRow(
+                                file = file,
+                                isOpening = file.id == openingAttachmentId,
+                                onClick = { onAttachmentClick(file) }
+                            )
+                        }
                     }
                 }
             }
@@ -125,7 +129,6 @@ fun ProjectDetailScreen(
         )
     }
 }
-
 
 @Composable
 private fun AttachmentRow(file: ProjectFile, isOpening: Boolean, onClick: () -> Unit) {
@@ -150,4 +153,3 @@ private fun AttachmentRow(file: ProjectFile, isOpening: Boolean, onClick: () -> 
         }
     }
 }
-

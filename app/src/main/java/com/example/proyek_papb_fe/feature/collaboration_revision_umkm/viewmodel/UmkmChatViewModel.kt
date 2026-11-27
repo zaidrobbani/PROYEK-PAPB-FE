@@ -24,6 +24,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.UmkmNegotiationStore
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmProjectStore
 import com.example.proyek_papb_fe.feature.umkm.data.toCode
 import com.example.proyek_papb_fe.feature.umkm.data.toUmkmProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,15 +37,10 @@ data class UmkmChatUiState(
     val errorMessage: String? = null,
     val isBusy: Boolean = false,
     val message: String? = null,
-    /** Kedua pihak setuju → project MENUNGGU_PEMBAYARAN, layar lanjut ke pembayaran. */
     val readyToPayProjectId: String? = null,
     val cancelledConversationId: String? = null
 )
 
-/**
- * Chat UMKM: isi cache UmkmConversationStore/UmkmNegotiationStore/UmkmProjectStore dari BE,
- * kirim pesan teks, Lanjut Project (approve kesepakatan), dan batalkan project.
- */
 class UmkmChatViewModel(
     private val conversationId: String?,
     private val overviewRepository: ChatOverviewRepository,
@@ -52,14 +48,12 @@ class UmkmChatViewModel(
     private val workflowRepository: WorkflowRepository,
     private val masterDataRepository: MasterDataRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmChatUiState())
     val uiState: StateFlow<UmkmChatUiState> = _uiState.asStateFlow()
 
     private val myId: String? get() = AppContainer.currentUserId
 
     private val realtime = conversationId?.let(chatRepository::realtime)
-    /** true saat WebSocket tersambung; layar hanya polling bila false. */
     val isRealtime: StateFlow<Boolean> = realtime?.isConnected ?: MutableStateFlow(false)
 
     init {
@@ -77,6 +71,8 @@ class UmkmChatViewModel(
                         }
                         is ChatRealtimeEvent.Read ->
                             if (event.readerUserId != myId) UmkmConversationStore.markReadByFreelancer(conversationId)
+                        is ChatRealtimeEvent.MessagesDeleted ->
+                            UmkmConversationStore.markDeleted(conversationId, event.messageIds.toSet())
                         is ChatRealtimeEvent.Error -> _uiState.update { it.copy(message = event.message) }
                     }
                 }
@@ -88,8 +84,8 @@ class UmkmChatViewModel(
         realtime?.close()
     }
 
-    fun load() {
-        viewModelScope.launch {
+    fun load(): Job {
+        return viewModelScope.launch {
             _uiState.update { it.copy(isLoading = it.isLoading, errorMessage = null) }
             try {
                 if (conversationId == null) {
@@ -123,7 +119,6 @@ class UmkmChatViewModel(
         viewModelScope.launch {
             val messages = runCatching { chatRepository.messages(id).items }.getOrNull() ?: return@launch
             val lastBefore = UmkmConversationStore.messages(id).lastOrNull()?.id
-            // Selalu ganti agar status dibaca ikut ter-update saat WebSocket terputus.
             UmkmConversationStore.replaceMessages(id, messages, myId)
             if (messages.lastOrNull()?.id != lastBefore) runCatching { chatRepository.markRead(id) }
         }
@@ -132,7 +127,6 @@ class UmkmChatViewModel(
     fun send(text: String) {
         val id = conversationId ?: return
         if (text.isBlank() || _uiState.value.isBusy) return
-        // Lewat WebSocket bila tersambung; pesan kembali sebagai event `message`. REST hanya cadangan.
         if (realtime?.sendMessage(text.trim()) == true) return
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true) }
@@ -147,7 +141,6 @@ class UmkmChatViewModel(
         }
     }
 
-    /** "Lanjut Project" UMKM = approve kesepakatan (BE mewajibkan total bobot milestone 100%). */
     fun continueProject() {
         val projectId = UmkmConversationStore.conversation(conversationId ?: return)?.projectId ?: return
         runBusy {

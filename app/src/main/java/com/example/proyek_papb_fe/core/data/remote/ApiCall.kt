@@ -6,7 +6,6 @@ import kotlinx.coroutines.CancellationException
 import retrofit2.HttpException
 import java.io.IOException
 
-/** Menjalankan request lalu membuka envelope; error HTTP/jaringan diubah menjadi [ApiException]. */
 suspend fun <T> apiCall(block: suspend () -> ApiResponse<T>): T {
     val response = execute(block)
     return response.data ?: throw ApiException(
@@ -14,8 +13,7 @@ suspend fun <T> apiCall(block: suspend () -> ApiResponse<T>): T {
     )
 }
 
-/** Untuk endpoint yang menjawab `data: null` (logout, delete, dll.). Mengembalikan `message` BE. */
-suspend fun apiCallNoData(block: suspend () -> ApiResponse<Any?>): String =
+suspend fun apiCallMessage(block: suspend () -> ApiResponse<Nothing>): String =
     execute(block).message.orEmpty()
 
 private suspend fun <T> execute(block: suspend () -> ApiResponse<T>): ApiResponse<T> = try {

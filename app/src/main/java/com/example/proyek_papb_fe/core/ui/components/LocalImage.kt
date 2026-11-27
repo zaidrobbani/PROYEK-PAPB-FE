@@ -33,7 +33,6 @@ private fun decodeSampled(context: Context, uri: android.net.Uri): ImageBitmap? 
     while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MaxDecodeSize) sample *= 2
     val options = BitmapFactory.Options().apply { inSampleSize = sample }
     val decoded = resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, options) } ?: return@runCatching null
-    // Foto kamera sering disimpan miring dengan tag EXIF; putar agar tampil tegak.
     val degrees = runCatching {
         resolver.openInputStream(uri)?.use {
             when (ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {

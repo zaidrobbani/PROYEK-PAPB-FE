@@ -19,6 +19,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.FreelancerProfile
 import com.example.proyek_papb_fe.feature.umkm.data.PortfolioItem
 import com.example.proyek_papb_fe.feature.umkm.data.ProfileSkill
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -33,10 +34,8 @@ data class UmkmFreelancerProfileUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val profile: FreelancerProfile? = null,
-    /** Lamaran freelancer ini (bila dibuka dari daftar Pengajuan). */
     val application: ProjectApplication? = null,
     val canSelect: Boolean = false,
-    /** Project tempat freelancer ini melamar; tombol "Pilih & Buat Kesepakatan" membuka Pengajuan project tsb. */
     val applicationsProjectId: String? = null,
     val isSelecting: Boolean = false,
     val message: String? = null,
@@ -50,7 +49,6 @@ class UmkmFreelancerProfileViewModel(
     private val projectRepository: ProjectRepository,
     private val workflowRepository: WorkflowRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(UmkmFreelancerProfileUiState())
     val uiState: StateFlow<UmkmFreelancerProfileUiState> = _uiState.asStateFlow()
 
@@ -61,8 +59,14 @@ class UmkmFreelancerProfileViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { freelancerRepository.detail(freelancerId) }
@@ -141,10 +145,6 @@ class UmkmFreelancerProfileViewModel(
         }
     }
 
-    /**
-     * Lamaran dicari dari project UMKM (BE tidak punya endpoint detail lamaran): berdasarkan [id] bila profil dibuka
-     * dari daftar Pengajuan, atau lamaran freelancer ini yang masih menunggu bila dibuka dari pencarian/beranda.
-     */
     private suspend fun findApplication(id: String?): Pair<Application, Boolean>? {
         val projects = workflowRepository.myProjects().items
             .sortedByDescending { it.project.status == ProjectStatusCode.TERBUKA }

@@ -6,7 +6,6 @@ import com.example.proyek_papb_fe.core.data.model.SubmittedDraft
 import com.example.proyek_papb_fe.core.data.model.WorkDraft
 
 object WorkDraftStore {
-
     private val pending = mutableStateMapOf<String, WorkDraft>()
     private val sentCount = mutableStateMapOf<String, Int>()
     private val submitted = mutableStateMapOf<String, List<SubmittedDraft>>()

@@ -63,7 +63,6 @@ fun PaymentContainer(
         if (uiState.isLoading) LoadingContent() else ErrorContent(uiState.errorMessage.orEmpty(), onRetry = viewModel::load)
         return
     }
-    // Countdown "Selesaikan dalam" mengikuti expires_at BE (15 menit). Setelah habis, tombol bayar membuat QRIS baru.
     val remainingSeconds = payment.expiresAtMillis?.let { ((it - now) / 1000).coerceAtLeast(0) } ?: 0
     val freelancer = payment.freelancer
 

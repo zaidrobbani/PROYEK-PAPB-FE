@@ -75,6 +75,7 @@ fun SubmissionStatusContainer(
     }
 
     SubmissionStatusScreen(
+        onRefresh = viewModel::refresh,
         state = SubmissionStatusUiState(
             submittedAgo = formatSubmittedAgo(submittedAt),
             projectTitle = title,

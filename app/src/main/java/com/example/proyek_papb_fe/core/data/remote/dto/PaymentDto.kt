@@ -69,7 +69,6 @@ data class PaymentHistoryDto(
     val limit: Int,
     val offset: Int,
     val hasMore: Boolean,
-    /** Key huruf besar: ALL, PENDING, HELD, COMPLETED, CANCELLED. */
     val counts: Map<String, Int>?
 )
 

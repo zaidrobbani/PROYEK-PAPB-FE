@@ -19,15 +19,10 @@ sealed interface ProjectChatEvent {
     data class Failed(val message: String) : ProjectChatEvent
 }
 
-/**
- * Tombol "Chat" yang berangkat dari project (UMKM maupun freelancer): cari lawan bicara dari detail alur,
- * lalu `POST /conversations` (buat atau ambil yang sudah ada).
- */
 class ProjectChatViewModel(
     private val workflowRepository: WorkflowRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-
     private val _events = Channel<ProjectChatEvent>(Channel.BUFFERED)
     val events: Flow<ProjectChatEvent> = _events.receiveAsFlow()
 

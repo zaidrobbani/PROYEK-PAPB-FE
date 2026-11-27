@@ -11,31 +11,42 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-// Default memakai adb reverse (adb reverse tcp:8000 tcp:8000). Emulator: http://10.0.2.2:8000/api/v1/
-val apiBaseUrl: String = localProperties.getProperty("api.base.url") ?: "http://localhost:8000/api/v1/"
+val apiBaseUrl: String = localProperties.getProperty("api.base.url") ?: "https://temukarya.bccdev.id/api/v1/"
 
-/**
- * Konfigurasi Firebase dari app/google-services.json (Firebase Console → Project settings → Your apps → Android).
- * Dibaca langsung tanpa plugin google-services; bila file belum ada, build tetap jalan dan push notifikasi nonaktif.
- */
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 data class FirebaseConfig(val appId: String, val apiKey: String, val projectId: String, val senderId: String)
+
+data class GoogleServicesFile(val projectInfo: GoogleProjectInfo?, val client: List<GoogleClient>?)
+
+data class GoogleProjectInfo(val projectNumber: String?, val projectId: String?)
+
+data class GoogleClient(val clientInfo: GoogleClientInfo?, val apiKey: List<GoogleApiKey>?)
+
+data class GoogleClientInfo(val mobilesdkAppId: String?, val androidClientInfo: GoogleAndroidClientInfo?)
+
+data class GoogleAndroidClientInfo(val packageName: String?)
+
+data class GoogleApiKey(val currentKey: String?)
 
 val firebaseConfig: FirebaseConfig? = run {
     val file = project.file("google-services.json")
     if (!file.exists()) return@run null
-    @Suppress("UNCHECKED_CAST")
-    val json = groovy.json.JsonSlurper().parse(file) as Map<String, Any?>
-    val projectInfo = json["project_info"] as Map<String, Any?>
-    val clients = json["client"] as List<Map<String, Any?>>
-    val client = clients.firstOrNull {
-        val info = (it["client_info"] as Map<String, Any?>)["android_client_info"] as Map<String, Any?>
-        info["package_name"] == "com.example.proyek_papb_fe"
+    val gson = com.google.gson.GsonBuilder()
+        .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create()
+    val json = gson.fromJson(file.readText(), GoogleServicesFile::class.java)
+    val client = json.client.orEmpty().firstOrNull {
+        it.clientInfo?.androidClientInfo?.packageName == "com.example.proyek_papb_fe"
     } ?: error("google-services.json tidak berisi app Android dengan package com.example.proyek_papb_fe")
     FirebaseConfig(
-        appId = (client["client_info"] as Map<String, Any?>)["mobilesdk_app_id"] as String,
-        apiKey = ((client["api_key"] as List<Map<String, Any?>>).first())["current_key"] as String,
-        projectId = projectInfo["project_id"] as String,
-        senderId = projectInfo["project_number"] as String
+        appId = client.clientInfo?.mobilesdkAppId ?: error("google-services.json tanpa mobilesdk_app_id"),
+        apiKey = client.apiKey?.firstOrNull()?.currentKey ?: error("google-services.json tanpa api_key"),
+        projectId = json.projectInfo?.projectId ?: error("google-services.json tanpa project_id"),
+        senderId = json.projectInfo?.projectNumber ?: error("google-services.json tanpa project_number")
     )
 }
 
@@ -60,8 +71,20 @@ android {
         buildConfigField("String", "FIREBASE_SENDER_ID", "\"${firebaseConfig?.senderId.orEmpty()}\"")
     }
 
+    signingConfigs {
+        if (keystoreProperties.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             optimization {
                 enable = false
             }
@@ -107,8 +130,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-// Debug lewat USB: BE lokal (localhost:8000 di laptop) diteruskan ke HP setiap kali build debug.
-// Gagal diam-diam bila HP tidak tersambung, supaya build tetap jalan.
 val adbReverse by tasks.registering(Exec::class) {
     val sdkDir = localProperties.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME").orEmpty()
     executable = "$sdkDir/platform-tools/adb"
@@ -116,6 +137,8 @@ val adbReverse by tasks.registering(Exec::class) {
     isIgnoreExitValue = true
 }
 
-tasks.matching { it.name == "assembleDebug" }.configureEach {
-    finalizedBy(adbReverse)
+if (apiBaseUrl.contains("localhost")) {
+    tasks.matching { it.name == "assembleDebug" }.configureEach {
+        finalizedBy(adbReverse)
+    }
 }

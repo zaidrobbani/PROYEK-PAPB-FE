@@ -11,6 +11,7 @@ import com.example.proyek_papb_fe.core.data.repository.NotificationRepository
 import com.example.proyek_papb_fe.core.data.repository.ProjectRepository
 import com.example.proyek_papb_fe.feature.freelancer.data.toFreelancerProject
 import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.SearchProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,13 +31,11 @@ data class SearchProjectUiState(
     val hasUnreadNotification: Boolean = false
 )
 
-/** Cari project TERBUKA: pencarian dikirim ke BE (`search`) dengan debounce, seperti pola modul 8. */
 class SearchProjectViewModel(
     private val projectRepository: ProjectRepository,
     private val masterDataRepository: MasterDataRepository,
     private val notificationRepository: NotificationRepository
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SearchProjectUiState())
     val uiState: StateFlow<SearchProjectUiState> = _uiState.asStateFlow()
 
@@ -59,6 +58,8 @@ class SearchProjectViewModel(
         viewModelScope.launch { fetch(_query.value.trim()) }
     }
 
+    fun refresh(): Job = viewModelScope.launch { fetch(_query.value.trim(), showLoading = false) }
+
     @OptIn(FlowPreview::class)
     private fun observeQuery() {
         viewModelScope.launch {
@@ -66,8 +67,8 @@ class SearchProjectViewModel(
         }
     }
 
-    private suspend fun fetch(keyword: String) {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+    private suspend fun fetch(keyword: String, showLoading: Boolean = true) {
+        _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
         try {
             val categories = runCatching { masterDataRepository.categories() }.getOrDefault(emptyList()).associate { it.id to it.name }
             val matches = runCatching { projectRepository.recommendedProjects(limit = 100) }.getOrDefault(emptyList())

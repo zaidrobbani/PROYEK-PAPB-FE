@@ -50,6 +50,7 @@ import com.example.proyek_papb_fe.core.ui.components.ErrorContent
 import com.example.proyek_papb_fe.core.ui.components.LoadingContent
 import com.example.proyek_papb_fe.core.ui.components.initialsOf
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
+import com.example.proyek_papb_fe.core.ui.components.chat.DeleteMessagesDialog
 import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
 import com.example.proyek_papb_fe.core.ui.components.chat.FailedAttachmentDialog
 import com.example.proyek_papb_fe.core.ui.components.chat.rememberChatAttachmentController
@@ -81,7 +82,6 @@ private fun List<Message>.toRoomItems(
     contactName: String,
     umkmName: String,
     pending: List<OutgoingAttachment>,
-    /** Judul project per percakapan; null = hanya satu project, penanda project tidak ditampilkan. */
     projectTitleOf: ((conversationId: String) -> String)? = null
 ): List<ChatRoomItem> {
     val items = mutableListOf<ChatRoomItem>()
@@ -111,12 +111,12 @@ private fun List<Message>.toRoomItems(
                 topGap = when { newDay -> 0; first -> 12; else -> 4 },
                 senderLabel = label,
                 file = message.attachments.firstOrNull()?.let { ChatFileUi.Remote(it) },
-                status = if (!mine) null else if (message.readAtMillis != null) DeliveryStatus.READ else DeliveryStatus.SENT
+                status = if (!mine) null else if (message.readAtMillis != null) DeliveryStatus.READ else DeliveryStatus.SENT,
+                isDeleted = message.isDeleted
             )
         )
         previous = message
     }
-    // Lampiran yang masih dikirim/gagal tampil di akhir, seperti WhatsApp.
     pending.forEachIndexed { index, item ->
         val newDay = previous == null || !isSameDay(previous!!.sentAtMillis, item.createdAtMillis)
         if (index == 0 && newDay) items += ChatRoomItem.DateSeparator(formatDateSeparator(item.createdAtMillis))
@@ -130,7 +130,8 @@ private fun List<Message>.toRoomItems(
                 isFirstInGroup = first,
                 topGap = if (first && !newDay) 12 else if (first) 0 else 4,
                 file = ChatFileUi.Local(item),
-                status = if (item.failedMessage != null) DeliveryStatus.FAILED else DeliveryStatus.SENDING
+                status = if (item.failedMessage != null) DeliveryStatus.FAILED else DeliveryStatus.SENDING,
+                isSelectable = false
             )
         )
     }
@@ -214,6 +215,9 @@ fun ChatRoomContainer(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val pendingAttachments by viewModel.pendingAttachments.collectAsStateWithLifecycle()
+    val selectedIds by viewModel.selectedMessageIds.collectAsStateWithLifecycle()
+    val isDeletingMessages by viewModel.isDeletingMessages.collectAsStateWithLifecycle()
+    var isDeleteDialogOpen by remember(conversationId) { mutableStateOf(false) }
     VisibleConversationEffect(uiState.threads.map { it.conversationId }.toSet() + conversationId)
     var failedAttachment by remember(conversationId) { mutableStateOf<OutgoingAttachment?>(null) }
     val context = LocalContext.current
@@ -252,6 +256,7 @@ fun ChatRoomContainer(
         }
     }
     BackHandler(enabled = isAttachmentOpen) { isAttachmentOpen = false }
+    BackHandler(enabled = selectedIds.isNotEmpty()) { viewModel.clearMessageSelection() }
 
     val overview = uiState.overview
     if (overview == null) {
@@ -319,7 +324,6 @@ fun ChatRoomContainer(
         }
     }
     val stage = resultStageEntry(detail)
-    // Proyek berjalan: jalan pintas ke Rencana Pengerjaan untuk mulai kerja & menandai milestone.
     val workEntry = when (detail?.project?.status) {
         ProjectStatusCode.SIAP_DIKERJAKAN -> UmkmSimulationEntry(
             "Dana sudah ditahan TEMUKARYA. Mulai pengerjaan di Rencana Pengerjaan.",
@@ -369,6 +373,12 @@ fun ChatRoomContainer(
             }
         },
         isOpening = { bubble -> bubble.file?.let(attachments::isOpening) == true },
+        selectedIds = selectedIds,
+        isDeletingMessages = isDeletingMessages,
+        onToggleSelect = { bubble -> viewModel.toggleMessageSelection(bubble.id) },
+        onClearSelection = viewModel::clearMessageSelection,
+        onDeleteSelected = { isDeleteDialogOpen = true },
+        onRefresh = viewModel::load,
         negotiation = negotiation,
         onCancelProjectClick = {
             if (detail?.can(WorkflowActionCode.CANCEL_PROJECT) == true) isCancelSheetVisible = true
@@ -406,6 +416,22 @@ fun ChatRoomContainer(
             }
         } else null
     )
+
+    if (isDeleteDialogOpen && selectedIds.isNotEmpty()) {
+        DeleteMessagesDialog(
+            count = selectedIds.size,
+            canDeleteForEveryone = remember(selectedIds, uiState.messages) { viewModel.canDeleteSelectedForEveryone() },
+            onDeleteForMe = {
+                isDeleteDialogOpen = false
+                viewModel.deleteSelectedMessages(forEveryone = false)
+            },
+            onDeleteForEveryone = {
+                isDeleteDialogOpen = false
+                viewModel.deleteSelectedMessages(forEveryone = true)
+            },
+            onDismiss = { isDeleteDialogOpen = false }
+        )
+    }
 
     failedAttachment?.let { item ->
         FailedAttachmentDialog(

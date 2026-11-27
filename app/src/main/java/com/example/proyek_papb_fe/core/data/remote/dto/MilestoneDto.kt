@@ -5,7 +5,6 @@ data class MilestoneDto(
     val projectId: String,
     val name: String,
     val description: String?,
-    /** Desimal dalam string, mis. "20.00". */
     val weightPercent: String,
     val status: String,
     val sortOrder: Int,

@@ -21,13 +21,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * E2E WebSocket terhadap BE lokal (butuh `adb reverse tcp:8000 tcp:8000` dan akun uji).
- * Sesi login aplikasi di perangkat dicadangkan lalu dipulihkan.
- */
 @RunWith(AndroidJUnit4::class)
 class ChatRealtimeE2ETest {
-
     private val http = OkHttpClient()
     private val json = "application/json".toMediaType()
 
