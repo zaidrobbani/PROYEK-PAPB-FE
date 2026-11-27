@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.freelancer_applications.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -110,43 +111,43 @@ fun FreelancerApplicationsScreen(
             ErrorContent(uiState.errorMessage ?: "Project tidak ditemukan.", onRetry = viewModel::load)
             return@Column
         }
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(
-                start = PageGutter,
-                end = PageGutter,
-                top = 3.61.dp,
-                bottom = 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(SectionSpacing)
-        ) {
-            item(key = "summary") {
-                ApplicationsProjectSummary(project = project, ownerLabel = uiState.ownerLabel)
-            }
-            item(key = "header") {
-                ApplicationsListHeader(
-                    count = applications.size,
-                    sort = sort,
-                    onSortChange = { sort = it },
-                    modifier = Modifier.padding(top = 4.226.dp)
-                )
-            }
-            if (applications.isEmpty()) {
-                item(key = "empty") { CenteredNote("Belum ada freelancer yang mengajukan diri.") }
-            }
-            items(applications, key = { it.id }) { application ->
-                ApplicantCard(
-                    application = application,
-                    selection = when {
-                        application.status == ApplicationStatusCode.ACCEPTED -> ApplicantSelection.Selected
-                        project.status == ProjectStatus.Terbuka -> ApplicantSelection.Open
-                        else -> ApplicantSelection.Closed
-                    },
-                    onViewProfile = { onViewProfile(application.freelancerId, application.id) },
-                    onApprove = { pendingApproveId = application.id }
-                )
+        RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = PageGutter,
+                    end = PageGutter,
+                    top = 3.61.dp,
+                    bottom = 32.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(SectionSpacing)
+            ) {
+                item(key = "summary") {
+                    ApplicationsProjectSummary(project = project, ownerLabel = uiState.ownerLabel)
+                }
+                item(key = "header") {
+                    ApplicationsListHeader(
+                        count = applications.size,
+                        sort = sort,
+                        onSortChange = { sort = it },
+                        modifier = Modifier.padding(top = 4.226.dp)
+                    )
+                }
+                if (applications.isEmpty()) {
+                    item(key = "empty") { CenteredNote("Belum ada freelancer yang mengajukan diri.") }
+                }
+                items(applications, key = { it.id }) { application ->
+                    ApplicantCard(
+                        application = application,
+                        selection = when {
+                            application.status == ApplicationStatusCode.ACCEPTED -> ApplicantSelection.Selected
+                            project.status == ProjectStatus.Terbuka -> ApplicantSelection.Open
+                            else -> ApplicantSelection.Closed
+                        },
+                        onViewProfile = { onViewProfile(application.freelancerId, application.id) },
+                        onApprove = { pendingApproveId = application.id }
+                    )
+                }
             }
         }
     }

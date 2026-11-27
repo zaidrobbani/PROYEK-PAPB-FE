@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.chat.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,6 +55,7 @@ fun ChatListScreen(
     conversations: List<ChatListItem>,
     onConversationClick: (conversationId: String) -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {}
 ) {
@@ -91,25 +94,25 @@ fun ChatListScreen(
             modifier = Modifier.padding(top = 8.dp)
         )
 
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(
-                start = ChatHorizontalPadding,
-                end = ChatHorizontalPadding,
-                top = 4.dp,
-                bottom = 24.dp
-            )
-        ) {
-            if (conversations.isEmpty()) {
-                item(key = "empty") { ChatEmptyState(selectedFilter = selectedFilter, query = query) }
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = ChatHorizontalPadding,
+                    end = ChatHorizontalPadding,
+                    top = 4.dp,
+                    bottom = 24.dp
+                )
+            ) {
+                if (conversations.isEmpty()) {
+                    item(key = "empty") { ChatEmptyState(selectedFilter = selectedFilter, query = query) }
+                }
+                items(items = conversations, key = { it.conversationId }) { item ->
+                    ConversationRow(item = item, onClick = { onConversationClick(item.conversationId) })
+                }
+                item(key = "footnote") { ChatFootnote() }
             }
-            items(items = conversations, key = { it.conversationId }) { item ->
-                ConversationRow(item = item, onClick = { onConversationClick(item.conversationId) })
-            }
-            item(key = "footnote") { ChatFootnote() }
         }
     }
 }

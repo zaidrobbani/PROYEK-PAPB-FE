@@ -1,5 +1,10 @@
 package com.example.proyek_papb_fe.feature.freelancer.dashboard.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -47,10 +52,14 @@ fun DashboardScreen(
     onActiveProjectClick: (String) -> Unit,
     onProjectClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     hasUnreadNotification: Boolean = true,
     onNotificationClick: () -> Unit = {},
     onSeeAllActiveProjectsClick: () -> Unit = {},
-    onSeeAllRecommendationsClick: () -> Unit = {}
+    onSeeAllRecommendationsClick: () -> Unit = {},
+    hasSkills: Boolean? = null,
+    isLoading: Boolean = false,
+    onManageSkillsClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -62,64 +71,67 @@ fun DashboardScreen(
             onNotificationClick = onNotificationClick
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(top = 15.774.dp, bottom = 25.354.dp),
-            verticalArrangement = Arrangement.spacedBy(28.dp)
-        ) {
-            item(key = "greeting") {
-                Text(
-                    text = "Halo, $userName",
-                    style = DashboardTypography.Greeting,
-                    color = DashboardColors.TextHeading,
-                    modifier = Modifier.padding(
-                        start = ScreenHorizontalPadding,
-                        end = ScreenHorizontalPadding,
-                        top = 4.226.dp
-                    )
-                )
-            }
-
-            item(key = "wallet") {
-                WalletSummaryCard(
-                    balance = availableBalance,
-                    onWithdrawClick = onWalletClick,
-                    modifier = Modifier.padding(horizontal = ScreenHorizontalPadding)
-                )
-            }
-
-            item(key = "active_project") {
-                Column(
-                    modifier = Modifier.padding(horizontal = ScreenHorizontalPadding),
-                    verticalArrangement = Arrangement.spacedBy(8.451.dp)
-                ) {
-                    SectionHeader(
-                        title = "Proyek Aktif Saya",
-                        onSeeAllClick = onSeeAllActiveProjectsClick
-                    )
-                    if (activeProject != null) {
-                        ActiveProjectCard(
-                            project = activeProject,
-                            onClick = { onActiveProjectClick(activeProject.id) }
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 15.774.dp, bottom = 25.354.dp),
+                verticalArrangement = Arrangement.spacedBy(28.dp)
+            ) {
+                item(key = "greeting") {
+                    Text(
+                        text = "Halo, $userName",
+                        style = DashboardTypography.Greeting,
+                        color = DashboardColors.TextHeading,
+                        modifier = Modifier.padding(
+                            start = ScreenHorizontalPadding,
+                            end = ScreenHorizontalPadding,
+                            top = 4.226.dp
                         )
-                    } else {
-                        Text(
-                            text = "Belum ada proyek aktif.",
-                            style = DashboardTypography.BodyRegular,
-                            color = DashboardColors.TextBody
+                    )
+                }
+
+                item(key = "wallet") {
+                    WalletSummaryCard(
+                        balance = availableBalance,
+                        onWithdrawClick = onWalletClick,
+                        modifier = Modifier.padding(horizontal = ScreenHorizontalPadding)
+                    )
+                }
+
+                item(key = "active_project") {
+                    Column(
+                        modifier = Modifier.padding(horizontal = ScreenHorizontalPadding),
+                        verticalArrangement = Arrangement.spacedBy(8.451.dp)
+                    ) {
+                        SectionHeader(
+                            title = "Proyek Aktif Saya",
+                            onSeeAllClick = onSeeAllActiveProjectsClick
                         )
+                        if (activeProject != null) {
+                            ActiveProjectCard(
+                                project = activeProject,
+                                onClick = { onActiveProjectClick(activeProject.id) }
+                            )
+                        } else {
+                            Text(
+                                text = "Belum ada proyek aktif.",
+                                style = DashboardTypography.BodyRegular,
+                                color = DashboardColors.TextBody
+                            )
+                        }
                     }
                 }
-            }
 
-            item(key = "recommendations") {
-                RecommendationSection(
-                    recommendations = recommendations,
-                    onProjectClick = onProjectClick,
-                    onSeeAllClick = onSeeAllRecommendationsClick
-                )
+                item(key = "recommendations") {
+                    RecommendationSection(
+                        recommendations = recommendations,
+                        onProjectClick = onProjectClick,
+                        onSeeAllClick = onSeeAllRecommendationsClick,
+                        hasSkills = hasSkills,
+                        isLoading = isLoading,
+                        onManageSkillsClick = onManageSkillsClick
+                    )
+                }
             }
         }
     }
@@ -129,8 +141,29 @@ fun DashboardScreen(
 private fun RecommendationSection(
     recommendations: List<DashboardProject>,
     onProjectClick: (String) -> Unit,
-    onSeeAllClick: () -> Unit
+    onSeeAllClick: () -> Unit,
+    hasSkills: Boolean?,
+    isLoading: Boolean,
+    onManageSkillsClick: () -> Unit
 ) {
+    if (recommendations.isEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.451.dp)) {
+            SectionHeader(
+                title = "Rekomendasi Proyek",
+                onSeeAllClick = onSeeAllClick,
+                modifier = Modifier.padding(horizontal = 17.dp + ScreenHorizontalPadding)
+            )
+            if (!isLoading) {
+                EmptyRecommendations(
+                    hasSkills = hasSkills,
+                    onManageSkillsClick = onManageSkillsClick,
+                    onSearchClick = onSeeAllClick,
+                    modifier = Modifier.padding(horizontal = 17.dp + ScreenHorizontalPadding)
+                )
+            }
+        }
+        return
+    }
     val listState = rememberLazyListState()
     Column(verticalArrangement = Arrangement.spacedBy(8.451.dp)) {
         SectionHeader(
@@ -199,4 +232,48 @@ private fun DashboardScreenPreview() {
         onActiveProjectClick = {},
         onProjectClick = {}
     )
+}
+
+/**
+ * Rekomendasi kosong: matching F1 hanya mengirim project TERBUKA yang skill-nya cocok minimal 60%.
+ * Tanpa skill sama sekali, rekomendasi tidak bisa dihitung, jadi arahkan ke Profil Profesional.
+ */
+@Composable
+private fun EmptyRecommendations(
+    hasSkills: Boolean?,
+    onManageSkillsClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val noSkills = hasSkills == false
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(DashboardColors.SurfaceSand.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = if (noSkills) "Tambahkan skill-mu dulu" else "Belum ada proyek yang cocok",
+            style = DashboardTypography.CardTitle,
+            color = DashboardColors.TextHeading
+        )
+        Text(
+            text = if (noSkills) {
+                "Rekomendasi dihitung dari kecocokan skill-mu dengan skill yang dibutuhkan proyek (minimal 60%). " +
+                    "Atur skill di Profil Profesional agar proyek yang cocok muncul di sini."
+            } else {
+                "Belum ada proyek terbuka yang minimal 60% skill-nya sesuai denganmu. " +
+                    "Tambah skill lain atau cari proyek secara manual."
+            },
+            style = DashboardTypography.BodyRegular,
+            color = DashboardColors.TextBody
+        )
+        Button(
+            onClick = if (noSkills) onManageSkillsClick else onSearchClick,
+            colors = ButtonDefaults.buttonColors(containerColor = DashboardColors.ActionPrimary)
+        ) {
+            Text(if (noSkills) "Atur Skill" else "Cari Proyek", style = DashboardTypography.LabelSemiBold)
+        }
+    }
 }

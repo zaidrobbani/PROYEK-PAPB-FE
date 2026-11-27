@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.searchproject.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +36,7 @@ fun SearchProjectScreen(
     projects: List<SearchProject>,
     onProjectClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     activeFilterCount: Int = 0,
     onFilterClick: () -> Unit = {},
     hasUnreadNotification: Boolean = false,
@@ -69,35 +72,35 @@ fun SearchProjectScreen(
             }
         )
 
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(
-                horizontal = SearchProjectHorizontalPadding,
-                vertical = 8.451.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            if (projects.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        text = "Tidak ada proyek yang cocok dengan pencarian Anda.",
-                        style = TemuKaryaTypography.BodyRegular,
-                        color = TemuKaryaColors.TextBody,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 32.dp)
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    horizontal = SearchProjectHorizontalPadding,
+                    vertical = 8.451.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                if (projects.isEmpty()) {
+                    item(key = "empty") {
+                        Text(
+                            text = "Tidak ada proyek yang cocok dengan pencarian Anda.",
+                            style = TemuKaryaTypography.BodyRegular,
+                            color = TemuKaryaColors.TextBody,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 32.dp)
+                        )
+                    }
+                }
+                items(items = projects, key = { it.id }) { project ->
+                    ProjectFeedCard(
+                        project = project,
+                        onClick = { onProjectClick(project.id) }
                     )
                 }
-            }
-            items(items = projects, key = { it.id }) { project ->
-                ProjectFeedCard(
-                    project = project,
-                    onClick = { onProjectClick(project.id) }
-                )
             }
         }
     }

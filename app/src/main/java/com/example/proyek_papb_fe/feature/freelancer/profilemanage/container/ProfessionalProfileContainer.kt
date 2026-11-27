@@ -154,6 +154,7 @@ fun ProfessionalProfileContainer(
             }
         },
         onViewProfile = onBack,
-        onBack = onBack
+        onBack = onBack,
+        skillOptions = uiState.skillOptions
     )
 }

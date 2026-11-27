@@ -11,8 +11,16 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-// Default memakai adb reverse (adb reverse tcp:8000 tcp:8000). Emulator: http://10.0.2.2:8000/api/v1/
-val apiBaseUrl: String = localProperties.getProperty("api.base.url") ?: "http://localhost:8000/api/v1/"
+// Default: BE yang sudah dideploy (HTTPS), jadi HP tidak perlu tersambung USB.
+// Untuk BE lokal, isi local.properties: api.base.url=http://localhost:8000/api/v1/ (adb reverse)
+// atau http://10.0.2.2:8000/api/v1/ (emulator).
+val apiBaseUrl: String = localProperties.getProperty("api.base.url") ?: "https://temukarya.bccdev.id/api/v1/"
+
+// Kunci tanda tangan APK release, dibaca dari keystore.properties di root proyek (tidak di-commit).
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
 
 /**
  * Konfigurasi Firebase dari app/google-services.json (Firebase Console → Project settings → Your apps → Android).
@@ -60,8 +68,20 @@ android {
         buildConfigField("String", "FIREBASE_SENDER_ID", "\"${firebaseConfig?.senderId.orEmpty()}\"")
     }
 
+    signingConfigs {
+        if (keystoreProperties.getProperty("storeFile") != null) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             optimization {
                 enable = false
             }
@@ -107,7 +127,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-// Debug lewat USB: BE lokal (localhost:8000 di laptop) diteruskan ke HP setiap kali build debug.
+// Hanya bila memakai BE lokal (localhost): port 8000 laptop diteruskan ke HP setiap kali build debug.
 // Gagal diam-diam bila HP tidak tersambung, supaya build tetap jalan.
 val adbReverse by tasks.registering(Exec::class) {
     val sdkDir = localProperties.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME").orEmpty()
@@ -116,6 +136,8 @@ val adbReverse by tasks.registering(Exec::class) {
     isIgnoreExitValue = true
 }
 
-tasks.matching { it.name == "assembleDebug" }.configureEach {
-    finalizedBy(adbReverse)
+if (apiBaseUrl.contains("localhost")) {
+    tasks.matching { it.name == "assembleDebug" }.configureEach {
+        finalizedBy(adbReverse)
+    }
 }

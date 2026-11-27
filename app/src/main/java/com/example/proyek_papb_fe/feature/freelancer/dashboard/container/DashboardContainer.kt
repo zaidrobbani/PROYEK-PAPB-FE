@@ -20,6 +20,7 @@ fun DashboardContainer(
     onRecommendedProjectClick: (projectId: String) -> Unit = {},
     onSeeAllRecommendationsClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    onManageSkillsClick: () -> Unit = {},
     viewModel: FreelancerDashboardViewModel = viewModel(
         factory = FreelancerDashboardViewModel.factory(
             AppContainer.authRepository,
@@ -27,7 +28,8 @@ fun DashboardContainer(
             AppContainer.workflowRepository,
             AppContainer.projectRepository,
             AppContainer.masterDataRepository,
-            AppContainer.notificationRepository
+            AppContainer.notificationRepository,
+            AppContainer.profileRepository
         )
     )
 ) {
@@ -39,6 +41,7 @@ fun DashboardContainer(
     }
 
     DashboardScreen(
+        onRefresh = viewModel::refresh,
         userName = uiState.userName,
         availableBalance = rupiah(uiState.availableBalance),
         activeProject = uiState.activeProject,
@@ -49,6 +52,9 @@ fun DashboardContainer(
         hasUnreadNotification = uiState.hasUnreadNotification,
         onNotificationClick = onNotificationClick,
         onSeeAllActiveProjectsClick = onSeeAllActiveProjectsClick,
-        onSeeAllRecommendationsClick = onSeeAllRecommendationsClick
+        onSeeAllRecommendationsClick = onSeeAllRecommendationsClick,
+        hasSkills = uiState.hasSkills,
+        isLoading = uiState.isLoading,
+        onManageSkillsClick = onManageSkillsClick
     )
 }

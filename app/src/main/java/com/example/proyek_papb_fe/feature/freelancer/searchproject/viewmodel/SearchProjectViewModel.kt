@@ -11,6 +11,7 @@ import com.example.proyek_papb_fe.core.data.repository.NotificationRepository
 import com.example.proyek_papb_fe.core.data.repository.ProjectRepository
 import com.example.proyek_papb_fe.feature.freelancer.data.toFreelancerProject
 import com.example.proyek_papb_fe.feature.freelancer.searchproject.component.SearchProject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +60,9 @@ class SearchProjectViewModel(
         viewModelScope.launch { fetch(_query.value.trim()) }
     }
 
+    /** Tarik untuk muat ulang: daftar lama tetap tampil selama memuat. */
+    fun refresh(): Job = viewModelScope.launch { fetch(_query.value.trim(), showLoading = false) }
+
     @OptIn(FlowPreview::class)
     private fun observeQuery() {
         viewModelScope.launch {
@@ -66,8 +70,8 @@ class SearchProjectViewModel(
         }
     }
 
-    private suspend fun fetch(keyword: String) {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+    private suspend fun fetch(keyword: String, showLoading: Boolean = true) {
+        _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
         try {
             val categories = runCatching { masterDataRepository.categories() }.getOrDefault(emptyList()).associate { it.id to it.name }
             val matches = runCatching { projectRepository.recommendedProjects(limit = 100) }.getOrDefault(emptyList())

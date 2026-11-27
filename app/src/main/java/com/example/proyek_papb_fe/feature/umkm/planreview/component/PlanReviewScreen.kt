@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.umkm.planreview.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -99,31 +101,34 @@ fun PlanReviewScreen(
     onBack: () -> Unit,
     onRequestChanges: () -> Unit,
     onApprove: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(modifier = modifier.fillMaxSize().background(TemuKaryaColors.BgCanvas)) {
         DetailTopBar(title = "Tinjau Rencana Pengerjaan", onBack = onBack)
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                HeaderCard(state)
-                InfoCard()
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Milestone proyek", style = PlanReviewTypography.Section, color = TemuKaryaColors.TextHeading)
-                    Text("${state.milestones.size} tahap", style = PlanReviewTypography.Count, color = PlanReviewColors.Muted)
+            RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HeaderCard(state)
+                    InfoCard()
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("Milestone proyek", style = PlanReviewTypography.Section, color = TemuKaryaColors.TextHeading)
+                        Text("${state.milestones.size} tahap", style = PlanReviewTypography.Count, color = PlanReviewColors.Muted)
+                    }
+                    state.milestones.forEachIndexed { index, milestone -> MilestoneRow(index + 1, milestone) }
+                    TotalCard(state)
+                    Text(
+                        "Progres proyek nanti dihitung otomatis dari bobot milestone yang sudah ditandai selesai.",
+                        style = PlanReviewTypography.Legend,
+                        color = PlanReviewColors.Muted
+                    )
                 }
-                state.milestones.forEachIndexed { index, milestone -> MilestoneRow(index + 1, milestone) }
-                TotalCard(state)
-                Text(
-                    "Progres proyek nanti dihitung otomatis dari bobot milestone yang sudah ditandai selesai.",
-                    style = PlanReviewTypography.Legend,
-                    color = PlanReviewColors.Muted
-                )
             }
             ActionBar(onRequestChanges, onApprove, Modifier.align(Alignment.BottomCenter))
         }

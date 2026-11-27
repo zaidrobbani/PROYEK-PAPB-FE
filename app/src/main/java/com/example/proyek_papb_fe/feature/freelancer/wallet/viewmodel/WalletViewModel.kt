@@ -9,6 +9,7 @@ import com.example.proyek_papb_fe.core.data.remote.userMessage
 import com.example.proyek_papb_fe.core.data.repository.PaymentRepository
 import com.example.proyek_papb_fe.core.domain.model.Wallet
 import com.example.proyek_papb_fe.core.domain.model.WalletEntry
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -34,8 +35,15 @@ class WalletViewModel(
     val uiState: StateFlow<WalletVmState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val wallet = async { paymentRepository.wallet() }

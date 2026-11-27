@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.dashboard.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import kotlinx.coroutines.Job
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.LinearProgressIndicator
@@ -68,7 +70,8 @@ fun UmkmDashboardScreen(
             AppContainer.profileRepository,
             AppContainer.workflowRepository,
             AppContainer.freelancerRepository,
-            AppContainer.profilePhotoRepository
+            AppContainer.profilePhotoRepository,
+            AppContainer.freelancerMatchRepository
         )
     ),
     notificationsViewModel: NotificationsViewModel = viewModel(
@@ -95,6 +98,10 @@ fun UmkmDashboardScreen(
         onSeeAllFreelancers = onSeeAllFreelancers,
         onFreelancerClick = onFreelancerClick,
         onTabSelected = onTabSelected,
+        onRefresh = {
+            notificationsViewModel.refresh()
+            viewModel.refresh()
+        },
         modifier = modifier
     )
 }
@@ -112,7 +119,8 @@ private fun UmkmDashboardContent(
     onSeeAllFreelancers: () -> Unit,
     onFreelancerClick: (freelancerId: String) -> Unit,
     onTabSelected: (UmkmTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     val data = uiState
     var query by rememberSaveable { mutableStateOf("") }
@@ -124,95 +132,96 @@ private fun UmkmDashboardContent(
             .background(colors.background)
     ) {
         UmkmTopBar(onNotificationsClick = onNotificationsClick)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 15.774.dp, bottom = 29.415.dp),
-            verticalArrangement = Arrangement.spacedBy(28.dp)
-        ) {
-            Text(
-                text = "Halo, ${data.ownerFirstName}",
-                modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = 4.226.dp),
-                color = colors.onSurface,
-                style = MaterialTheme.typography.headlineSmall.withFrameMetrics(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 23.241.sp,
-                    lineHeight = 29.579.sp,
-                    letterSpacing = (-0.581).sp
-                )
-            )
-            DashboardSearchBar(
-                query = query,
-                onQueryChange = { query = it },
-                onSearch = {
-                    val keyword = query.trim()
-                    query = ""
-                    onSearch(keyword)
-                },
-                onFilterClick = onFilterClick,
-                modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = SectionTopMargin)
-            )
-            CreateProjectBanner(
-                onCreateProject = onCreateProject,
-                modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = SectionTopMargin)
-            )
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
             Column(
-                modifier = Modifier.padding(
-                    start = PageGutter,
-                    end = PageGutter,
-                    top = SectionTopMargin + 4.226.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.677.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 15.774.dp, bottom = 29.415.dp),
+                verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
-                DashboardSectionHeader(
-                    title = "Project Aktif Saya",
-                    actionLabel = "Semua Riwayat",
-                    actionColor = colors.secondary,
-                    onActionClick = onSeeAllProjects
-                )
-                when {
-                    uiState.isLoading && data.activeProjects.isEmpty() -> LinearProgressIndicator(Modifier.fillMaxWidth())
-                    uiState.errorMessage != null -> InlineErrorContent(message = uiState.errorMessage, onRetry = onRetry)
-                    !uiState.hasBusinessProfile -> EmptyContent("Lengkapi profil usaha di menu Profil sebelum membuat project.")
-                    data.activeProjects.isEmpty() -> EmptyContent("Belum ada project aktif. Buat project pertamamu.")
-                }
-                data.activeProjects.forEach { project ->
-                    ActiveProjectCard(
-                        project = project,
-                        onClick = { onProjectClick(project.id) }
+                Text(
+                    text = "Halo, ${data.ownerFirstName}",
+                    modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = 4.226.dp),
+                    color = colors.onSurface,
+                    style = MaterialTheme.typography.headlineSmall.withFrameMetrics(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 23.241.sp,
+                        lineHeight = 29.579.sp,
+                        letterSpacing = (-0.581).sp
                     )
-                }
-            }
-            Column(
-                modifier = Modifier.padding(top = SectionTopMargin),
-                verticalArrangement = Arrangement.spacedBy(12.677.dp)
-            ) {
-                DashboardSectionHeader(
-                    title = "Rekomendasi Freelancer",
-                    actionLabel = "Lihat Semua",
-                    actionColor = colors.onTertiaryContainer,
-                    onActionClick = onSeeAllFreelancers,
-                    modifier = Modifier.padding(horizontal = PageGutter)
                 )
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(207.056.dp),
-                    contentPadding = PaddingValues(
+                DashboardSearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = {
+                        val keyword = query.trim()
+                        query = ""
+                        onSearch(keyword)
+                    },
+                    onFilterClick = onFilterClick,
+                    modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = SectionTopMargin)
+                )
+                CreateProjectBanner(
+                    onCreateProject = onCreateProject,
+                    modifier = Modifier.padding(start = PageGutter, end = PageGutter, top = SectionTopMargin)
+                )
+                Column(
+                    modifier = Modifier.padding(
                         start = PageGutter,
                         end = PageGutter,
-                        bottom = 4.226.dp
+                        top = SectionTopMargin + 4.226.dp
                     ),
-                    horizontalArrangement = Arrangement.spacedBy(12.677.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.677.dp)
                 ) {
-                    items(data.recommendedFreelancers, key = { it.id }) { freelancer ->
-                        FreelancerRecommendationCard(
-                            freelancer = freelancer,
-                            onClick = { onFreelancerClick(freelancer.id) },
-                            modifier = Modifier.height(202.831.dp)
+                    DashboardSectionHeader(
+                        title = "Project Aktif Saya",
+                        actionLabel = "Semua Riwayat",
+                        actionColor = colors.secondary,
+                        onActionClick = onSeeAllProjects
+                    )
+                    when {
+                        uiState.isLoading && data.activeProjects.isEmpty() -> LinearProgressIndicator(Modifier.fillMaxWidth())
+                        uiState.errorMessage != null -> InlineErrorContent(message = uiState.errorMessage, onRetry = onRetry)
+                        !uiState.hasBusinessProfile -> EmptyContent("Lengkapi profil usaha di menu Profil sebelum membuat project.")
+                        data.activeProjects.isEmpty() -> EmptyContent("Belum ada project aktif. Buat project pertamamu.")
+                    }
+                    data.activeProjects.forEach { project ->
+                        ActiveProjectCard(
+                            project = project,
+                            onClick = { onProjectClick(project.id) }
                         )
+                    }
+                }
+                Column(
+                    modifier = Modifier.padding(top = SectionTopMargin),
+                    verticalArrangement = Arrangement.spacedBy(12.677.dp)
+                ) {
+                    DashboardSectionHeader(
+                        title = "Rekomendasi Freelancer",
+                        actionLabel = "Lihat Semua",
+                        actionColor = colors.onTertiaryContainer,
+                        onActionClick = onSeeAllFreelancers,
+                        modifier = Modifier.padding(horizontal = PageGutter)
+                    )
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(207.056.dp),
+                        contentPadding = PaddingValues(
+                            start = PageGutter,
+                            end = PageGutter,
+                            bottom = 4.226.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(12.677.dp)
+                    ) {
+                        items(data.recommendedFreelancers, key = { it.id }) { freelancer ->
+                            FreelancerRecommendationCard(
+                                freelancer = freelancer,
+                                onClick = { onFreelancerClick(freelancer.id) },
+                                modifier = Modifier.height(202.831.dp)
+                            )
+                        }
                     }
                 }
             }

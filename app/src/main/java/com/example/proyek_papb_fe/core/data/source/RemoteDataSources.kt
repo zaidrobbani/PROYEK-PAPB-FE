@@ -25,6 +25,7 @@ import com.example.proyek_papb_fe.core.data.remote.dto.RequestChangesRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.ReviewRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.RevisionRequestBody
 import com.example.proyek_papb_fe.core.data.remote.dto.SelectFreelancerRequest
+import com.example.proyek_papb_fe.core.data.remote.dto.DeleteMessagesRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.SendMessageRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.SetSkillsRequest
 import com.example.proyek_papb_fe.core.data.remote.dto.SimulatePaymentRequest
@@ -141,6 +142,8 @@ class ChatRemoteDataSource(private val api: ChatApiService) {
     suspend fun send(id: String, text: String) = apiCall { api.send(id, SendMessageRequest(text)) }
     suspend fun messages(id: String, beforeAt: String?, beforeId: String?) = apiCall { api.messages(id, 50, beforeAt, beforeId) }
     suspend fun markRead(id: String) = apiCall { api.markRead(id) }
+    suspend fun deleteMessages(id: String, messageIds: List<String>, scope: String) =
+        apiCall { api.deleteMessages(id, DeleteMessagesRequest(messageIds, scope)) }
     suspend fun sendAttachment(id: String, file: okhttp3.MultipartBody.Part, caption: okhttp3.RequestBody?) =
         apiCall { api.sendAttachment(id, file, caption) }
 }

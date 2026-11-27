@@ -21,7 +21,8 @@ fun NavGraphBuilder.dashboardScreen(
     onSeeAllActiveProjectsClick: () -> Unit,
     onRecommendedProjectClick: (projectId: String) -> Unit,
     onSeeAllRecommendationsClick: () -> Unit,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    onManageSkillsClick: () -> Unit
 ) {
     composable<DashboardRoute> {
         DashboardContainer(
@@ -30,7 +31,8 @@ fun NavGraphBuilder.dashboardScreen(
             onSeeAllActiveProjectsClick = onSeeAllActiveProjectsClick,
             onRecommendedProjectClick = onRecommendedProjectClick,
             onSeeAllRecommendationsClick = onSeeAllRecommendationsClick,
-            onNotificationClick = onNotificationClick
+            onNotificationClick = onNotificationClick,
+            onManageSkillsClick = onManageSkillsClick
         )
     }
 }

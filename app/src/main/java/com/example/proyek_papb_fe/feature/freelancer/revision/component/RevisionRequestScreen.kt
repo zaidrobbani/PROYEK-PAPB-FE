@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.revision.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -95,22 +97,24 @@ fun RevisionRequestScreen(
     onOpenChat: () -> Unit,
     onAskClarification: () -> Unit,
     onOpenReferenceFile: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(modifier = modifier.fillMaxSize().background(TemuKaryaColors.BgCanvas)) {
         DetailTopBar(title = "Permintaan Revisi", onBack = onBack)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(top = 3.61.dp, bottom = 33.805.dp)
-        ) {
-            ContextCard(request)
-            DeadlineCard(request)
-            RevisionPoints(request.points)
-            ReferenceDraft(request.referenceFileName, request.referenceFileMeta, onOpenReferenceFile)
-            Actions(request, onUploadRevisedDraft, onOpenChat, onAskClarification)
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 3.61.dp, bottom = 33.805.dp)
+            ) {
+                ContextCard(request)
+                DeadlineCard(request)
+                RevisionPoints(request.points)
+                ReferenceDraft(request.referenceFileName, request.referenceFileMeta, onOpenReferenceFile)
+                Actions(request, onUploadRevisedDraft, onOpenChat, onAskClarification)
+            }
         }
     }
 }

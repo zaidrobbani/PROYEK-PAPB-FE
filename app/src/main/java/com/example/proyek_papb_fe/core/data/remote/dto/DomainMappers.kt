@@ -468,7 +468,8 @@ fun MessageDto.toDomain(attachments: List<MessageAttachment> = emptyList()) = Me
     type = messageType,
     sentAtMillis = parseUtcMillis(sentAt) ?: 0L,
     readAtMillis = parseUtcMillis(readAt),
-    attachments = attachments
+    attachments = if (deletedAt != null) emptyList() else attachments,
+    deletedAtMillis = parseUtcMillis(deletedAt)
 )
 
 fun NotificationDto.toDomain() = AppNotification(

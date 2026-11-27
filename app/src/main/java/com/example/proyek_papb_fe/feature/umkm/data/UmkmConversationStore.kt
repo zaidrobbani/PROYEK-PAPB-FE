@@ -2,6 +2,7 @@ package com.example.proyek_papb_fe.feature.umkm.data
 
 import androidx.compose.runtime.mutableStateMapOf
 import com.example.proyek_papb_fe.core.data.repository.ConversationOverview
+import com.example.proyek_papb_fe.core.domain.model.DeletedMessageLabel
 import com.example.proyek_papb_fe.core.domain.model.Message
 import com.example.proyek_papb_fe.core.domain.model.MessageAttachment
 import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
@@ -98,7 +99,9 @@ data class ChatMessage(
     val attachment: ChatAttachment? = null,
     val readByFreelancer: Boolean = false,
     /** Foto/dokumen chat dari server (berbeda dengan `attachment` draf hasil kerja). */
-    val file: MessageAttachment? = null
+    val file: MessageAttachment? = null,
+    /** Dihapus untuk semua orang: tampil sebagai "Pesan ini telah dihapus". */
+    val isDeleted: Boolean = false
 )
 
 /** Cache percakapan UMKM dari BE (`ChatOverviewRepository`), diperbarui lewat WebSocket saat ruang chat terbuka. */
@@ -175,6 +178,34 @@ object UmkmConversationStore {
 
     fun messages(conversationId: String): List<ChatMessage> = messagesById[conversationId].orEmpty()
 
+    /** Hapus untuk saya: pesan hilang dari perangkat ini. */
+    fun removeMessages(conversationId: String, ids: Set<String>) {
+        messagesById[conversationId] = messages(conversationId).filterNot { it.id in ids }
+        refreshPreview(conversationId)
+    }
+
+    /** Hapus untuk semua orang: isi & lampiran dibuang, pesan tetap ada sebagai penanda. */
+    fun markDeleted(conversationId: String, ids: Set<String>) {
+        messagesById[conversationId] = messages(conversationId).map {
+            if (it.id in ids) it.copy(text = "", file = null, attachment = null, isDeleted = true) else it
+        }
+        refreshPreview(conversationId)
+    }
+
+    private fun refreshPreview(conversationId: String) {
+        val index = items.indexOfFirst { it.id == conversationId }
+        if (index < 0) return
+        val last = messages(conversationId).lastOrNull()
+        items[index] = items[index].copy(
+            lastMessage = when {
+                last == null -> ""
+                last.isDeleted -> DeletedMessageLabel
+                last.file != null && last.text.isBlank() -> if (last.file.isImage) "📷 Foto" else "📄 ${last.file.fileName}"
+                else -> last.text
+            }
+        )
+    }
+
     fun markRead(id: String) {
         val index = items.indexOfFirst { it.id == id }
         if (index >= 0) items[index] = items[index].copy(unreadCount = 0)
@@ -195,7 +226,8 @@ object UmkmConversationStore {
         text = text,
         sentAt = toLocal(sentAtMillis),
         readByFreelancer = readAtMillis != null,
-        file = attachments.firstOrNull()
+        file = attachments.firstOrNull(),
+        isDeleted = isDeleted
     )
 }
 fun formatConversationTime(time: LocalDateTime, today: LocalDate = LocalDate.now()): String = when (time.toLocalDate()) {

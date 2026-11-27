@@ -27,7 +27,10 @@ data class DashboardFreelancer(
     val city: String = "",
     val isAvailable: Boolean = true,
     val skills: List<String> = emptyList(),
-    val experienceCount: Int = 0
+    val experienceCount: Int = 0,
+    /** Persentase kecocokan skill (≥ 60%) dengan project TERBUKA milik UMKM; null bila tidak ada. */
+    val matchPercent: Int? = null,
+    val matchProjectTitle: String? = null
 )
 
 data class UmkmDashboardData(

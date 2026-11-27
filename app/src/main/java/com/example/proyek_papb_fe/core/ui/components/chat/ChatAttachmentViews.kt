@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -147,7 +148,8 @@ fun ChatImageAttachment(
     status: DeliveryStatus,
     width: Dp,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
 ) {
     val uri = rememberChatFileUri(file, thumbnail = true)
     val shape = RoundedCornerShape(14.dp)
@@ -157,7 +159,7 @@ fun ChatImageAttachment(
             .height(200.dp)
             .clip(shape)
             .background(TemuKaryaColors.SurfaceSand)
-            .clickable(role = Role.Image, onClickLabel = "Lihat foto", onClick = onClick),
+            .combinedClickable(role = Role.Image, onClickLabel = "Lihat foto", onLongClick = onLongClick, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         LocalImage(
@@ -191,7 +193,8 @@ fun ChatDocumentAttachment(
     status: DeliveryStatus,
     isOpening: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
 ) {
     val textColor = if (mine) TemuKaryaColors.OnAction else TemuKaryaColors.TextPrimary
     val subColor = if (mine) TemuKaryaColors.SurfaceSand else TemuKaryaColors.TextPlaceholder
@@ -200,7 +203,7 @@ fun ChatDocumentAttachment(
         modifier = modifier
             .clip(shape)
             .background(if (mine) Color(0x26FFFFFF) else TemuKaryaColors.SurfaceCard)
-            .clickable(role = Role.Button, onClickLabel = "Buka dokumen", onClick = onClick)
+            .combinedClickable(role = Role.Button, onClickLabel = "Buka dokumen", onLongClick = onLongClick, onClick = onClick)
             .padding(10.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically

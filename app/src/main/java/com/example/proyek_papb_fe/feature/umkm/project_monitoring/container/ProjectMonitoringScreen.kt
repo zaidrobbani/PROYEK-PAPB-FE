@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.project_monitoring.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -117,39 +118,41 @@ fun ProjectMonitoringScreen(
                 )
                 return@Box
             }
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item(key = "header") {
-                    MonitoringHeaderCard(
-                        title = project.title,
-                        status = project.status,
-                        risk = result.risk,
-                        freelancerName = project.freelancer?.name
-                    )
-                }
-                item(key = "progress") { MonitoringProgressCard(result) }
-                item(key = "risk") {
-                    MonitoringRiskAlert(result, nextMilestone = project.milestones.firstOrNull { !it.isDone })
-                }
-                item(key = "timeline") { MonitoringTimeline(result) }
-                item(key = "milestone-header") {
-                    MilestoneSectionHeader(
-                        agreedDate = project.agreedUtcMillis?.let(::utcMillisToDate),
-                        onOpenPlan = onOpenWorkPlan?.let { open -> { open(project.id) } }
-                    )
-                }
-                item(key = "milestones") {
-                    MilestoneList(
-                        project.milestones,
-                        inProgress = project.status == ProjectStatus.SedangDikerjakan || project.status == ProjectStatus.Revisi
-                    )
-                }
-                item(key = "info") { MonitoringInfoNote() }
-                item(key = "updated") {
-                    MonitoringUpdatedAt("Terakhir diperbarui ${evaluatedAt.format(UpdatedFormat)} WIB")
+            RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item(key = "header") {
+                        MonitoringHeaderCard(
+                            title = project.title,
+                            status = project.status,
+                            risk = result.risk,
+                            freelancerName = project.freelancer?.name
+                        )
+                    }
+                    item(key = "progress") { MonitoringProgressCard(result) }
+                    item(key = "risk") {
+                        MonitoringRiskAlert(result, nextMilestone = project.milestones.firstOrNull { !it.isDone })
+                    }
+                    item(key = "timeline") { MonitoringTimeline(result) }
+                    item(key = "milestone-header") {
+                        MilestoneSectionHeader(
+                            agreedDate = project.agreedUtcMillis?.let(::utcMillisToDate),
+                            onOpenPlan = onOpenWorkPlan?.let { open -> { open(project.id) } }
+                        )
+                    }
+                    item(key = "milestones") {
+                        MilestoneList(
+                            project.milestones,
+                            inProgress = project.status == ProjectStatus.SedangDikerjakan || project.status == ProjectStatus.Revisi
+                        )
+                    }
+                    item(key = "info") { MonitoringInfoNote() }
+                    item(key = "updated") {
+                        MonitoringUpdatedAt("Terakhir diperbarui ${evaluatedAt.format(UpdatedFormat)} WIB")
+                    }
                 }
             }
             MonitoringBottomBar(

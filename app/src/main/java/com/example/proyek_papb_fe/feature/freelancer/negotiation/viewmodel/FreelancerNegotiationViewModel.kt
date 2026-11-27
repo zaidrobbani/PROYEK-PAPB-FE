@@ -13,6 +13,7 @@ import com.example.proyek_papb_fe.core.domain.model.CancelReasonCode
 import com.example.proyek_papb_fe.core.domain.model.Message
 import com.example.proyek_papb_fe.core.domain.model.WorkflowActionCode
 import com.example.proyek_papb_fe.core.domain.model.WorkflowDetail
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,8 +54,15 @@ class FreelancerNegotiationViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 val detail = workflowRepository.detail(projectId)
                 // Pesan negosiasi = percakapan project dengan UMKM (dibuat bila belum ada).

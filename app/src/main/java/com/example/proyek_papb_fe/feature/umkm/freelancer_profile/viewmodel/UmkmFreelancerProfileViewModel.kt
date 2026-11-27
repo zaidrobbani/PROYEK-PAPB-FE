@@ -19,6 +19,7 @@ import com.example.proyek_papb_fe.feature.umkm.data.FreelancerProfile
 import com.example.proyek_papb_fe.feature.umkm.data.PortfolioItem
 import com.example.proyek_papb_fe.feature.umkm.data.ProfileSkill
 import com.example.proyek_papb_fe.feature.umkm.data.ProjectApplication
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -61,8 +62,15 @@ class UmkmFreelancerProfileViewModel(
     }
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val detail = async { freelancerRepository.detail(freelancerId) }

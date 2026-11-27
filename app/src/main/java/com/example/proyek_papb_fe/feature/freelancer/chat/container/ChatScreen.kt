@@ -77,6 +77,7 @@ fun ChatScreen(
     }
 
     ChatListScreen(
+        onRefresh = viewModel::refresh,
         query = query,
         onQueryChange = { query = it },
         filterOptions = filterOptions,

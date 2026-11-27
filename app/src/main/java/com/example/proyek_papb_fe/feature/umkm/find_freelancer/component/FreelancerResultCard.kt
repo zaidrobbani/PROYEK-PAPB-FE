@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.find_freelancer.component
 
+import com.example.proyek_papb_fe.feature.umkm.component.shared.FreelancerMatchBadge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -133,6 +134,9 @@ fun FreelancerResultCard(
                     color = colors.onTertiaryContainer,
                     style = text(FontWeight.Medium, 12.677.sp, 16.903.sp)
                 )
+                freelancer.matchPercent?.let {
+                    FreelancerMatchBadge(it, freelancer.matchProjectTitle, Modifier.padding(top = 4.226.dp))
+                }
                 Row(
                     modifier = Modifier.padding(top = 2.113.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.226.dp),

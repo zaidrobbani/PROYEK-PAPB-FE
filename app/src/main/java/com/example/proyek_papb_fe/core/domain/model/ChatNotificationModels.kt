@@ -8,6 +8,11 @@ data class Conversation(
     val lastMessageAtMillis: Long?
 )
 
+/** Batas "Hapus untuk semua orang" (sama dengan BE). */
+const val DeleteForEveryoneWindowMillis = 48L * 60 * 60 * 1000
+
+const val DeletedMessageLabel = "🚫 Pesan ini telah dihapus"
+
 data class Message(
     val id: String,
     val conversationId: String,
@@ -16,15 +21,27 @@ data class Message(
     val type: String,
     val sentAtMillis: Long,
     val readAtMillis: Long?,
-    val attachments: List<MessageAttachment> = emptyList()
+    val attachments: List<MessageAttachment> = emptyList(),
+    /** Terisi bila dihapus untuk semua orang. */
+    val deletedAtMillis: Long? = null
 ) {
     val attachmentNames: List<String> get() = attachments.map { it.fileName }
+
+    val isDeleted: Boolean get() = deletedAtMillis != null
+
+    /** Versi tampilan setelah dihapus untuk semua orang: isi & lampiran dibuang. */
+    fun asDeleted(atMillis: Long): Message = copy(text = "", attachments = emptyList(), deletedAtMillis = atMillis)
+
+    /** Aturan BE: hanya pesan sendiri yang belum dihapus dan dikirim paling lama 48 jam lalu. */
+    fun canDeleteForEveryone(myId: String?, nowMillis: Long = System.currentTimeMillis()): Boolean =
+        senderUserId == myId && !isDeleted && nowMillis - sentAtMillis <= DeleteForEveryoneWindowMillis
 
     /** Teks ringkas untuk daftar percakapan/notifikasi: caption, atau label lampiran seperti WhatsApp. */
     val previewText: String
         get() {
             val first = attachments.firstOrNull()
             return when {
+                isDeleted -> DeletedMessageLabel
                 text.isNotBlank() -> if (first != null) "${if (first.isImage) "📷" else "📄"} $text" else text
                 first == null -> ""
                 first.isImage -> "📷 Foto"

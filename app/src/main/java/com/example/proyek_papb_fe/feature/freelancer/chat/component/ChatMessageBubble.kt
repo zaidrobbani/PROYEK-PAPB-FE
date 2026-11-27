@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatDocumentAttachment
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatFileUi
 import com.example.proyek_papb_fe.core.ui.components.chat.ChatImageAttachment
+import com.example.proyek_papb_fe.core.ui.components.chat.DeletedMessageText
+import com.example.proyek_papb_fe.core.ui.components.chat.selectableMessage
 import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryIcon
 import com.example.proyek_papb_fe.core.ui.components.chat.DeliveryStatus
 import com.example.proyek_papb_fe.core.ui.theme.TemuKaryaColors
@@ -43,7 +45,11 @@ data class ChatBubbleUi(
     val senderLabel: String? = null,
     val file: ChatFileUi? = null,
     /** null untuk pesan masuk. */
-    val status: DeliveryStatus? = if (isMine) DeliveryStatus.SENT else null
+    val status: DeliveryStatus? = if (isMine) DeliveryStatus.SENT else null,
+    /** Dihapus untuk semua orang. */
+    val isDeleted: Boolean = false,
+    /** false untuk lampiran yang masih dikirim (belum punya id server). */
+    val isSelectable: Boolean = true
 )
 
 sealed interface ChatRoomItem {
@@ -59,7 +65,10 @@ internal fun ChatMessageBubble(
     bubble: ChatBubbleUi,
     modifier: Modifier = Modifier,
     isOpening: Boolean = false,
-    onFileClick: (ChatBubbleUi) -> Unit = {}
+    onFileClick: (ChatBubbleUi) -> Unit = {},
+    isSelected: Boolean = false,
+    selectionMode: Boolean = false,
+    onToggleSelect: (ChatBubbleUi) -> Unit = {}
 ) {
     val mine = bubble.isMine
     val small = 6.dp
@@ -71,14 +80,19 @@ internal fun ChatMessageBubble(
         bottomStart = large
     )
     val textColor = if (mine) TemuKaryaColors.OnAction else TemuKaryaColors.TextPrimary
-    val file = bubble.file
+    val file = bubble.file?.takeUnless { bubble.isDeleted }
     val isImage = file?.isImage == true
+    val selectable = bubble.isSelectable
+    val longPress: (() -> Unit)? = if (selectable) ({ onToggleSelect(bubble) }) else null
+    val fileClick = { if (selectionMode && selectable) onToggleSelect(bubble) else onFileClick(bubble) }
     val status = bubble.status ?: DeliveryStatus.SENT
 
     Column(
         modifier = modifier
+            .padding(top = bubble.topGap.dp)
             .fillMaxWidth()
-            .padding(top = bubble.topGap.dp),
+            .selectableMessage(isSelected, selectionMode, selectable) { onToggleSelect(bubble) }
+            .padding(vertical = 2.dp),
         horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -108,15 +122,16 @@ internal fun ChatMessageBubble(
         ) {
             if (file != null) {
                 if (isImage) {
-                    ChatImageAttachment(file = file, status = status, width = AttachmentWidth, onClick = { onFileClick(bubble) })
+                    ChatImageAttachment(file = file, status = status, width = AttachmentWidth, onClick = fileClick, onLongClick = longPress)
                 } else {
                     ChatDocumentAttachment(
                         file = file,
                         mine = mine,
                         status = status,
                         isOpening = isOpening,
-                        onClick = { onFileClick(bubble) },
-                        modifier = Modifier.width(AttachmentWidth)
+                        onClick = fileClick,
+                        modifier = Modifier.width(AttachmentWidth),
+                        onLongClick = longPress
                     )
                 }
                 Column(
@@ -132,18 +147,20 @@ internal fun ChatMessageBubble(
                     MessageMeta(time = bubble.time, status = bubble.status)
                 }
             } else {
-                if (bubble.text.isNotBlank()) {
+                if (bubble.isDeleted) {
+                    DeletedMessageText(mine = mine, color = textColor)
+                } else if (bubble.text.isNotBlank()) {
                     Text(text = bubble.text, style = TemuKaryaTypography.BodyLarge, color = textColor)
                 }
-                MessageMeta(time = bubble.time, status = bubble.status)
+                // Pesan terhapus tidak menampilkan status baca, seperti WhatsApp.
+                MessageMeta(time = bubble.time, status = bubble.status.takeUnless { bubble.isDeleted }, mine = mine)
             }
         }
     }
 }
 
 @Composable
-private fun MessageMeta(time: String, status: DeliveryStatus?) {
-    val mine = status != null
+private fun MessageMeta(time: String, status: DeliveryStatus?, mine: Boolean = status != null) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = time,

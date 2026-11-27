@@ -17,6 +17,7 @@ import com.example.proyek_papb_fe.core.domain.model.ProjectStatusCode
 import com.example.proyek_papb_fe.core.domain.model.TransactionGroup
 import com.example.proyek_papb_fe.feature.umkm.data.UmkmAccount
 import com.example.proyek_papb_fe.feature.umkm.data.needsUmkmAction
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -49,8 +50,15 @@ class UmkmProfileViewModel(
     val uiState: StateFlow<UmkmProfileUiState> = _uiState.asStateFlow()
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        fetch(showLoading = true)
+    }
+
+    /** Tarik untuk muat ulang: konten lama tetap tampil selama memuat. */
+    fun refresh(): Job = fetch(showLoading = false)
+
+    private fun fetch(showLoading: Boolean): Job {
+        return viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoading || it.isLoading, errorMessage = null) }
             try {
                 coroutineScope {
                     val profile = async { profileRepository.umkmProfile() }

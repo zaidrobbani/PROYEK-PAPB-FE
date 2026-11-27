@@ -82,6 +82,10 @@ fun ProfileScreen(
     )
 
     ProfileContent(
+        onRefresh = {
+            notificationsViewModel.refresh()
+            viewModel.refresh()
+        },
         state = state,
         onNotificationClick = onNotificationsClick,
         onManageSkillsClick = onProfessionalProfileClick,

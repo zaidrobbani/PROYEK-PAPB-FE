@@ -1,5 +1,8 @@
 package com.example.proyek_papb_fe.feature.freelancer.profilemanage.component
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -108,7 +111,9 @@ fun ProfessionalProfileScreen(
     onSave: () -> Unit,
     onViewProfile: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Nama skill master data (`GET /skills`); hanya ini yang bisa disimpan BE dan dipakai matching. */
+    skillOptions: List<String> = emptyList()
 ) {
     var showAddSkill by rememberSaveable { mutableStateOf(false) }
 
@@ -215,6 +220,7 @@ fun ProfessionalProfileScreen(
 
     if (showAddSkill) {
         AddSkillDialog(
+            options = skillOptions,
             existing = form.skills,
             onAdd = { skill -> onFormChange(form.copy(skills = form.skills + skill)); showAddSkill = false },
             onDismiss = { showAddSkill = false }
@@ -291,32 +297,49 @@ private fun PhotoCard(initials: String, photoUri: String?, onPickPhoto: () -> Un
     }
 }
 
+/** Pilih dari master skill (bukan ketik bebas): BE menolak skill di luar daftar dan matching butuh id yang sama. */
 @Composable
-private fun AddSkillDialog(existing: List<String>, onAdd: (String) -> Unit, onDismiss: () -> Unit) {
-    var text by rememberSaveable { mutableStateOf("") }
-    val trimmed = text.trim()
-    val duplicate = existing.any { it.equals(trimmed, ignoreCase = true) }
+private fun AddSkillDialog(options: List<String>, existing: List<String>, onAdd: (String) -> Unit, onDismiss: () -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val tokens = query.trim().lowercase().split(" ").filter { it.isNotBlank() }
+    val available = options
+        .filterNot { option -> existing.any { it.equals(option, ignoreCase = true) } }
+        .filter { option -> tokens.all { it in option.lowercase() } }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = TemuKaryaColors.BgCanvas,
         title = { Text("Tambah keahlian", style = KelolaTypography.SheetTitle, color = TemuKaryaColors.TextHeading) },
         text = {
-            KelolaTextField(
-                label = "Nama keahlian",
-                value = text,
-                onValueChange = { text = it.take(40) },
-                placeholder = "Contoh: Ilustrasi Digital",
-                error = if (duplicate) "Keahlian ini sudah ada." else null,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done)
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onAdd(trimmed) }, enabled = trimmed.isNotEmpty() && !duplicate) {
-                Text("Tambah", style = KelolaTypography.Link, color = TemuKaryaColors.ActionPrimary)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                KelolaTextField(
+                    label = "Cari keahlian",
+                    value = query,
+                    onValueChange = { query = it.take(40) },
+                    placeholder = "Contoh: Desain Logo",
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Search)
+                )
+                when {
+                    options.isEmpty() -> KelolaHelper("Daftar keahlian belum termuat. Periksa koneksi lalu buka lagi.", isError = true)
+                    available.isEmpty() -> KelolaHelper("Keahlian tidak ditemukan. Pilih dari daftar yang tersedia.", isError = false)
+                }
+                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                    items(available, key = { it }) { option ->
+                        Text(
+                            text = option,
+                            style = KelolaTypography.Link,
+                            color = TemuKaryaColors.TextHeading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable(role = Role.Button, onClickLabel = "Tambah $option") { onAdd(option) }
+                                .padding(horizontal = 8.dp, vertical = 12.dp)
+                        )
+                    }
+                }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Batal", style = KelolaTypography.Link, color = TemuKaryaColors.TextBody) }
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Tutup", style = KelolaTypography.Link, color = TemuKaryaColors.TextBody) }
         }
     )
 }

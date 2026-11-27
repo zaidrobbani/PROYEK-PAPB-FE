@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.workplan.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +43,7 @@ fun WorkPlanScreen(
     onSaveDraftClick: () -> Unit,
     onSubmitClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null,
     umkmEntry: UmkmSimulationEntry? = null,
     onOpenUmkmSimulation: () -> Unit = {},
     /** Diisi saat proyek sudah berjalan: daftar milestone berubah jadi daftar progres. */
@@ -65,91 +68,92 @@ fun WorkPlanScreen(
                 .fillMaxWidth()
                 .imePadding()
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                WorkPlanHeaderCard(
-                    projectTitle = header.projectTitle,
-                    clientAndDeadline = header.clientAndDeadline,
-                    isSubmitted = isSubmitted
-                )
-                WorkPlanInfoCard()
-                umkmEntry?.let { UmkmSimulationCard(it, onOpenUmkmSimulation) }
-
-                if (progressItems != null) {
-                    Text("Milestone proyek", style = WorkPlanTypography.SectionTitle, color = TemuKaryaColors.TextHeading)
-                    MilestoneProgressList(
-                        items = progressItems,
-                        progressPercent = progressPercent,
-                        canComplete = canCompleteMilestone,
-                        isBusy = isBusy,
-                        onComplete = onCompleteMilestone
+            RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    WorkPlanHeaderCard(
+                        projectTitle = header.projectTitle,
+                        clientAndDeadline = header.clientAndDeadline,
+                        isSubmitted = isSubmitted
                     )
+                    WorkPlanInfoCard()
+                    umkmEntry?.let { UmkmSimulationCard(it, onOpenUmkmSimulation) }
+
+                    if (progressItems != null) {
+                        Text("Milestone proyek", style = WorkPlanTypography.SectionTitle, color = TemuKaryaColors.TextHeading)
+                        MilestoneProgressList(
+                            items = progressItems,
+                            progressPercent = progressPercent,
+                            canComplete = canCompleteMilestone,
+                            isBusy = isBusy,
+                            onComplete = onCompleteMilestone
+                        )
+                        Text(
+                            text = "Progres dihitung otomatis dari bobot milestone yang ditandai selesai dan terlihat oleh UMKM.",
+                            style = WorkPlanTypography.Footnote,
+                            color = TemuKaryaColors.TextPlaceholder
+                        )
+                        return@Column
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Milestone proyek",
+                            style = WorkPlanTypography.SectionTitle,
+                            color = TemuKaryaColors.TextHeading,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${milestones.size} tahap",
+                            style = WorkPlanTypography.Count,
+                            color = TemuKaryaColors.TextPlaceholder
+                        )
+                    }
+
+                    milestones.forEachIndexed { index, milestone ->
+                        key(milestone.id) {
+                            MilestoneRow(
+                                index = index,
+                                milestone = milestone,
+                                showErrors = showErrors,
+                                isLocked = isSubmitted,
+                                canDelete = milestones.size > 1,
+                                requestFocus = milestone.id == focusMilestoneId,
+                                onNameChange = { onNameChange(milestone.id, it) },
+                                onWeightChange = { onWeightChange(milestone.id, it) },
+                                onDelete = { onDeleteMilestone(milestone.id) },
+                                onFocusConsumed = onFocusConsumed
+                            )
+                        }
+                    }
+
+                    if (!isSubmitted) {
+                        AddMilestoneButton(
+                            enabled = milestones.size < MaxMilestones,
+                            onClick = onAddMilestone
+                        )
+                    }
+
+                    WeightSummaryCard(
+                        milestones = milestones,
+                        validation = validation,
+                        isSubmitted = isSubmitted
+                    )
+
                     Text(
-                        text = "Progres dihitung otomatis dari bobot milestone yang ditandai selesai dan terlihat oleh UMKM.",
+                        text = "Progres proyek nanti dihitung otomatis dari bobot milestone yang sudah ditandai selesai.",
                         style = WorkPlanTypography.Footnote,
                         color = TemuKaryaColors.TextPlaceholder
                     )
-                    return@Column
                 }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Milestone proyek",
-                        style = WorkPlanTypography.SectionTitle,
-                        color = TemuKaryaColors.TextHeading,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "${milestones.size} tahap",
-                        style = WorkPlanTypography.Count,
-                        color = TemuKaryaColors.TextPlaceholder
-                    )
-                }
-
-                milestones.forEachIndexed { index, milestone ->
-                    key(milestone.id) {
-                        MilestoneRow(
-                            index = index,
-                            milestone = milestone,
-                            showErrors = showErrors,
-                            isLocked = isSubmitted,
-                            canDelete = milestones.size > 1,
-                            requestFocus = milestone.id == focusMilestoneId,
-                            onNameChange = { onNameChange(milestone.id, it) },
-                            onWeightChange = { onWeightChange(milestone.id, it) },
-                            onDelete = { onDeleteMilestone(milestone.id) },
-                            onFocusConsumed = onFocusConsumed
-                        )
-                    }
-                }
-
-                if (!isSubmitted) {
-                    AddMilestoneButton(
-                        enabled = milestones.size < MaxMilestones,
-                        onClick = onAddMilestone
-                    )
-                }
-
-                WeightSummaryCard(
-                    milestones = milestones,
-                    validation = validation,
-                    isSubmitted = isSubmitted
-                )
-
-                Text(
-                    text = "Progres proyek nanti dihitung otomatis dari bobot milestone yang sudah ditandai selesai.",
-                    style = WorkPlanTypography.Footnote,
-                    color = TemuKaryaColors.TextPlaceholder
-                )
             }
 
             if (progressItems == null) WorkPlanActionBar(

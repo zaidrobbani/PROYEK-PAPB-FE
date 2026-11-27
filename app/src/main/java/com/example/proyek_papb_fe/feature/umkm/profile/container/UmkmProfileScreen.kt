@@ -1,5 +1,6 @@
 package com.example.proyek_papb_fe.feature.umkm.profile.container
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -82,65 +83,65 @@ fun UmkmProfileScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         UmkmTopBar(onNotificationsClick = onNotificationsClick, title = "Profil")
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 110.dp - 72.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item(key = "header") { ProfileHeaderCard(profile) }
-            item(key = "stats") { ProfileStatsRow(stats) }
-            item(key = "section") { ProfileSectionTitle("Kelola Akun") }
-            item(key = "business") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_storefront,
-                    title = "Kelola Profil Usaha",
-                    subtitle = if (UmkmAccount.hasBusinessProfile) "Nama usaha, kategori, dan alamat"
-                    else "Belum diisi. Wajib sebelum membuat project",
-                    onClick = onManageBusinessProfile ?: comingSoon("Kelola Profil Usaha")
-                )
-            }
-            item(key = "projects") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_folder_open,
-                    title = "Project Saya",
-                    subtitle = "${uiState.projectCount} project, $attention perlu perhatian",
-                    onClick = onOpenProjects
-                )
-            }
-            item(key = "transactions") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_receipt_long,
-                    title = "Riwayat Transaksi",
-                    subtitle = "Pembayaran dan bukti bayar",
-                    onClick = onOpenTransactions
-                )
-            }
-            item(key = "notifications") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_notifications,
-                    title = "Notifikasi",
-                    subtitle = if (unread > 0) "$unread belum dibaca" else "Semua sudah dibaca",
-                    onClick = onOpenNotifications
-                )
-            }
-            item(key = "security") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_shield,
-                    title = "Keamanan & Kata Sandi",
-                    subtitle = "Ubah kata sandi akun",
-                    onClick = onSecurity ?: comingSoon("Keamanan & Kata Sandi")
-                )
-            }
-            item(key = "logout") {
-                ProfileMenuItem(
-                    icon = R.drawable.ic_symbol_logout,
-                    title = "Keluar",
-                    subtitle = "Akhiri sesi di perangkat ini",
-                    onClick = onLogout,
-                    destructive = true
-                )
+        RefreshableContent(onRefresh = viewModel::refresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 17.dp, end = 17.dp, top = 84.dp - 64.dp, bottom = 110.dp - 72.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(key = "header") { ProfileHeaderCard(profile) }
+                item(key = "stats") { ProfileStatsRow(stats) }
+                item(key = "section") { ProfileSectionTitle("Kelola Akun") }
+                item(key = "business") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_storefront,
+                        title = "Kelola Profil Usaha",
+                        subtitle = if (UmkmAccount.hasBusinessProfile) "Nama usaha, kategori, dan alamat"
+                        else "Belum diisi. Wajib sebelum membuat project",
+                        onClick = onManageBusinessProfile ?: comingSoon("Kelola Profil Usaha")
+                    )
+                }
+                item(key = "projects") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_folder_open,
+                        title = "Project Saya",
+                        subtitle = "${uiState.projectCount} project, $attention perlu perhatian",
+                        onClick = onOpenProjects
+                    )
+                }
+                item(key = "transactions") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_receipt_long,
+                        title = "Riwayat Transaksi",
+                        subtitle = "Pembayaran dan bukti bayar",
+                        onClick = onOpenTransactions
+                    )
+                }
+                item(key = "notifications") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_notifications,
+                        title = "Notifikasi",
+                        subtitle = if (unread > 0) "$unread belum dibaca" else "Semua sudah dibaca",
+                        onClick = onOpenNotifications
+                    )
+                }
+                item(key = "security") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_shield,
+                        title = "Keamanan & Kata Sandi",
+                        subtitle = "Ubah kata sandi akun",
+                        onClick = onSecurity ?: comingSoon("Keamanan & Kata Sandi")
+                    )
+                }
+                item(key = "logout") {
+                    ProfileMenuItem(
+                        icon = R.drawable.ic_symbol_logout,
+                        title = "Keluar",
+                        subtitle = "Akhiri sesi di perangkat ini",
+                        onClick = onLogout,
+                        destructive = true
+                    )
+                }
             }
         }
         UmkmBottomNav(

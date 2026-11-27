@@ -1,5 +1,7 @@
 package com.example.proyek_papb_fe.feature.freelancer.wallet.component
 
+import com.example.proyek_papb_fe.core.ui.components.RefreshableContent
+import kotlinx.coroutines.Job
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -100,30 +102,32 @@ fun WalletScreen(
     onWithdrawClick: () -> Unit,
     onChangeAccountClick: () -> Unit,
     onShowAllTransactionsClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRefresh: (() -> Job)? = null
 ) {
     Column(modifier = modifier.fillMaxSize().background(TemuKaryaColors.BgCanvas)) {
         DetailTopBar(title = "Dompet & Rekening", onBack = onBack)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            BalanceCard(state = state, onWithdrawClick = onWithdrawClick)
-            HeldBalanceInfo()
-            SectionHeader(title = "Rekening Pencairan", actionLabel = "Ubah", onActionClick = onChangeAccountClick)
-            if (state.accountTitle != null) {
-                PayoutAccountCard(title = state.accountTitle, holder = state.accountHolder.orEmpty(), isPrimary = state.isPrimaryAccount)
+        RefreshableContent(onRefresh = onRefresh, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 17.dp, end = 17.dp, top = 20.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                BalanceCard(state = state, onWithdrawClick = onWithdrawClick)
+                HeldBalanceInfo()
+                SectionHeader(title = "Rekening Pencairan", actionLabel = "Ubah", onActionClick = onChangeAccountClick)
+                if (state.accountTitle != null) {
+                    PayoutAccountCard(title = state.accountTitle, holder = state.accountHolder.orEmpty(), isPrimary = state.isPrimaryAccount)
+                }
+                SectionHeader(
+                    title = "Riwayat Transaksi",
+                    actionLabel = if (state.hasMoreTransactions) "Semua" else null,
+                    onActionClick = onShowAllTransactionsClick
+                )
+                TransactionList(transactions = state.transactions)
             }
-            SectionHeader(
-                title = "Riwayat Transaksi",
-                actionLabel = if (state.hasMoreTransactions) "Semua" else null,
-                onActionClick = onShowAllTransactionsClick
-            )
-            TransactionList(transactions = state.transactions)
         }
     }
 }
